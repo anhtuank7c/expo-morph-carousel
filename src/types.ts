@@ -77,6 +77,22 @@ export type LiquidOptions = {
    * apply. Default false.
    */
   preserveShape?: boolean;
+  /**
+   * When photos are decoded. A decode blocks the thread it runs on for tens
+   * of milliseconds per photo.
+   *
+   * - `'scheduled'` (default): on the JS thread, one per task, the
+   *   page in view first, then its neighbors; images of pages that left the
+   *   window before their turn are skipped. The app's own callbacks run
+   *   between two decodes, even when a window of pages mounts at once.
+   * - `'immediate'`: on the JS thread as soon as the file is read, back to
+   *   back when several arrive together.
+   * - `'onDraw'`: left to Skia, which decodes on the first draw: on the UI
+   *   thread, in the middle of the swipe that brings the page into view.
+   *
+   * Bundled images (`require`) are loaded by Skia and not affected.
+   */
+  decode?: 'scheduled' | 'immediate' | 'onDraw';
 };
 
 export type AutoplayOptions = {

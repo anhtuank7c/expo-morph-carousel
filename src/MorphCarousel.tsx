@@ -65,7 +65,13 @@ const DEFAULT_SPRING = { damping: 26, stiffness: 220, mass: 1 };
 const DEFAULT_TIMING_MS = 380;
 /** Glide of `snapMode="free"`: the deceleration of a native scroll view. */
 const FREE_DECELERATION = 0.998;
-const DEFAULT_LIQUID = { blur: 28, threshold: 0.5, sharpness: 24, preserveShape: false };
+const DEFAULT_LIQUID = {
+  blur: 28,
+  threshold: 0.5,
+  sharpness: 24,
+  preserveShape: false,
+  decode: 'scheduled' as const,
+};
 const DEFAULT_AUTOPLAY: Required<AutoplayOptions> = {
   interval: 4000,
   reverse: false,
@@ -555,6 +561,7 @@ export function MorphCarousel<T>({
           threshold={liquidConfig.threshold}
           sharpness={liquidConfig.sharpness}
           preserveShape={liquidConfig.preserveShape}
+          decode={liquidConfig.decode}
           cache={cacheOptions}
           pixelRatio={pixelRatio}
         />

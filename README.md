@@ -114,7 +114,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `configureGesture(pan)` | | Adjust the pan gesture (thresholds, simultaneous gestures) and return it. Memoize it |
 | `keyExtractor(item, index)` | index | Stable key for each item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` or a worklet function (see below) |
-| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false }`. Larger `blur` gives a rounder blob; lower `threshold` keeps more of the halo. `preserveShape` keeps the image rectangle sharp (no rounded corners) while only its content melts, for photos |
+| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false, decode = 'scheduled' }`. Larger `blur` gives a rounder blob; lower `threshold` keeps more of the halo. `preserveShape` keeps the image rectangle sharp (no rounded corners) while only its content melts, for photos. `decode` picks when photos are decoded (see "How the liquid effect works") |
 | `mediaPosition` | `'top'` | `'top'` or `'background'` |
 | `mediaHeight` | `280` | Height of the media area when it is at the top |
 | `mediaFit` | `'contain'` | `'contain'` or `'cover'` |
@@ -464,7 +464,17 @@ All images near the current page are stacked in one Skia layer and cross-fade by
 
 Both filters scale with a triangle curve that is 0 on a page and 1 halfway between two pages, so a page at rest is drawn untouched.
 
-With photos (`mediaFit="cover"`) the threshold also rounds off the rectangle's corners and eats into its edges during the transition. `liquid={{ preserveShape: true }}` keeps the rectangle instead: the blur stays inside the image area and repeats its edge pixels, there is no threshold, so the corners stay square and only the content melts. The text pages are ordinary React Native views that slide; only the media area is drawn by Skia.
+With photos (`mediaFit="cover"`) the threshold also rounds off the rectangle's corners and eats into its edges during the transition. `liquid={{ preserveShape: true }}` keeps the rectangle instead: the blur stays inside the image area and repeats its edge pixels, there is no threshold, so the corners stay square and only the content melts.
+
+**When photos are decoded.** Decoding a photo blocks the thread it runs on (a 1080×810 JPEG takes tens of milliseconds). Skia does it lazily on the first draw, which is the UI thread, in the middle of the swipe that brings the page in. `liquid.decode` moves it:
+
+- `'scheduled'` (default): on the JS thread when the page mounts ahead of time, one photo per task, the page in view first. Photos of pages that left the window before their turn are skipped.
+- `'immediate'`: on the JS thread as soon as each file is read.
+- `'onDraw'`: Skia's default, on the UI thread at first draw.
+
+Measured on a Redmi Note 8 Pro (Helio G90T, Expo Go, production JS) with the example's Stress test screen, 40 pages at 350 ms: `'onDraw'` dropped about one frame per page (40–41 frames over 25 ms, up to 133 ms). `'immediate'` and `'scheduled'` dropped 0–1, the longest frame 17 ms. The JS thread pays instead: about 15 gaps over 100 ms in those 40 pages, while `onIndexChange` still ran 9 ms after the page change on average. `'scheduled'` and `'immediate'` measured the same; the queue only bounds the cases where many photos arrive at once.
+
+ The text pages are ordinary React Native views that slide; only the media area is drawn by Skia.
 
 ## Accessibility
 

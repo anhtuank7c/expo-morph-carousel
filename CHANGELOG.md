@@ -6,7 +6,7 @@ All notable changes to this package are listed here. The format follows [Keep a 
 
 ### Performance
 
-- Photos for the liquid effect are decoded on the JS thread when their page mounts, ahead of time. Skia decodes lazily on first draw, which put a 20–45 ms JPEG decode (1080×810 photo, Android emulator) on the UI thread in the middle of a swipe.
+- Photos for the liquid effect are decoded on the JS thread when their page mounts, ahead of time, through a queue (one per task, the page in view first, skipped when the page left the window). Skia decodes lazily on first draw, which put a 20–45 ms JPEG decode (1080×810 photo, Android emulator) on the UI thread in the middle of a swipe. On a Redmi Note 8 Pro, 40 pages dropped 40–41 frames before and 0–1 after.
 - The liquid filters are built once per size and options instead of every frame (no paint, blur or color filter allocated on the UI thread while swiping).
 - Pages more than one page away are not drawn by the liquid layer (zero size, decided on the UI thread).
 - Pages and media items are memoized: the re-render when the current page changes mid-swipe no longer renders every item again.
@@ -14,6 +14,8 @@ All notable changes to this package are listed here. The format follows [Keep a 
 
 ### Added
 
+- `liquid.decode`: `'scheduled'` (default), `'immediate'` or `'onDraw'` (Skia's lazy decoding).
+- Example: Stress test screen (60 photos in a Tinder stack, JS and UI thread probes, unattended runs with `?decode=…&auto=40&gap=350`).
 - `imageCache.configure({ decodedBytes })`: memory budget for decoded images (default 96 MB), next to the `decodedImages` count.
 
 ## [0.1.0] - 2026-11-27

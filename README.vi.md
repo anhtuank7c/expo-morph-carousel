@@ -114,7 +114,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `configureGesture(pan)` | | Chỉnh pan gesture (ngưỡng, gesture chạy song song) rồi trả về. Nên memo |
 | `keyExtractor(item, index)` | index | Key ổn định cho từng item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` hoặc một worklet (xem bên dưới) |
-| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false }`. `blur` lớn hơn cho khối tròn hơn; `threshold` thấp hơn giữ lại nhiều quầng mờ hơn. `preserveShape` giữ khung chữ nhật của ảnh sắc nét (không bo góc), chỉ phần nội dung tan vào nhau, dành cho ảnh chụp |
+| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false, decode = 'scheduled' }`. `blur` lớn hơn cho khối tròn hơn; `threshold` thấp hơn giữ lại nhiều quầng mờ hơn. `preserveShape` giữ khung chữ nhật của ảnh sắc nét (không bo góc), chỉ phần nội dung tan vào nhau, dành cho ảnh chụp. `decode` chọn thời điểm giải mã ảnh (xem phần giải thích hiệu ứng liquid) |
 | `mediaPosition` | `'top'` | `'top'` hoặc `'background'` |
 | `mediaHeight` | `280` | Chiều cao vùng media khi nằm trên |
 | `mediaFit` | `'contain'` | `'contain'` hoặc `'cover'` |
@@ -464,7 +464,17 @@ Mọi ảnh gần trang hiện tại được xếp chồng trong một layer Sk
 
 Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở đúng trang và bằng 1 ở giữa hai trang, nên trang đứng yên được vẽ nguyên vẹn.
 
-Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn góc và ăn vào mép khung chữ nhật trong lúc chuyển. `liquid={{ preserveShape: true }}` giữ nguyên khung: blur chỉ nằm trong vùng ảnh và lặp lại điểm ảnh ở mép, không có bước cắt alpha, nên góc vẫn vuông và chỉ phần nội dung tan vào nhau. Các trang chữ là view React Native thông thường và trượt; chỉ vùng media được vẽ bằng Skia.
+Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn góc và ăn vào mép khung chữ nhật trong lúc chuyển. `liquid={{ preserveShape: true }}` giữ nguyên khung: blur chỉ nằm trong vùng ảnh và lặp lại điểm ảnh ở mép, không có bước cắt alpha, nên góc vẫn vuông và chỉ phần nội dung tan vào nhau.
+
+**Khi nào ảnh được giải mã.** Giải mã một ảnh chặn thread chạy nó (JPEG 1080×810 mất vài chục mili giây). Skia giải mã lười ở lần vẽ đầu tiên, tức là trên UI thread, đúng lúc cú vuốt đưa trang đó vào. `liquid.decode` chuyển việc đó đi:
+
+- `'scheduled'` (mặc định): trên JS thread khi trang được mount trước, mỗi task một ảnh, trang đang xem trước. Ảnh của trang đã ra khỏi cửa sổ trước lượt của nó thì bỏ qua.
+- `'immediate'`: trên JS thread ngay khi đọc xong file.
+- `'onDraw'`: mặc định của Skia, trên UI thread ở lần vẽ đầu.
+
+Đo trên Redmi Note 8 Pro (Helio G90T, Expo Go, JS production) bằng màn Stress test của example, 40 trang cách nhau 350 ms: `'onDraw'` rớt khoảng một khung hình mỗi trang (40–41 khung trên 25 ms, dài nhất 133 ms). `'immediate'` và `'scheduled'` rớt 0–1, khung dài nhất 17 ms. Bù lại JS thread bận hơn: khoảng 15 lần trên 100 ms trong 40 trang, còn `onIndexChange` vẫn chạy trung bình 9 ms sau khi đổi trang. `'scheduled'` và `'immediate'` đo như nhau; hàng đợi chỉ chặn trên các trường hợp nhiều ảnh tới cùng lúc.
+
+ Các trang chữ là view React Native thông thường và trượt; chỉ vùng media được vẽ bằng Skia.
 
 ## Accessibility
 

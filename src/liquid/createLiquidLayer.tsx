@@ -18,7 +18,7 @@
  * Types come from a type-only import, which does not exist at runtime.
  */
 import type * as SkiaModule from '@shopify/react-native-skia';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import {
   runOnJS,
@@ -31,6 +31,7 @@ import {
 import { decodedByteLimit, decodedImageLimit, useCachedUri, type LoadPriority } from '../cache';
 import type { ResolvedCacheOptions } from '../cache/ImageCache';
 import { clamp, transitionPeak } from '../math';
+import { createDecodeQueue, type DecodeRequest } from './decodeQueue';
 import { sameSource, type NormalizedSource } from '../responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from '../useResponsiveImage';
 
@@ -59,6 +60,8 @@ export type LiquidItem = {
  */
 const FILTER_LEVELS = 48;
 
+export type LiquidDecode = 'scheduled' | 'immediate' | 'onDraw';
+
 export type LiquidLayerProps = {
   items: LiquidItem[];
   position: SharedValue<number>;
@@ -71,6 +74,8 @@ export type LiquidLayerProps = {
   sharpness: number;
   /** Keep the image rectangle sharp: blur the content inside it, no alpha threshold. */
   preserveShape: boolean;
+  /** When photos are decoded (see LiquidOptions.decode). */
+  decode: LiquidDecode;
   /** Disk cache options for remote images, or null to load them directly. */
   cache: ResolvedCacheOptions | null;
   pixelRatio: number;
@@ -130,7 +135,23 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     }
   };
 
-  function useSkImage(source: number | string | null): SkImage | null {
+  const queue = createDecodeQueue<SkiaModule.SkData, SkImage>({
+    load: (uri) => SkiaApi.Data.fromURI(uri),
+    decode: (data) => {
+      const encoded = SkiaApi.Image.MakeImageFromEncoded(data);
+      return encoded ? decodeNow(encoded) : null;
+    },
+    // A plain task, not requestAnimationFrame: animation frame callbacks run
+    // before the app's own tasks, so a decode in each frame would hold
+    // callbacks such as onIndexChange back until the queue is empty.
+    schedule: (fn) => setTimeout(fn, 0),
+  });
+
+  function useSkImage(
+    source: number | string | null,
+    priority: LoadPriority,
+    mode: LiquidDecode,
+  ): SkImage | null {
     const uri = typeof source === 'string' ? source : null;
     // Bundled assets (`require`) go through Skia's own loader, which resolves them.
     const bundled = useImage(uri === null ? (source ?? undefined) : undefined);
@@ -138,6 +159,8 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       uri,
       image: uri ? decodedImage(uri) : null,
     }));
+    const priorityRef = useRef(priority);
+    const requestRef = useRef<DecodeRequest | null>(null);
 
     useEffect(() => {
       if (!uri) return;
@@ -148,19 +171,35 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
         return;
       }
       let alive = true;
+      const done = (image: SkImage) => {
+        remember(uri, image);
+        if (alive) setState({ uri, image });
+      };
+      if (mode === 'scheduled') {
+        const request = queue.request(uri, priorityRef.current, done);
+        requestRef.current = request;
+        return () => {
+          alive = false;
+          request.cancel();
+          if (requestRef.current === request) requestRef.current = null;
+        };
+      }
       SkiaApi.Data.fromURI(uri)
         .then((data) => {
           const encoded = SkiaApi.Image.MakeImageFromEncoded(data);
-          if (!encoded) return;
-          const image = decodeNow(encoded);
-          remember(uri, image);
-          if (alive) setState({ uri, image });
+          if (encoded) done(mode === 'immediate' ? decodeNow(encoded) : encoded);
         })
         .catch(() => {});
       return () => {
         alive = false;
       };
-    }, [uri]);
+    }, [uri, mode]);
+
+    // The page in view moves up the queue as the user swipes to it.
+    useEffect(() => {
+      priorityRef.current = priority;
+      requestRef.current?.setPriority(priority);
+    }, [priority]);
 
     if (!uri) return bundled;
     return state.uri === uri ? state.image : decodedImage(uri);
@@ -216,16 +255,22 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     rect,
     area,
     cache,
+    decode,
   }: {
     item: LiquidItem;
     position: SharedValue<number>;
     rect: Rect;
     area: ImageArea;
     cache: ResolvedCacheOptions | null;
+    decode: LiquidDecode;
   }) {
     const chosen = useChosenUri(item.identity, item.source, area, cache);
     const cached = useCachedUri(chosen, cache, item.priority);
-    const image = useSkImage(item.source.kind === 'bundled' ? item.source.asset : cached);
+    const image = useSkImage(
+      item.source.kind === 'bundled' ? item.source.asset : cached,
+      item.priority,
+      decode,
+    );
     const { layers, onShown } = useImageLayers(image);
     const opacity = useDerivedValue(() => clamp(1 - Math.abs(item.virtual - position.value), 0, 1));
     const cx = useDerivedValue(() => rect.x + rect.width.value / 2);
@@ -272,6 +317,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       a.rect === b.rect &&
       a.area === b.area &&
       a.cache === b.cache &&
+      a.decode === b.decode &&
       x.key === y.key &&
       x.identity === y.identity &&
       x.virtual === y.virtual &&
@@ -292,6 +338,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     threshold,
     sharpness,
     preserveShape,
+    decode,
     cache,
     pixelRatio,
   }: LiquidLayerProps) {
@@ -368,6 +415,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
               rect={rect}
               area={area}
               cache={cache}
+              decode={decode}
             />
           ))}
         </Group>

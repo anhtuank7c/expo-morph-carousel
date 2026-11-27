@@ -42,6 +42,12 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
     subtitle: 'Photos from the network with placeholder blobs, cover fit, loop and autoplay',
     icon: 'cloud-download-outline',
   },
+  {
+    href: '/stress',
+    title: 'Stress test',
+    subtitle: '60 photos in a Tinder stack, JS and UI thread probes, decode modes',
+    icon: 'speedometer-outline',
+  },
 ];
 
 export default function Home() {
