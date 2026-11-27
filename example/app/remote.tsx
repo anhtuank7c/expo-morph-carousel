@@ -64,6 +64,8 @@ export default function RemoteScreen() {
   const [maxAge, setMaxAge] = useState(AGES[0].ms);
   const [serverHeaders, setServerHeaders] = useState(true);
   const [enabled, setEnabled] = useState(true);
+  const [tapImage, setTapImage] = useState(true);
+  const [keepCorners, setKeepCorners] = useState(true);
   const [index, setIndex] = useState(0);
   const [note, setNote] = useState('');
   const carousel = useRef<MorphCarouselRef>(null);
@@ -122,7 +124,16 @@ export default function RemoteScreen() {
         mediaFit={source === 'local' ? 'contain' : 'cover'}
         mediaPadding={source === 'local' ? 24 : 0}
         mediaHeight={REMOTE_MEDIA_HEIGHT}
-        liquid={source === 'local' ? undefined : { blur: 36, threshold: 0.35 }}
+        // Photos: keep the rectangle sharp while the content melts (no rounded,
+        // eaten-in corners). Shapes on a transparent background melt whole.
+        liquid={
+          source === 'local'
+            ? { preserveShape: keepCorners }
+            : { blur: 36, threshold: 0.35, preserveShape: keepCorners }
+        }
+        // Tap the image: left 30% back, the rest forward. Taps on the text
+        // below do nothing.
+        tapToNavigate={tapImage ? { area: 'media' } : false}
         loop
         onIndexChange={setIndex}
         style={styles.card}
@@ -188,6 +199,8 @@ export default function RemoteScreen() {
       </Section>
 
       <View style={styles.toggles}>
+        <Toggle label="Tap the image to change page" value={tapImage} onChange={setTapImage} />
+        <Toggle label="Keep image corners while morphing" value={keepCorners} onChange={setKeepCorners} />
         <Toggle label="Cache enabled" value={enabled} onChange={setEnabled} />
         <Toggle label="Use server Cache-Control / ETag" value={serverHeaders} onChange={setServerHeaders} />
       </View>

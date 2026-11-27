@@ -114,7 +114,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `configureGesture(pan)` | | Chỉnh pan gesture (ngưỡng, gesture chạy song song) rồi trả về. Nên memo |
 | `keyExtractor(item, index)` | index | Key ổn định cho từng item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` hoặc một worklet (xem bên dưới) |
-| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24 }`. `blur` lớn hơn cho khối tròn hơn; `threshold` thấp hơn giữ lại nhiều quầng mờ hơn |
+| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false }`. `blur` lớn hơn cho khối tròn hơn; `threshold` thấp hơn giữ lại nhiều quầng mờ hơn. `preserveShape` giữ khung chữ nhật của ảnh sắc nét (không bo góc), chỉ phần nội dung tan vào nhau, dành cho ảnh chụp |
 | `mediaPosition` | `'top'` | `'top'` hoặc `'background'` |
 | `mediaHeight` | `280` | Chiều cao vùng media khi nằm trên |
 | `mediaFit` | `'contain'` | `'contain'` hoặc `'cover'` |
@@ -461,7 +461,9 @@ Mọi ảnh gần trang hiện tại được xếp chồng trong một layer Sk
 1. Blur, với bán kính đạt đỉnh ở giữa hai trang. Hai ảnh tan vào nhau thành một hình mềm.
 2. Alpha threshold, tức một color matrix trên kênh alpha, cắt viền mờ về lại một đường viền sắc. Hình mềm trở thành một khối đặc thay vì một đám mờ.
 
-Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở đúng trang và bằng 1 ở giữa hai trang, nên trang đứng yên được vẽ nguyên vẹn. Các trang chữ là view React Native thông thường và trượt; chỉ vùng media được vẽ bằng Skia.
+Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở đúng trang và bằng 1 ở giữa hai trang, nên trang đứng yên được vẽ nguyên vẹn.
+
+Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn góc và ăn vào mép khung chữ nhật trong lúc chuyển. `liquid={{ preserveShape: true }}` giữ nguyên khung: blur chỉ nằm trong vùng ảnh và lặp lại điểm ảnh ở mép, không có bước cắt alpha, nên góc vẫn vuông và chỉ phần nội dung tan vào nhau. Các trang chữ là view React Native thông thường và trượt; chỉ vùng media được vẽ bằng Skia.
 
 ## Accessibility
 

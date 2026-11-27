@@ -20,6 +20,7 @@ First public release.
 - Page effects for whole pages or cards (`pageEffect`): `slide`, `parallax`, `stack`, `coverflow`, `cube`, `flip`, `fade`, `scale-fade`, `rotate`, `tinder`, with option factories in `pageEffects`, and custom worklets (`PageEffectFn`). `pageSize`, `pageGap` and `pageAlign` show the neighbors. `getImage` is optional, so the carousel also works as a plain card carousel.
 - `renderItem` receives the page's `offset` as a shared value, to animate content inside a page.
 - `snapMode`: `page`, `momentum` (a fling glides over several pages), `free` (no snapping). `animation`: spring or timing.
+- `liquid.preserveShape`: keep the image rectangle sharp during the morph (no rounded, eaten-in corners); only the content melts. For photos.
 - `tapToNavigate`: tap to change page (`sides` like stories or `forward`, `backZone`, `area: 'media'`); a tap on a peeking neighbor goes to it.
 - `onScrollStart`, `onScrollEnd(index)`, `configureGesture(pan)`, and `next` / `prev` with `count`.
 - Slots through `components`: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground`.

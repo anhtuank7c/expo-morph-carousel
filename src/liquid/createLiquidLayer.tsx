@@ -59,6 +59,8 @@ export type LiquidLayerProps = {
   blur: number;
   threshold: number;
   sharpness: number;
+  /** Keep the image rectangle sharp: blur the content inside it, no alpha threshold. */
+  preserveShape: boolean;
   /** Disk cache options for remote images, or null to load them directly. */
   cache: ResolvedCacheOptions | null;
   pixelRatio: number;
@@ -222,13 +224,32 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     blur,
     threshold,
     sharpness,
+    preserveShape,
     cache,
     pixelRatio,
   }: LiquidLayerProps) {
+    // The canvas fills the media area and reports its size on the UI thread,
+    // in the same frame as the layout. Drawing from React state instead lags
+    // a render behind, which after a rotation shows one frame drawn at the
+    // old width.
+    const canvasSize = useSharedValue({ width, height });
+    const rectWidth = useDerivedValue(() => Math.max(canvasSize.value.width - padding * 2, 0));
+    const rectHeight = useDerivedValue(() => Math.max(canvasSize.value.height - padding * 2, 0));
+
     const layer = useDerivedValue(() => {
       const t = transitionPeak(position.value);
       const paint = SkiaApi.Paint();
       if (t < 0.002) return paint;
+      const sigma = blur * t;
+      if (preserveShape) {
+        // Photos keep their rectangle: the blur stays inside the image area
+        // and repeats the edge pixels (Clamp) instead of mixing in the
+        // transparent outside, so edges stay opaque and corners square. No
+        // alpha threshold, which is what rounds the corners off.
+        const crop = SkiaApi.XYWHRect(padding, padding, rectWidth.value, rectHeight.value);
+        paint.setImageFilter(SkiaApi.ImageFilter.MakeBlur(sigma, sigma, TileMode.Clamp, null, crop));
+        return paint;
+      }
       // alpha' = a·alpha + b. At t = 1 the line crosses 0.5 at `threshold`
       // with slope `sharpness`; at t = 0 it is the identity.
       const a = IDENTITY_ALPHA.a + (sharpness - 1) * t;
@@ -240,21 +261,12 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
         0, 0, 1, 0, 0,
         0, 0, 0, a, b,
       ];
-      const sigma = blur * t;
       const blurred = SkiaApi.ImageFilter.MakeBlur(sigma, sigma, TileMode.Decal, null);
       paint.setImageFilter(
         SkiaApi.ImageFilter.MakeColorFilter(SkiaApi.ColorFilter.MakeMatrix(matrix), blurred),
       );
       return paint;
     });
-
-    // The canvas fills the media area and reports its size on the UI thread,
-    // in the same frame as the layout. Drawing from React state instead lags
-    // a render behind, which after a rotation shows one frame drawn at the
-    // old width.
-    const canvasSize = useSharedValue({ width, height });
-    const rectWidth = useDerivedValue(() => Math.max(canvasSize.value.width - padding * 2, 0));
-    const rectHeight = useDerivedValue(() => Math.max(canvasSize.value.height - padding * 2, 0));
 
     if (width <= 0 || height <= 0) return null;
     const rect: Rect = { x: padding, y: padding, width: rectWidth, height: rectHeight };

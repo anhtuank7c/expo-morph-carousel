@@ -114,7 +114,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `configureGesture(pan)` | | Adjust the pan gesture (thresholds, simultaneous gestures) and return it. Memoize it |
 | `keyExtractor(item, index)` | index | Stable key for each item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` or a worklet function (see below) |
-| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24 }`. Larger `blur` gives a rounder blob; lower `threshold` keeps more of the halo |
+| `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false }`. Larger `blur` gives a rounder blob; lower `threshold` keeps more of the halo. `preserveShape` keeps the image rectangle sharp (no rounded corners) while only its content melts, for photos |
 | `mediaPosition` | `'top'` | `'top'` or `'background'` |
 | `mediaHeight` | `280` | Height of the media area when it is at the top |
 | `mediaFit` | `'contain'` | `'contain'` or `'cover'` |
@@ -461,7 +461,9 @@ All images near the current page are stacked in one Skia layer and cross-fade by
 1. A blur whose radius peaks halfway between two pages. Both images melt into one soft shape.
 2. An alpha threshold, a color matrix on the alpha channel, that cuts the blurred edge back to a sharp outline. The soft shape reads as a solid blob instead of a haze.
 
-Both filters scale with a triangle curve that is 0 on a page and 1 halfway between two pages, so a page at rest is drawn untouched. The text pages are ordinary React Native views that slide; only the media area is drawn by Skia.
+Both filters scale with a triangle curve that is 0 on a page and 1 halfway between two pages, so a page at rest is drawn untouched.
+
+With photos (`mediaFit="cover"`) the threshold also rounds off the rectangle's corners and eats into its edges during the transition. `liquid={{ preserveShape: true }}` keeps the rectangle instead: the blur stays inside the image area and repeats its edge pixels, there is no threshold, so the corners stay square and only the content melts. The text pages are ordinary React Native views that slide; only the media area is drawn by Skia.
 
 ## Accessibility
 

@@ -69,6 +69,14 @@ export type LiquidOptions = {
   threshold?: number;
   /** How sharp the cut edge is. Default 24. */
   sharpness?: number;
+  /**
+   * Keep the image's own outline during the morph: only the content inside
+   * the image area melts, edges and corners stay sharp. Use it for photos
+   * (`mediaFit="cover"`), whose rectangle would otherwise be rounded off and
+   * eaten into while the effect runs. `threshold` and `sharpness` do not
+   * apply. Default false.
+   */
+  preserveShape?: boolean;
 };
 
 export type AutoplayOptions = {
