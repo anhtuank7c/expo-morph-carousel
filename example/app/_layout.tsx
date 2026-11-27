@@ -14,6 +14,8 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="playground" options={{ title: 'Playground' }} />
           <Stack.Screen name="remote" options={{ title: 'Remote images' }} />
+          <Stack.Screen name="layouts" options={{ title: 'Layouts' }} />
+          <Stack.Screen name="slots" options={{ title: 'Slots' }} />
         </Stack>
       </GestureHandlerRootView>
     </SafeAreaProvider>

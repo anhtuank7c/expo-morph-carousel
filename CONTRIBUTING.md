@@ -34,7 +34,8 @@ Code map:
 | `src/math.ts` | Pure paging math (snap target, rubber band, ring distance, render window). Unit tested |
 | `src/effects.ts` | View-based presets |
 | `src/liquid/` | Skia liquid layer; `index.ts` loads Skia on native, `index.web.ts` loads CanvasKit first |
-| `src/Pagination.tsx` | Dots |
+| `src/pageEffects.ts` | Page effect presets (worklets) and their option factories |
+| `src/Pagination.tsx` | Dots, with the `Dot` slot |
 | `src/cache/policy.ts` | Pure cache rules: freshness, `Cache-Control` parsing, eviction. Unit tested |
 | `src/cache/ImageCache.ts` | Cache engine with injected storage and fetch. Unit tested with fakes |
 | `src/cache/store.ts`, `store.web.ts` | expo-file-system store (native), Cache Storage store (web) |

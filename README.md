@@ -15,6 +15,8 @@ A carousel for Expo in which the images melt into each other like liquid while t
 - **Pager behavior you would expect.** Snap to page, one page per swipe, fling, rubber band at the ends, `loop` in both directions, horizontal or `vertical`, right-to-left layouts.
 - **Autoplay** that pauses while the carousel is touched and while a screen reader is on.
 - **Control from code.** `ref.scrollTo(index)`, `next()`, `prev()`, `onIndexChange`, a shared value that mirrors the position for your own animations, and a footer render prop with the current item.
+- **Page layouts** for whole cards: `parallax`, `stack`, `coverflow`, `cube`, `flip`, `fade`, `scale-fade`, `rotate`, `tinder`, or your own worklet; pages narrower than the carousel to show the neighbors; `page`, `momentum` or `free` snapping; spring or timing.
+- **Slots** like expo-morph-menu: replace the pagination, each dot, or draw over and behind the media with your own components.
 - **Morphing pagination dots** that follow the finger and can be tapped.
 - **Images.** Local `require()` or remote `{ uri }`, `contain` or `cover`, a placeholder color per item, neighbors kept loaded so a swipe rarely waits.
 - **Responsive images.** Give a list of sizes (`srcset`) or build CDN URLs from the measured size; the carousel picks the right one for the area and pixel ratio, and after a rotation cross-fades to a sharper one without a flash.
@@ -99,8 +101,16 @@ The liquid effect works best with images on a transparent background, such as pr
 | Prop | Default | Description |
 | --- | --- | --- |
 | `data` | required | Items |
-| `getImage(item, index, target)` | required | Image for the media area: `require(...)`, `{ uri }`, a list of `{ uri, width, height }` variants, or a URL built from `target` (see [Responsive images](#responsive-images-srcset)) |
-| `renderItem({ item, index })` | | Page content that slides with the gesture |
+| `getImage(item, index, target)` | | Image for the media area (no media area without it): `require(...)`, `{ uri }`, a list of `{ uri, width, height }` variants, or a URL built from `target` (see [Responsive images](#responsive-images-srcset)) |
+| `renderItem({ item, index, offset })` | | Page content or a whole card. `offset` is this page's distance from the current position (shared value) |
+| `pageEffect` | `'slide'` | How whole pages move: `'slide'`, `'parallax'`, `'stack'`, `'coverflow'`, `'cube'`, `'flip'`, `'fade'`, `'scale-fade'`, `'rotate'`, `'tinder'`, `pageEffects.<name>(options)` or a worklet (see [Page layouts](#page-layouts)) |
+| `pageSize` | page area | Size of a page along the scroll axis; smaller shows the neighbors |
+| `pageGap` | `0` | Space between pages |
+| `pageAlign` | `'center'` | `'center'` or `'start'` |
+| `snapMode` | `'page'` | `'page'`, `'momentum'` or `'free'` |
+| `animation` | spring | `{ type: 'spring', damping, stiffness, mass }` or `{ type: 'timing', duration }` |
+| `components` | | Slots: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (see [Slots](#slots)) |
+| `configureGesture(pan)` | | Adjust the pan gesture (thresholds, simultaneous gestures) and return it. Memoize it |
 | `keyExtractor(item, index)` | index | Stable key for each item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` or a worklet function (see below) |
 | `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24 }`. Larger `blur` gives a rounder blob; lower `threshold` keeps more of the halo |
@@ -116,16 +126,122 @@ The liquid effect works best with images on a transparent background, such as pr
 | `autoplay` | `false` | `true` or `{ interval = 4000, reverse = false, whenScreenReaderEnabled = false }` |
 | `windowSize` | `2` | Pages rendered and images kept loaded on each side of the current page |
 | `prefetch` | `1` | Pages beyond the window on each side whose images are downloaded ahead, at low priority |
-| `spring` | | `{ damping, stiffness, mass }` for the snap animation |
 | `gestureEnabled` | `true` | Allow swiping. `ref` navigation works either way |
 | `pagination` | `true` | `false`, or options: `activeColor`, `inactiveColor`, `size`, `activeWidth`, `gap`, `pressable`, `style` |
 | `renderFooter(api)` | | Content under the dots. Gets `item`, `index`, `count`, `position`, `scrollTo`, `next`, `prev` |
 | `onIndexChange(index)` | | Called when the nearest page changes, also during a drag |
+| `onScrollStart()` | | A swipe, a programmatic move or an autoplay step started |
+| `onScrollEnd(index)` | | The carousel came to rest on `index` |
 | `positionValue` | | A `SharedValue<number>` that mirrors the position in pages |
 | `accessibilityLabel` | `'Carousel'` | Screen reader label of the carousel |
 | `getAccessibilityLabel(item, index)` | key | Screen reader text for the current item |
-| `ref` | | `{ scrollTo(index, { animated }), next(), prev(), getIndex() }` |
+| `ref` | | `{ scrollTo(index, { animated }), next({ count, animated }), prev({ count, animated }), getIndex() }` |
 | `style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |
+
+## Page layouts
+
+Without `getImage` the carousel is a plain card carousel: `renderItem` is the whole card and `pageEffect` decides how cards move. With `getImage` the page effect moves the content under the media area.
+
+```tsx
+import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
+
+<MorphCarousel
+  data={cards}
+  renderItem={({ item }) => <Card item={item} />}
+  pageEffect="coverflow" // or pageEffects.coverflow({ angle: 60, spacing: 0.5 })
+  pageSize={280} // narrower than the carousel: the neighbors show at the sides
+  pageGap={12}
+  style={{ height: 380 }}
+/>
+```
+
+| Effect | Look | Options |
+| --- | --- | --- |
+| `slide` | Pages side by side | |
+| `parallax` | Current page full size, neighbors smaller and closer. Use with `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
+| `stack` | A deck: next cards wait behind, the current one slides off | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
+| `coverflow` | Neighbors turned away in 3D, overlapping | `angle` 48, `scale` 0.82, `spacing` 0.62 |
+| `cube` | Faces of a cube turning around their edge | |
+| `flip` | The card turns over in place; the next card is its back | |
+| `fade` | Cross-fade in place | |
+| `scale-fade` | Outgoing shrinks and fades, incoming settles from slightly larger | `scale` 0.86 |
+| `rotate` | Pages swing on an arc | `angle` 14, `drop` 24 |
+| `tinder` | Pile of cards; the top one is thrown off with a tilt | `visible` 2, `angle` 18 |
+
+All effects work horizontally and vertically and mirror in right-to-left layouts. With Reduce Motion on, named effects fall back to `slide`.
+
+A custom effect is a worklet from the page's offset to a style. It gets `offset` (0 in view, 1 next, -1 previous, fractions while moving), `step` (distance between pages), the page and viewport sizes, `direction` and `rtl`, and returns `opacity`, `zIndex`, `transform` and `transformOrigin`. It must include the translation:
+
+```tsx
+const door: PageEffectFn = ({ offset, step }) => {
+  'worklet';
+  const o = Math.max(-1, Math.min(1, offset));
+  return {
+    zIndex: Math.round(100 - Math.abs(offset) * 10),
+    transformOrigin: o > 0 ? 'left center' : 'right center',
+    transform: [{ perspective: 800 }, { translateX: offset * step }, { rotateY: `${o * -60}deg` }],
+  };
+};
+```
+
+`renderItem` also gets `offset` as a shared value, to animate a card's content separately from the card:
+
+```tsx
+renderItem={({ item, offset }) => <Card item={item} offset={offset} />}
+
+// inside Card
+const title = useAnimatedStyle(() => ({
+  transform: [{ translateX: interpolate(offset.value, [-1, 0, 1], [-60, 0, 60]) }],
+}));
+```
+
+## Snapping and animation
+
+| `snapMode` | Behavior |
+| --- | --- |
+| `page` (default) | One page per swipe; a fling moves to the next page |
+| `momentum` | A hard fling glides over several pages, then snaps to the nearest |
+| `free` | Glides and stops anywhere, like a scroll view |
+
+`animation` sets how the carousel settles, after a swipe and for `scrollTo`, `next`, dots and autoplay: a spring that carries the finger's velocity (default `{ damping: 26, stiffness: 220 }`) or `{ type: 'timing', duration }`.
+
+`onScrollStart` fires when a swipe, a command or an autoplay step starts, `onScrollEnd(index)` when the carousel comes to rest. `configureGesture` receives the pan gesture to adjust it, for example to run together with a parent gesture:
+
+```tsx
+const configureGesture = useCallback((pan) => pan.simultaneousWithExternalGesture(parentPan), [parentPan]);
+```
+
+## Slots
+
+Like expo-morph-menu, the visible parts can be replaced with your own components through `components`. Each slot gets the carousel's `position` as a shared value, so it can animate with the finger on the UI thread.
+
+| Slot | Props | Default |
+| --- | --- | --- |
+| `Pagination` | `count`, `index`, `position`, `loop`, `direction`, `scrollTo(i)` | Morphing dots. `null` hides the pagination |
+| `Dot` | `index`, `count`, `active` (shared value 0–1), `direction`, `onPress` | Pill dot. Used by the built-in pagination |
+| `MediaOverlay` | `item`, `index`, `count`, `position`, `width`, `height` | Nothing. Drawn over the media, not touchable |
+| `MediaBackground` | same | Nothing. Drawn behind the media |
+
+```tsx
+function StoryPagination({ count, position, scrollTo }: PaginationSlotProps) {
+  // one bar per page that fills as you swipe (see example/app/slots.tsx)
+}
+
+function NumberDot({ index, active, onPress }: DotSlotProps) {
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: 0.8 + active.value * 0.35 }] }));
+  return (
+    <Pressable onPress={onPress}>
+      <Animated.View style={[styles.dot, style]}>
+        <Text>{index + 1}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+<MorphCarousel components={{ Pagination: StoryPagination, MediaOverlay: Caption, MediaBackground: Tint }} … />
+```
+
+`renderItem` and `renderFooter` are slots too: the page content and whatever sits under the pagination.
 
 ## Responsive images (srcset)
 
@@ -283,9 +399,9 @@ const background = useAnimatedStyle(() => ({
 
 `next()` on the last page goes back to the first when `loop` is off, which is what "Next" buttons and autoplay usually want. With `loop`, `scrollTo(0)` from the last page moves forward one page instead of rewinding through all of them.
 
-## Custom effects
+## Custom media effects
 
-An effect gets the signed distance of an image's page from the current position (`offset`: 0 in view, -1 one page back, 0.5 halfway to the next) and returns opacity and transforms. It runs on the UI thread, so it must be a worklet:
+A media effect gets the signed distance of an image's page from the current position (`offset`: 0 in view, -1 one page back, 0.5 halfway to the next) and returns opacity and transforms. It runs on the UI thread, so it must be a worklet:
 
 ```tsx
 import type { MediaEffectFn } from 'expo-morph-carousel';
@@ -352,7 +468,7 @@ Both filters scale with a triangle curve that is 0 on a page and 1 halfway betwe
 
 | Platform | Verified with |
 | --- | --- |
-| Android | Android 17 emulator (API 37), Expo Go: every effect, loop, vertical, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
+| Android | Android 17 emulator (API 37), Expo Go: every media effect and page effect, slots, loop, vertical, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
 | Web | Desktop Chrome: liquid effect with CanvasKit, keyboard navigation, remote images, the Cache Storage cache across page reloads |
 | iOS | Not verified yet |
 
@@ -368,7 +484,7 @@ npm test                 # paging math unit tests only
 npm run build            # compile to lib/
 ```
 
-The example app (`example/`) imports the package from `src/` and has four screens: a product showcase, a full-screen onboarding, a playground for every option and a remote image gallery. Its shapes are generated with `npm run make-assets --workspace example` (needs ffmpeg).
+The example app (`example/`) imports the package from `src/` and has six screens: a product showcase, a full-screen onboarding, page layouts, slots, a playground for the media effects and a remote image gallery with the cache panel. Its shapes are generated with `npm run make-assets --workspace example` (needs ffmpeg).
 
 `npm install` also sets up a pre-commit hook that runs ESLint and Prettier on staged files and the typecheck.
 

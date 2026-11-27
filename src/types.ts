@@ -1,9 +1,14 @@
-import type { ReactNode, Ref } from 'react';
+import type { ComponentType, ReactNode, Ref } from 'react';
+import type { Gesture } from 'react-native-gesture-handler';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 import type { ImageCacheOptions } from './cache/ImageCache';
+import type { PageEffect } from './pageEffects';
 import type { ImageTarget } from './responsive';
+
+/** The pan gesture the carousel builds with `Gesture.Pan()`. */
+export type CarouselPanGesture = ReturnType<typeof Gesture.Pan>;
 
 /**
  * Style a media effect returns for one image. Only properties that are cheap to
@@ -84,9 +89,79 @@ export type SpringOptions = {
   mass?: number;
 };
 
+/**
+ * How the carousel moves to a page after a swipe, a dot tap, `next()` or
+ * autoplay. A spring carries the finger's velocity; timing gives a fixed
+ * duration.
+ */
+export type AnimationConfig =
+  ({ type?: 'spring' } & SpringOptions) | { type: 'timing'; /** Default 380 ms. */ duration?: number };
+
+/**
+ * - `page` (default): one page per swipe, like a native pager.
+ * - `momentum`: a hard fling glides over several pages, then snaps to the nearest.
+ * - `free`: glides and stops anywhere, like a scroll view.
+ */
+export type SnapMode = 'page' | 'momentum' | 'free';
+
 export type RenderItemInfo<T> = {
   item: T;
   index: number;
+  /**
+   * This page's signed distance from the current position, on the UI thread:
+   * 0 in view, 1 next, -1 previous. Animate the page's content independently,
+   * for example a title that slides slower than its card.
+   */
+  offset: SharedValue<number>;
+};
+
+/** Props of a `components.Pagination` slot. */
+export type PaginationSlotProps = {
+  count: number;
+  /** Index of the page in view. */
+  index: number;
+  /** Continuous position in pages, on the UI thread. */
+  position: SharedValue<number>;
+  loop: boolean;
+  direction: CarouselDirection;
+  scrollTo: (index: number) => void;
+};
+
+/** Props of a `components.Dot` slot, rendered once per page by the built-in pagination. */
+export type DotSlotProps = {
+  index: number;
+  count: number;
+  /** 1 when this dot's page is in view, 0 when a page or more away, in between while swiping. UI thread. */
+  active: SharedValue<number>;
+  direction: CarouselDirection;
+  /** Present when dots are pressable. */
+  onPress?: () => void;
+};
+
+/** Props of the `components.MediaOverlay` and `components.MediaBackground` slots. */
+export type MediaSlotProps<T> = {
+  item: T | undefined;
+  index: number;
+  count: number;
+  /** Continuous position in pages, on the UI thread. */
+  position: SharedValue<number>;
+  width: number;
+  height: number;
+};
+
+/**
+ * Replaceable parts, like the slots of expo-morph-menu. Every slot is optional;
+ * the built-in part is used when it is missing.
+ */
+export type CarouselComponents<T> = {
+  /** Whole page indicator. `null` hides it. */
+  Pagination?: ComponentType<PaginationSlotProps> | null;
+  /** One dot of the built-in pagination. */
+  Dot?: ComponentType<DotSlotProps>;
+  /** Drawn over the media area, for example a gradient, a caption or a badge. Not touchable. */
+  MediaOverlay?: ComponentType<MediaSlotProps<T>>;
+  /** Drawn behind the media, for example a color that follows the swipe. */
+  MediaBackground?: ComponentType<MediaSlotProps<T>>;
 };
 
 export type CarouselApi = {
@@ -120,8 +195,10 @@ export type PaginationOptions = {
 
 export type MorphCarouselRef = {
   scrollTo: (index: number, options?: { animated?: boolean }) => void;
-  next: (options?: { animated?: boolean }) => void;
-  prev: (options?: { animated?: boolean }) => void;
+  /** Move `count` pages forward (default 1). */
+  next: (options?: { animated?: boolean; count?: number }) => void;
+  /** Move `count` pages back (default 1). */
+  prev: (options?: { animated?: boolean; count?: number }) => void;
   getIndex: () => number;
 };
 
@@ -139,9 +216,32 @@ export type MorphCarouselProps<T> = {
    * After a rotation to a larger area a sharper variant is loaded and
    * cross-faded in; after a rotation to a smaller one the current image stays.
    */
-  getImage: (item: T, index: number, target: ImageTarget) => ImageSourcePropType;
-  /** Page content that slides with the gesture: title, description, anything. */
+  getImage?: (item: T, index: number, target: ImageTarget) => ImageSourcePropType;
+  /**
+   * Page content: a card, a title and description, anything. Without
+   * `getImage` there is no media area and the pages are the whole carousel.
+   */
   renderItem?: (info: RenderItemInfo<T>) => ReactNode;
+
+  /** How whole pages move between positions. Default `'slide'`. See `pageEffects` for options. */
+  pageEffect?: PageEffect;
+  /**
+   * Size of one page along the scroll axis. Smaller than the carousel shows
+   * the neighbors at the sides (with `parallax` or `coverflow`, for example).
+   * Default: the whole page area.
+   */
+  pageSize?: number;
+  /** Space between pages along the scroll axis. Default 0. */
+  pageGap?: number;
+  /** Where the current page sits when `pageSize` is smaller than the carousel. Default `center`. */
+  pageAlign?: 'center' | 'start';
+  snapMode?: SnapMode;
+  /** Animation used to settle on a page. Default: a spring. */
+  animation?: AnimationConfig;
+  /** Customize the pan gesture: thresholds, `simultaneousWithExternalGesture`, extra callbacks. Return the gesture. */
+  configureGesture?: (gesture: CarouselPanGesture) => CarouselPanGesture;
+  /** Replaceable parts: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground`. */
+  components?: CarouselComponents<T>;
   keyExtractor?: (item: T, index: number) => string;
 
   /** How the images change between pages. Default `'liquid'`. */
@@ -185,8 +285,7 @@ export type MorphCarouselProps<T> = {
    * priority, its neighbors at normal, the rest at low.
    */
   prefetch?: number;
-  /** Spring used when a page snaps into place. */
-  spring?: SpringOptions;
+
   /** Allow swiping. Default true. Programmatic navigation still works when false. */
   gestureEnabled?: boolean;
 
@@ -195,7 +294,12 @@ export type MorphCarouselProps<T> = {
   /** Content under the pagination, such as a button. Gets the current item and navigation helpers. */
   renderFooter?: (info: RenderFooterInfo<T>) => ReactNode;
 
+  /** The nearest page changed, also during a drag. */
   onIndexChange?: (index: number) => void;
+  /** A swipe, a programmatic move or an autoplay step started. */
+  onScrollStart?: () => void;
+  /** The carousel came to rest; `index` is the page in view. */
+  onScrollEnd?: (index: number) => void;
   /** Shared value that mirrors the position, to drive other animations from the carousel. */
   positionValue?: SharedValue<number>;
 

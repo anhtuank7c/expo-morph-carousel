@@ -1,8 +1,14 @@
+import type { ComponentType } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { interpolateColor, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useDerivedValue,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 import { clamp, ringOffset } from './math';
-import type { CarouselDirection, PaginationOptions } from './types';
+import type { CarouselDirection, DotSlotProps, PaginationOptions } from './types';
 
 export type PaginationProps = PaginationOptions & {
   count: number;
@@ -11,6 +17,8 @@ export type PaginationProps = PaginationOptions & {
   loop?: boolean;
   direction?: CarouselDirection;
   onPress?: (index: number) => void;
+  /** Replace the look of each dot; the pagination still lays them out and computes `active`. */
+  Dot?: ComponentType<DotSlotProps>;
 };
 
 /**
@@ -18,7 +26,8 @@ export type PaginationProps = PaginationOptions & {
  * pill, and while a page is dragged the width and color flow from one dot to
  * the next instead of jumping when the index changes.
  *
- * Exported so it can be placed anywhere, for example in a custom footer.
+ * Exported so it can be placed anywhere, for example in a custom footer, and
+ * each dot can be replaced with `Dot`.
  */
 export function Pagination({
   count,
@@ -26,6 +35,7 @@ export function Pagination({
   loop = false,
   direction = 'horizontal',
   onPress,
+  Dot,
   activeColor = '#1c1c1e',
   inactiveColor = '#c7c7cc',
   size = 8,
@@ -43,13 +53,14 @@ export function Pagination({
       importantForAccessibility="no-hide-descendants"
     >
       {Array.from({ length: count }, (_, i) => (
-        <Dot
+        <DotHost
           key={i}
           index={i}
           count={count}
           position={position}
           loop={loop}
-          vertical={vertical}
+          direction={direction}
+          Dot={Dot}
           size={size}
           activeWidth={activeWidth}
           activeColor={activeColor}
@@ -61,34 +72,66 @@ export function Pagination({
   );
 }
 
-function Dot({
+/** Computes how active one dot is and renders the slot or the built-in pill. */
+function DotHost({
   index,
   count,
   position,
   loop,
-  vertical,
-  size,
-  activeWidth,
-  activeColor,
-  inactiveColor,
+  direction,
+  Dot,
   onPress,
+  ...look
 }: {
   index: number;
   count: number;
   position: SharedValue<number>;
   loop: boolean;
+  direction: CarouselDirection;
+  Dot?: ComponentType<DotSlotProps>;
+  onPress?: () => void;
+  size: number;
+  activeWidth: number;
+  activeColor: string;
+  inactiveColor: string;
+}) {
+  const active = useDerivedValue(() => {
+    const distance = loop
+      ? Math.abs(ringOffset(index, position.value, count))
+      : Math.abs(index - position.value);
+    return 1 - clamp(distance, 0, 1);
+  });
+  const dot = Dot ? (
+    <Dot index={index} count={count} active={active} direction={direction} onPress={onPress} />
+  ) : (
+    <PillDot active={active} vertical={direction === 'vertical'} {...look} />
+  );
+  // A custom dot gets `onPress` and decides how to be pressable itself.
+  if (Dot || !onPress) return dot;
+  return (
+    <Pressable onPress={onPress} hitSlop={look.size} accessible={false}>
+      {dot}
+    </Pressable>
+  );
+}
+
+function PillDot({
+  active,
+  vertical,
+  size,
+  activeWidth,
+  activeColor,
+  inactiveColor,
+}: {
+  active: SharedValue<number>;
   vertical: boolean;
   size: number;
   activeWidth: number;
   activeColor: string;
   inactiveColor: string;
-  onPress?: () => void;
 }) {
   const animated = useAnimatedStyle(() => {
-    const distance = loop
-      ? Math.abs(ringOffset(index, position.value, count))
-      : Math.abs(index - position.value);
-    const t = 1 - clamp(distance, 0, 1);
+    const t = active.value;
     const length = size + (activeWidth - size) * t;
     return {
       width: vertical ? size : length,
@@ -96,14 +139,7 @@ function Dot({
       backgroundColor: interpolateColor(t, [0, 1], [inactiveColor, activeColor]),
     };
   });
-
-  const dot = <Animated.View style={[{ borderRadius: size / 2 }, animated]} />;
-  if (!onPress) return dot;
-  return (
-    <Pressable onPress={onPress} hitSlop={size} accessible={false}>
-      {dot}
-    </Pressable>
-  );
+  return <Animated.View style={[{ borderRadius: size / 2 }, animated]} />;
 }
 
 const styles = StyleSheet.create({

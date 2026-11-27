@@ -16,7 +16,12 @@ First public release.
 - Paging: snap, one page per swipe, fling, rubber band, `loop` in both directions, `direction="vertical"`, right-to-left layouts.
 - `autoplay` that pauses on touch and while a screen reader is on.
 - `ref` API (`scrollTo`, `next`, `prev`, `getIndex`), `onIndexChange`, `positionValue`, `renderFooter`.
-- `Pagination` with dots that stretch into a pill and follow the gesture; usable on its own.
+- `Pagination` with dots that stretch into a pill and follow the gesture; usable on its own, each dot replaceable.
+- Page effects for whole pages or cards (`pageEffect`): `slide`, `parallax`, `stack`, `coverflow`, `cube`, `flip`, `fade`, `scale-fade`, `rotate`, `tinder`, with option factories in `pageEffects`, and custom worklets (`PageEffectFn`). `pageSize`, `pageGap` and `pageAlign` show the neighbors. `getImage` is optional, so the carousel also works as a plain card carousel.
+- `renderItem` receives the page's `offset` as a shared value, to animate content inside a page.
+- `snapMode`: `page`, `momentum` (a fling glides over several pages), `free` (no snapping). `animation`: spring or timing.
+- `onScrollStart`, `onScrollEnd(index)`, `configureGesture(pan)`, and `next` / `prev` with `count`.
+- Slots through `components`: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground`.
 - Images from `require()` or `{ uri }`, `contain` or `cover`, placeholder colors, `windowSize` to keep neighbors loaded.
 - Disk cache for remote images with expiry (`imageCache` prop, on by default): `stale-while-revalidate`, `cache-first` or `network-first`; lifetime from `maxAge` or `Cache-Control` / `Expires`; conditional revalidation with `ETag` / `Last-Modified`; `maxStale`, `headers`, `getCacheKey` for signed URLs; LRU size and count limits. Stored with expo-file-system on native (optional) and Cache Storage on web. Decoded Skia images are kept in a small in-memory LRU.
 - Responsive images: `getImage` may return a list of `{ uri, width, height }` variants (`srcset`) or build a URL from its third argument `target` (physical pixels, rounded to `WIDTH_STEPS`). The carousel picks by measured area, pixel ratio and fit, prefers a cached variant, never downgrades a mounted image, and cross-fades to a sharper variant after a rotation or resize. Images are redrawn at the new size in the layout frame (Skia `onSize`), so a rotation shows no stale or empty frame.

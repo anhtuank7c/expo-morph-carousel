@@ -15,6 +15,8 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
 - **Hành vi pager quen thuộc.** Snap theo trang, mỗi lần vuốt một trang, vuốt nhanh (fling), co giãn ở hai đầu, `loop` theo cả hai chiều, trượt ngang hoặc `vertical`, hỗ trợ bố cục phải sang trái.
 - **Autoplay** tạm dừng khi người dùng chạm vào carousel và khi trình đọc màn hình đang bật.
 - **Điều khiển từ code.** `ref.scrollTo(index)`, `next()`, `prev()`, `onIndexChange`, một shared value phản chiếu vị trí để dùng cho animation khác, và render prop cho footer kèm item hiện tại.
+- **Bố cục trang** cho cả tấm thẻ: `parallax`, `stack`, `coverflow`, `cube`, `flip`, `fade`, `scale-fade`, `rotate`, `tinder`, hoặc worklet tự viết; trang hẹp hơn carousel để lộ trang kế bên; snap `page`, `momentum` hoặc `free`; spring hoặc timing.
+- **Slots** giống expo-morph-menu: thay pagination, từng chấm, hoặc vẽ phía trên và phía sau media bằng component của bạn.
 - **Chấm phân trang biến hình** chạy theo ngón tay và bấm được.
 - **Ảnh.** `require()` cục bộ hoặc `{ uri }` từ mạng, `contain` hoặc `cover`, màu placeholder cho từng item, ảnh lân cận được tải sẵn nên vuốt hiếm khi phải chờ.
 - **Ảnh responsive.** Khai báo danh sách kích thước (`srcset`) hoặc dựng URL CDN theo kích thước đo được; carousel chọn ảnh phù hợp với vùng hiển thị và mật độ điểm ảnh, và sau khi xoay màn hình thì crossfade sang ảnh nét hơn mà không chớp.
@@ -99,8 +101,16 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | Prop | Mặc định | Mô tả |
 | --- | --- | --- |
 | `data` | bắt buộc | Danh sách item |
-| `getImage(item, index, target)` | bắt buộc | Ảnh cho vùng media: `require(...)`, `{ uri }`, danh sách biến thể `{ uri, width, height }`, hoặc URL dựng từ `target` (xem [Ảnh responsive](#ảnh-responsive-srcset)) |
-| `renderItem({ item, index })` | | Nội dung trang, trượt theo cử chỉ |
+| `getImage(item, index, target)` | | Ảnh cho vùng media (không có thì không có vùng media): `require(...)`, `{ uri }`, danh sách biến thể `{ uri, width, height }`, hoặc URL dựng từ `target` (xem [Ảnh responsive](#ảnh-responsive-srcset)) |
+| `renderItem({ item, index, offset })` | | Nội dung trang hoặc cả một thẻ. `offset` là khoảng cách của trang tới vị trí hiện tại (shared value) |
+| `pageEffect` | `'slide'` | Cách cả trang chuyển động: `'slide'`, `'parallax'`, `'stack'`, `'coverflow'`, `'cube'`, `'flip'`, `'fade'`, `'scale-fade'`, `'rotate'`, `'tinder'`, `pageEffects.<tên>(tuỳ chọn)` hoặc một worklet (xem [Bố cục trang](#bố-cục-trang)) |
+| `pageSize` | vùng trang | Kích thước một trang theo trục cuộn; nhỏ hơn thì lộ các trang kế bên |
+| `pageGap` | `0` | Khoảng cách giữa các trang |
+| `pageAlign` | `'center'` | `'center'` hoặc `'start'` |
+| `snapMode` | `'page'` | `'page'`, `'momentum'` hoặc `'free'` |
+| `animation` | spring | `{ type: 'spring', damping, stiffness, mass }` hoặc `{ type: 'timing', duration }` |
+| `components` | | Slot: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (xem [Slots](#slots)) |
+| `configureGesture(pan)` | | Chỉnh pan gesture (ngưỡng, gesture chạy song song) rồi trả về. Nên memo |
 | `keyExtractor(item, index)` | index | Key ổn định cho từng item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` hoặc một worklet (xem bên dưới) |
 | `liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24 }`. `blur` lớn hơn cho khối tròn hơn; `threshold` thấp hơn giữ lại nhiều quầng mờ hơn |
@@ -116,16 +126,122 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `autoplay` | `false` | `true` hoặc `{ interval = 4000, reverse = false, whenScreenReaderEnabled = false }` |
 | `windowSize` | `2` | Số trang được render và số ảnh được giữ tải ở mỗi bên trang hiện tại |
 | `prefetch` | `1` | Số trang ngoài cửa sổ mỗi bên được tải ảnh trước, ở mức ưu tiên thấp |
-| `spring` | | `{ damping, stiffness, mass }` cho animation snap |
 | `gestureEnabled` | `true` | Cho phép vuốt. Điều hướng qua `ref` vẫn hoạt động khi tắt |
 | `pagination` | `true` | `false`, hoặc tuỳ chọn: `activeColor`, `inactiveColor`, `size`, `activeWidth`, `gap`, `pressable`, `style` |
 | `renderFooter(api)` | | Nội dung dưới chấm phân trang. Nhận `item`, `index`, `count`, `position`, `scrollTo`, `next`, `prev` |
 | `onIndexChange(index)` | | Gọi khi trang gần nhất thay đổi, kể cả trong lúc kéo |
+| `onScrollStart()` | | Một cú vuốt, lệnh điều hướng hoặc bước autoplay bắt đầu |
+| `onScrollEnd(index)` | | Carousel dừng lại ở trang `index` |
 | `positionValue` | | `SharedValue<number>` phản chiếu vị trí tính theo trang |
 | `accessibilityLabel` | `'Carousel'` | Nhãn của carousel cho trình đọc màn hình |
 | `getAccessibilityLabel(item, index)` | key | Văn bản đọc cho item hiện tại |
-| `ref` | | `{ scrollTo(index, { animated }), next(), prev(), getIndex() }` |
+| `ref` | | `{ scrollTo(index, { animated }), next({ count, animated }), prev({ count, animated }), getIndex() }` |
 | `style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |
+
+## Bố cục trang
+
+Không có `getImage` thì carousel là carousel thẻ thuần: `renderItem` là cả tấm thẻ và `pageEffect` quyết định thẻ chuyển động thế nào. Có `getImage` thì page effect áp cho phần nội dung bên dưới vùng media.
+
+```tsx
+import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
+
+<MorphCarousel
+  data={cards}
+  renderItem={({ item }) => <Card item={item} />}
+  pageEffect="coverflow" // hoặc pageEffects.coverflow({ angle: 60, spacing: 0.5 })
+  pageSize={280} // hẹp hơn carousel: lộ các trang kế bên hai bên
+  pageGap={12}
+  style={{ height: 380 }}
+/>
+```
+
+| Hiệu ứng | Trông thế nào | Tuỳ chọn |
+| --- | --- | --- |
+| `slide` | Các trang nằm cạnh nhau | |
+| `parallax` | Trang hiện tại đủ cỡ, trang kế bên nhỏ hơn và gần hơn. Dùng với `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
+| `stack` | Một chồng bài: thẻ sau nằm chờ phía sau, thẻ hiện tại trượt ra | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
+| `coverflow` | Trang kế bên xoay 3D và chồng lên nhau | `angle` 48, `scale` 0.82, `spacing` 0.62 |
+| `cube` | Các mặt của khối lập phương xoay quanh cạnh | |
+| `flip` | Thẻ lật tại chỗ; trang sau là mặt lưng | |
+| `fade` | Crossfade tại chỗ | |
+| `scale-fade` | Trang cũ co lại và mờ dần, trang mới từ lớn hơn một chút thu về | `scale` 0.86 |
+| `rotate` | Các trang đung đưa theo cung tròn | `angle` 14, `drop` 24 |
+| `tinder` | Một chồng thẻ; thẻ trên cùng bị ném ra kèm nghiêng | `visible` 2, `angle` 18 |
+
+Mọi hiệu ứng chạy được cả ngang lẫn dọc và tự lật chiều trong bố cục phải sang trái. Khi bật Reduce Motion, các hiệu ứng theo tên chuyển về `slide`.
+
+Hiệu ứng tự viết là một worklet nhận `offset` của trang (0 đang hiện, 1 trang sau, -1 trang trước, số lẻ khi đang chuyển), `step` (khoảng cách giữa hai trang), kích thước trang và viewport, `direction`, `rtl`, rồi trả về `opacity`, `zIndex`, `transform` và `transformOrigin`. Phải tự tính cả phần dịch chuyển:
+
+```tsx
+const door: PageEffectFn = ({ offset, step }) => {
+  'worklet';
+  const o = Math.max(-1, Math.min(1, offset));
+  return {
+    zIndex: Math.round(100 - Math.abs(offset) * 10),
+    transformOrigin: o > 0 ? 'left center' : 'right center',
+    transform: [{ perspective: 800 }, { translateX: offset * step }, { rotateY: `${o * -60}deg` }],
+  };
+};
+```
+
+`renderItem` cũng nhận `offset` dạng shared value, để animate nội dung bên trong thẻ tách biệt với thẻ:
+
+```tsx
+renderItem={({ item, offset }) => <Card item={item} offset={offset} />}
+
+// trong Card
+const title = useAnimatedStyle(() => ({
+  transform: [{ translateX: interpolate(offset.value, [-1, 0, 1], [-60, 0, 60]) }],
+}));
+```
+
+## Snap và animation
+
+| `snapMode` | Hành vi |
+| --- | --- |
+| `page` (mặc định) | Mỗi lần vuốt một trang; vuốt nhanh sang trang kế |
+| `momentum` | Vuốt mạnh lướt qua nhiều trang rồi snap vào trang gần nhất |
+| `free` | Lướt và dừng ở bất kỳ đâu, như scroll view |
+
+`animation` quyết định cách carousel dừng lại, sau cú vuốt và cho `scrollTo`, `next`, chấm phân trang, autoplay: spring giữ vận tốc ngón tay (mặc định `{ damping: 26, stiffness: 220 }`) hoặc `{ type: 'timing', duration }`.
+
+`onScrollStart` được gọi khi một cú vuốt, lệnh điều hướng hoặc bước autoplay bắt đầu, `onScrollEnd(index)` khi carousel dừng hẳn. `configureGesture` nhận pan gesture để chỉnh, ví dụ cho chạy song song với gesture của view cha:
+
+```tsx
+const configureGesture = useCallback((pan) => pan.simultaneousWithExternalGesture(parentPan), [parentPan]);
+```
+
+## Slots
+
+Giống expo-morph-menu, các phần hiển thị có thể thay bằng component của bạn qua `components`. Mỗi slot nhận `position` của carousel dạng shared value, nên animate theo ngón tay ngay trên UI thread.
+
+| Slot | Props | Mặc định |
+| --- | --- | --- |
+| `Pagination` | `count`, `index`, `position`, `loop`, `direction`, `scrollTo(i)` | Chấm biến hình. `null` để ẩn |
+| `Dot` | `index`, `count`, `active` (shared value 0–1), `direction`, `onPress` | Chấm dạng viên thuốc. Dùng trong pagination có sẵn |
+| `MediaOverlay` | `item`, `index`, `count`, `position`, `width`, `height` | Không có. Vẽ phía trên media, không nhận chạm |
+| `MediaBackground` | như trên | Không có. Vẽ phía sau media |
+
+```tsx
+function StoryPagination({ count, position, scrollTo }: PaginationSlotProps) {
+  // mỗi trang một thanh, tự lấp đầy khi vuốt (xem example/app/slots.tsx)
+}
+
+function NumberDot({ index, active, onPress }: DotSlotProps) {
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: 0.8 + active.value * 0.35 }] }));
+  return (
+    <Pressable onPress={onPress}>
+      <Animated.View style={[styles.dot, style]}>
+        <Text>{index + 1}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+<MorphCarousel components={{ Pagination: StoryPagination, MediaOverlay: Caption, MediaBackground: Tint }} … />
+```
+
+`renderItem` và `renderFooter` cũng là slot: nội dung trang và phần nằm dưới chấm phân trang.
 
 ## Ảnh responsive (srcset)
 
@@ -283,9 +399,9 @@ const background = useAnimatedStyle(() => ({
 
 Khi `loop` tắt, `next()` ở trang cuối quay về trang đầu, đúng như nút "Next" và autoplay thường cần. Khi `loop` bật, `scrollTo(0)` từ trang cuối tiến thêm một trang thay vì tua ngược qua tất cả các trang.
 
-## Hiệu ứng tự viết
+## Hiệu ứng media tự viết
 
-Một hiệu ứng nhận khoảng cách có dấu từ trang của ảnh tới vị trí hiện tại (`offset`: 0 là đang hiển thị, -1 là lùi một trang, 0.5 là nửa đường tới trang sau) và trả về opacity, transform. Nó chạy trên UI thread nên phải là worklet:
+Một hiệu ứng media nhận khoảng cách có dấu từ trang của ảnh tới vị trí hiện tại (`offset`: 0 là đang hiển thị, -1 là lùi một trang, 0.5 là nửa đường tới trang sau) và trả về opacity, transform. Nó chạy trên UI thread nên phải là worklet:
 
 ```tsx
 import type { MediaEffectFn } from 'expo-morph-carousel';
@@ -352,7 +468,7 @@ Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở �
 
 | Nền tảng | Đã kiểm tra bằng |
 | --- | --- |
-| Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng, loop, trượt dọc, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
+| Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng media và page effect, slots, loop, trượt dọc, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
 | Web | Chrome desktop: hiệu ứng liquid với CanvasKit, điều hướng bằng bàn phím, ảnh từ mạng, cache bằng Cache Storage qua các lần tải lại trang |
 | iOS | Chưa kiểm tra |
 
@@ -368,7 +484,7 @@ npm test                 # chỉ unit test cho phần toán phân trang
 npm run build            # biên dịch ra lib/
 ```
 
-App ví dụ (`example/`) import package từ `src/` và có bốn màn: trưng bày sản phẩm, onboarding toàn màn hình, playground cho mọi tuỳ chọn và thư viện ảnh từ mạng. Các hình trong ví dụ được tạo bằng `npm run make-assets --workspace example` (cần ffmpeg).
+App ví dụ (`example/`) import package từ `src/` và có sáu màn: trưng bày sản phẩm, onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media và thư viện ảnh từ mạng kèm bảng thông tin cache. Các hình trong ví dụ được tạo bằng `npm run make-assets --workspace example` (cần ffmpeg).
 
 `npm install` cũng cài một pre-commit hook chạy ESLint và Prettier trên các file đã stage và chạy typecheck.
 

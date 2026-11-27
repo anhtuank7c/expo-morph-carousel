@@ -18,7 +18,9 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
+  useDerivedValue,
   useSharedValue,
+  withDecay,
   withSpring,
   withTiming,
   type SharedValue,
@@ -36,13 +38,21 @@ import {
   type NormalizedSource,
 } from './responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from './useResponsiveImage';
-import { clamp, nearestVirtual, pageWindow, rubberBand, snapTarget, wrap } from './math';
+import { clamp, momentumTarget, nearestVirtual, pageWindow, rubberBand, snapTarget, wrap } from './math';
+import { resolvePageEffect, type PageEffectFn } from './pageEffects';
 import { Pagination } from './Pagination';
-import type { AutoplayOptions, CarouselDirection, MediaEffectFn, MorphCarouselProps } from './types';
+import type {
+  AutoplayOptions,
+  CarouselDirection,
+  MediaEffectFn,
+  MorphCarouselProps,
+  SpringOptions,
+} from './types';
 
 /** Duration of the cross-fade when an image is replaced by a sharper or newer one. */
 const SWAP_MS = 220;
 const DEFAULT_SPRING = { damping: 26, stiffness: 220, mass: 1 };
+const DEFAULT_TIMING_MS = 380;
 const DEFAULT_LIQUID = { blur: 28, threshold: 0.5, sharpness: 24 };
 const DEFAULT_AUTOPLAY: Required<AutoplayOptions> = {
   interval: 4000,
@@ -71,7 +81,16 @@ export function MorphCarousel<T>({
   initialIndex = 0,
   autoplay = false,
   windowSize = 2,
-  spring,
+  pageEffect = 'slide',
+  pageSize: pageSizeProp,
+  pageGap = 0,
+  pageAlign = 'center',
+  snapMode = 'page',
+  animation,
+  configureGesture,
+  components,
+  onScrollStart,
+  onScrollEnd,
   gestureEnabled = true,
   pagination = true,
   renderFooter,
@@ -90,7 +109,25 @@ export function MorphCarousel<T>({
   const vertical = direction === 'vertical';
   const rtl = !vertical && I18nManager.isRTL;
   const reduceMotion = useReducedMotion();
-  const springConfig = useMemo(() => ({ ...DEFAULT_SPRING, ...spring }), [spring]);
+  const motion = useMemo(() => {
+    if (animation?.type === 'timing') {
+      return { timing: true, duration: animation.duration ?? DEFAULT_TIMING_MS, spring: DEFAULT_SPRING };
+    }
+    const { damping, stiffness, mass } = (animation ?? {}) as SpringOptions;
+    return {
+      timing: false,
+      duration: 0,
+      spring: {
+        damping: damping ?? DEFAULT_SPRING.damping,
+        stiffness: stiffness ?? DEFAULT_SPRING.stiffness,
+        mass: mass ?? DEFAULT_SPRING.mass,
+      },
+    };
+  }, [animation]);
+  const pageEffectFn = useMemo(
+    () => resolvePageEffect(reduceMotion && typeof pageEffect === 'string' ? 'slide' : pageEffect),
+    [pageEffect, reduceMotion],
+  );
   const liquidConfig = { ...DEFAULT_LIQUID, ...liquid };
   // Memoized on identity: pass a module constant or a memoized object, or each
   // parent render makes every visible image look its URI up again.
@@ -101,7 +138,7 @@ export function MorphCarousel<T>({
   const [center, setCenter] = useState(startIndex);
   const index = wrap(center, count);
 
-  const [pageSize, setPageSize] = useState<Size>({ width: 0, height: 0 });
+  const [viewport, setViewport] = useState<Size>({ width: 0, height: 0 });
   const [mediaSize, setMediaSize] = useState<Size>({ width: 0, height: 0 });
   const pageExtent = useSharedValue(0);
 
@@ -109,10 +146,16 @@ export function MorphCarousel<T>({
      `position` lives on the UI thread. React only needs to know when the
      nearest page changes, to move the render window and report the index.   */
   const onIndexChangeRef = useRef(onIndexChange);
+  const onScrollStartRef = useRef(onScrollStart);
+  const onScrollEndRef = useRef(onScrollEnd);
   const lastIndex = useRef(startIndex);
   useEffect(() => {
     onIndexChangeRef.current = onIndexChange;
+    onScrollStartRef.current = onScrollStart;
+    onScrollEndRef.current = onScrollEnd;
   });
+  const emitStart = useCallback(() => onScrollStartRef.current?.(), []);
+  const emitEnd = useCallback((virtual: number) => onScrollEndRef.current?.(wrap(virtual, count)), [count]);
   const onCenter = useCallback(
     (virtual: number) => {
       setCenter(virtual);
@@ -145,12 +188,31 @@ export function MorphCarousel<T>({
   }, [count, center, loop, position]);
 
   /* --- navigation ------------------------------------------------------- */
+  /** Settle on `target` with the configured animation; reports the end. Runs on either thread. */
+  const settleTo = useCallback(
+    (target: number, velocity: number) => {
+      'worklet';
+      const done = (finished?: boolean) => {
+        'worklet';
+        if (finished) runOnJS(emitEnd)(target);
+      };
+      position.value = motion.timing
+        ? withTiming(target, { duration: motion.duration }, done)
+        : withSpring(target, { ...motion.spring, velocity }, done);
+    },
+    [emitEnd, motion, position],
+  );
   const animateTo = useCallback(
     (target: number, animated = true) => {
       cancelAnimation(position);
-      position.value = animated ? withSpring(target, springConfig) : target;
+      emitStart();
+      if (animated) settleTo(target, 0);
+      else {
+        position.value = target;
+        emitEnd(target);
+      }
     },
-    [position, springConfig],
+    [emitEnd, emitStart, position, settleTo],
   );
   const scrollTo = useCallback(
     (to: number, options?: { animated?: boolean }) => {
@@ -175,8 +237,14 @@ export function MorphCarousel<T>({
     },
     [animateTo, count, loop, position],
   );
-  const next = useCallback((options?: { animated?: boolean }) => step(1, options), [step]);
-  const prev = useCallback((options?: { animated?: boolean }) => step(-1, options), [step]);
+  const next = useCallback(
+    (options?: { animated?: boolean; count?: number }) => step(options?.count ?? 1, options),
+    [step],
+  );
+  const prev = useCallback(
+    (options?: { animated?: boolean; count?: number }) => step(-(options?.count ?? 1), options),
+    [step],
+  );
 
   useImperativeHandle(ref, () => ({ scrollTo, next, prev, getIndex: () => lastIndex.current }), [
     scrollTo,
@@ -202,12 +270,29 @@ export function MorphCarousel<T>({
   /* --- gesture -------------------------------------------------------------- */
   const start = useSharedValue(0);
   const dragging = useSharedValue(false);
+  // The gesture callbacks run on gestures, not during render. The React
+  // Compiler rule cannot tell once the gesture is handed to `configureGesture`.
+  /* eslint-disable react-hooks/refs */
   const pan = useMemo(() => {
     const sign = rtl ? -1 : 1;
     const settle = (velocity: number) => {
       'worklet';
-      const target = snapTarget(Math.round(start.value), position.value, velocity, count, loop);
-      position.value = withSpring(target, { ...springConfig, velocity });
+      if (snapMode === 'free') {
+        position.value = withDecay(
+          loop
+            ? { velocity, deceleration: 0.996 }
+            : { velocity, deceleration: 0.996, clamp: [0, Math.max(count - 1, 0)] },
+          (finished) => {
+            if (finished) runOnJS(emitEnd)(Math.round(position.value));
+          },
+        );
+        return;
+      }
+      const target =
+        snapMode === 'momentum'
+          ? momentumTarget(position.value, velocity, count, loop)
+          : snapTarget(Math.round(start.value), position.value, velocity, count, loop);
+      settleTo(target, velocity);
     };
     const g = Gesture.Pan()
       .enabled(gestureEnabled && count > 1)
@@ -219,6 +304,7 @@ export function MorphCarousel<T>({
       })
       .onStart(() => {
         dragging.value = true;
+        runOnJS(emitStart)();
       })
       .onUpdate((e) => {
         const extent = pageExtent.value;
@@ -234,22 +320,48 @@ export function MorphCarousel<T>({
       })
       .onFinalize(() => {
         // A tap that caught a moving carousel never activates the pan, so
-        // onEnd does not run: settle from where it was caught.
-        if (!dragging.value) settle(0);
+        // onEnd does not run: settle from where it was caught (free mode
+        // simply stays there).
+        if (!dragging.value && snapMode !== 'free') settle(0);
         dragging.value = false;
         runOnJS(setTouching)(false);
       });
-    return vertical
+    const base = vertical
       ? g.activeOffsetY([-10, 10]).failOffsetX([-14, 14])
       : g.activeOffsetX([-10, 10]).failOffsetY([-14, 14]);
-  }, [count, dragging, gestureEnabled, loop, pageExtent, position, rtl, springConfig, start, vertical]);
+    // Memoize `configureGesture`, or the gesture is rebuilt on every render.
+    return configureGesture ? configureGesture(base) : base;
+  }, [
+    configureGesture,
+    count,
+    dragging,
+    emitEnd,
+    emitStart,
+    gestureEnabled,
+    loop,
+    pageExtent,
+    position,
+    rtl,
+    settleTo,
+    snapMode,
+    start,
+    vertical,
+  ]);
+  /* eslint-enable react-hooks/refs */
 
   /* --- layout ------------------------------------------------------------- */
   const onPagesLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
-    setPageSize({ width, height });
-    pageExtent.value = vertical ? height : width;
+    setViewport({ width, height });
   };
+  // One page along the scroll axis, and the distance between two pages (what
+  // a swipe of one page covers).
+  const viewportMain = vertical ? viewport.height : viewport.width;
+  const pageMain = Math.min(pageSizeProp ?? viewportMain, viewportMain || Number.POSITIVE_INFINITY);
+  const pageStep = pageMain + pageGap;
+  useEffect(() => {
+    pageExtent.value = pageStep;
+  }, [pageExtent, pageStep]);
   const onMediaLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setMediaSize({ width, height });
@@ -276,7 +388,9 @@ export function MorphCarousel<T>({
   };
   const target = makeTarget(imageArea, pixelRatio, mediaFit);
   const area: ImageArea = { ...imageArea, pixelRatio, fit: mediaFit };
+  const hasMedia = !!getImage;
   const sourceOf = (i: number): NormalizedSource => {
+    if (!getImage) return { kind: 'none' };
     const n = normalizeSource(getImage(data[i], i, target));
     // A single URI built for `target` is as wide as the target asked for;
     // without a width it would count as infinitely sharp and never upgrade.
@@ -326,7 +440,7 @@ export function MorphCarousel<T>({
   }, [prefetchKey, cacheOptions]);
 
   const media =
-    mediaSize.width > 0 && count > 0 ? (
+    hasMedia && mediaSize.width > 0 && count > 0 ? (
       LiquidLayer ? (
         // The rule sees a component returned by a hook. It is created once per
         // app (cached at module level in ./liquid), not on each render.
@@ -406,8 +520,33 @@ export function MorphCarousel<T>({
         }
       : null;
 
-  const showPagination = pagination !== false && count > 1;
+  const showPagination = pagination !== false && components?.Pagination !== null && count > 1;
   const paginationOptions = typeof pagination === 'object' ? pagination : undefined;
+  const PaginationSlot = components?.Pagination;
+  const { MediaOverlay, MediaBackground } = components ?? {};
+  const mediaSlotProps = {
+    item: current,
+    index,
+    count,
+    position,
+    width: mediaSize.width,
+    height: mediaSize.height,
+  };
+  const mediaLayers = (
+    <>
+      {MediaBackground && mediaSize.width > 0 && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <MediaBackground {...mediaSlotProps} />
+        </View>
+      )}
+      {media}
+      {MediaOverlay && mediaSize.width > 0 && (
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <MediaOverlay {...mediaSlotProps} />
+        </View>
+      )}
+    </>
+  );
 
   return (
     <View style={[styles.root, style]} testID={testID}>
@@ -424,9 +563,9 @@ export function MorphCarousel<T>({
           onAccessibilityAction={onAccessibilityAction}
           {...(keyboard as object)}
         >
-          {mediaPosition === 'background' ? (
+          {!hasMedia ? null : mediaPosition === 'background' ? (
             <View style={[StyleSheet.absoluteFill, mediaStyle]} onLayout={onMediaLayout} pointerEvents="none">
-              {media}
+              {mediaLayers}
             </View>
           ) : (
             <View
@@ -434,12 +573,12 @@ export function MorphCarousel<T>({
               onLayout={onMediaLayout}
               pointerEvents="none"
             >
-              {media}
+              {mediaLayers}
             </View>
           )}
           <View style={styles.pages} onLayout={onPagesLayout}>
             {renderItem &&
-              pageSize.width > 0 &&
+              viewport.width > 0 &&
               pages.map((v) => {
                 const i = wrap(v, count);
                 return (
@@ -447,13 +586,16 @@ export function MorphCarousel<T>({
                     key={v}
                     virtual={v}
                     position={position}
-                    size={pageSize}
+                    viewport={viewport}
+                    pageMain={pageMain}
+                    step={pageStep}
+                    align={pageAlign}
+                    effect={pageEffectFn}
                     direction={direction}
                     rtl={rtl}
                     style={pageStyle}
-                  >
-                    {renderItem({ item: data[i], index: i })}
-                  </Page>
+                    render={(offset) => renderItem({ item: data[i], index: i, offset })}
+                  />
                 );
               })}
           </View>
@@ -462,15 +604,28 @@ export function MorphCarousel<T>({
 
       {(showPagination || renderFooter) && (
         <View style={[styles.footer, footerStyle]}>
-          {showPagination && (
-            <Pagination
-              count={count}
-              position={position}
-              loop={loop}
-              onPress={(i) => scrollTo(i)}
-              {...paginationOptions}
-            />
-          )}
+          {showPagination &&
+            (PaginationSlot ? (
+              <PaginationSlot
+                count={count}
+                index={index}
+                position={position}
+                loop={loop}
+                direction={direction}
+                scrollTo={(i) => scrollTo(i)}
+              />
+            ) : (
+              <Pagination
+                count={count}
+                position={position}
+                loop={loop}
+                onPress={(i) => scrollTo(i)}
+                Dot={components?.Dot}
+                {...paginationOptions}
+              />
+            ))}
+          {/* `position` is a shared value handed over, not read during render. */}
+          {/* eslint-disable-next-line react-hooks/refs */}
           {renderFooter?.({ item: current, index, count, position, scrollTo, next, prev })}
         </View>
       )}
@@ -480,39 +635,62 @@ export function MorphCarousel<T>({
 
 /* --- pieces ---------------------------------------------------------------- */
 
+/**
+ * One page. Its frame is `pageMain` long along the scroll axis, placed at the
+ * start or the center of the viewport; the page effect moves it from there by
+ * its offset from the current position.
+ */
 function Page({
   virtual,
   position,
-  size,
+  viewport,
+  pageMain,
+  step,
+  align,
+  effect,
   direction,
   rtl,
   style,
-  children,
+  render,
 }: {
   virtual: number;
   position: SharedValue<number>;
-  size: Size;
+  viewport: Size;
+  pageMain: number;
+  step: number;
+  align: 'center' | 'start';
+  effect: PageEffectFn;
   direction: CarouselDirection;
   rtl: boolean;
   style: MorphCarouselProps<unknown>['pageStyle'];
-  children: React.ReactNode;
+  render: (offset: SharedValue<number>) => React.ReactNode;
 }) {
   const vertical = direction === 'vertical';
-  const animated = useAnimatedStyle(() => {
-    const offset = virtual - position.value;
-    const distance = offset * (vertical ? size.height : size.width) * (rtl ? -1 : 1);
-    return {
-      // Pages further than one away are off screen; hiding them also keeps
-      // their content out of hit testing.
-      opacity: Math.abs(offset) < 1.5 ? 1 : 0,
-      transform: [vertical ? { translateY: distance } : { translateX: distance }],
-    };
-  });
+  const width = vertical ? viewport.width : pageMain;
+  const height = vertical ? pageMain : viewport.height;
+  const lead = align === 'center' ? ((vertical ? viewport.height : viewport.width) - pageMain) / 2 : 0;
+  const offset = useDerivedValue(() => virtual - position.value);
+  const animated = useAnimatedStyle(() =>
+    effect({
+      offset: offset.value,
+      step,
+      width,
+      height,
+      viewportWidth: viewport.width,
+      viewportHeight: viewport.height,
+      direction,
+      rtl,
+    }),
+  );
+  // Start alignment in right-to-left layouts starts at the right edge.
+  const frame = vertical
+    ? { top: lead, left: 0 }
+    : rtl && align === 'start'
+      ? { right: 0, top: 0 }
+      : { left: lead, top: 0 };
   return (
-    <Animated.View
-      style={[{ position: 'absolute', width: size.width, height: size.height }, style, animated]}
-    >
-      {children}
+    <Animated.View style={[{ position: 'absolute', width, height }, frame, style, animated]}>
+      {render(offset)}
     </Animated.View>
   );
 }

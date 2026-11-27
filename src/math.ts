@@ -84,6 +84,26 @@ export function snapTarget(
 }
 
 /**
+ * Page to settle on with `snapMode="momentum"`: the gesture keeps going for
+ * `momentum` seconds at the release velocity (pages per second), slowing down
+ * linearly, then rounds to the nearest page. A hard fling can skip several
+ * pages; a slow release behaves like `snapTarget`.
+ */
+export function momentumTarget(
+  position: number,
+  velocity: number,
+  count: number,
+  loop: boolean,
+  momentum = 0.35,
+): number {
+  'worklet';
+  // Distance of a linear slow-down from `velocity` to 0 over `momentum` s.
+  let target = Math.round(position + (velocity * momentum) / 2);
+  if (!loop) target = clamp(target, 0, Math.max(count - 1, 0));
+  return target;
+}
+
+/**
  * Virtual page indexes to render around `center`: `radius` pages on each side.
  * Without loop the window stops at the data bounds; with loop it continues and
  * the caller maps each virtual index onto the data with `wrap`.

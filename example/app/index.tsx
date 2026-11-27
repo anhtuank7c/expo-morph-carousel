@@ -19,6 +19,18 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
     icon: 'rocket-outline',
   },
   {
+    href: '/layouts',
+    title: 'Layouts',
+    subtitle: 'Card carousel: parallax, stack, coverflow, cube, flip, tinder, custom effects, snap modes',
+    icon: 'albums-outline',
+  },
+  {
+    href: '/slots',
+    title: 'Slots',
+    subtitle: 'Your own pagination, dots, media overlay and background, content animated by offset',
+    icon: 'extension-puzzle-outline',
+  },
+  {
     href: '/playground',
     title: 'Playground',
     subtitle: 'Every preset, a custom effect, loop, autoplay, vertical, liquid tuning',

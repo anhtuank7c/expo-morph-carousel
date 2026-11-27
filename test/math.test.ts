@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 
 import {
   clamp,
+  momentumTarget,
   nearestVirtual,
   pageWindow,
   ringOffset,
@@ -109,5 +110,20 @@ describe('nearestVirtual', () => {
     assert.equal(nearestVirtual(4, 5, 5, true), 4); // first (virtual 5) → last: one step back
     assert.equal(nearestVirtual(2, 12, 5, true), 12);
     assert.equal(nearestVirtual(3, -1, 5, true), -2);
+  });
+});
+
+describe('momentumTarget', () => {
+  it('rounds to the nearest page for a slow release', () => {
+    assert.equal(momentumTarget(2.3, 0, 10, false), 2);
+    assert.equal(momentumTarget(2.6, 0.2, 10, false), 3);
+  });
+  it('lets a hard fling skip several pages', () => {
+    assert.equal(momentumTarget(2, 20, 10, false), 6); // 2 + 20·0.35/2 = 5.5 → 6
+    assert.equal(momentumTarget(5, -20, 10, true), 2);
+  });
+  it('stops at the ends without loop', () => {
+    assert.equal(momentumTarget(8, 40, 10, false), 9);
+    assert.equal(momentumTarget(1, -40, 10, false), 0);
   });
 });
