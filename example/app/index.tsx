@@ -21,7 +21,7 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
   {
     href: '/layouts',
     title: 'Layouts',
-    subtitle: 'Card carousel: parallax, stack, coverflow, cube, flip, tinder, custom effects, snap modes',
+    subtitle: 'Liquid images over cards that move with parallax, stack, coverflow, cube, flip, tinder…',
     icon: 'albums-outline',
   },
   {

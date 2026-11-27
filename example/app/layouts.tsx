@@ -22,9 +22,12 @@ import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react
 import { products, type Product } from '../data/products';
 
 /**
- * Card carousel without a media area: `renderItem` is the whole card, and the
- * page effect decides how cards move. Every built-in effect, a custom one,
- * snap modes, spring or timing, a peek at the neighbors, vertical.
+ * Page effects with the liquid images. With "Liquid images" on (the default),
+ * the product shots melt into each other in the media area while the cards
+ * underneath move with the chosen page effect: both effects at once. Off, the
+ * carousel is a plain card carousel and the image is part of each card.
+ * Every built-in page effect, a custom one, snap modes, spring or timing, a
+ * peek at the neighbors, vertical.
  */
 
 /** A custom page effect: cards swing like a door hinged on their leading edge. */
@@ -71,6 +74,7 @@ export default function LayoutsScreen() {
   const [page, setPage] = useState(0);
   const [moving, setMoving] = useState(false);
   const [rests, setRests] = useState(0);
+  const [liquid, setLiquid] = useState(true);
   const peek = peekOverride ?? !!EFFECTS[effect].peek;
 
   const viewport = width - 32;
@@ -81,7 +85,7 @@ export default function LayoutsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.screen}>
       <MorphCarousel
-        key={vertical ? 'v' : 'h'}
+        key={`${vertical ? 'v' : 'h'}-${liquid ? 'liquid' : 'cards'}`}
         testID="layouts-carousel"
         data={data}
         keyExtractor={(p) => p.id}
@@ -94,7 +98,13 @@ export default function LayoutsScreen() {
         animation={animation}
         loop={loop}
         direction={vertical ? 'vertical' : 'horizontal'}
-        style={styles.carousel}
+        // The liquid morph of the images, above the cards.
+        getImage={liquid ? (p) => p.image : undefined}
+        effect="liquid"
+        mediaHeight={220}
+        mediaPadding={24}
+        getPlaceholderColor={(p) => p.color}
+        style={liquid ? styles.carouselWithMedia : styles.carousel}
         onIndexChange={setPage}
         onScrollStart={() => setMoving(true)}
         onScrollEnd={(i) => {
@@ -102,7 +112,7 @@ export default function LayoutsScreen() {
           setPage(i);
           setRests((n) => n + 1);
         }}
-        renderItem={({ item, offset }) => <Card item={item} offset={offset} />}
+        renderItem={({ item, offset }) => <Card item={item} offset={offset} showImage={!liquid} />}
       />
 
       <Text style={styles.status} testID="layouts-status">
@@ -124,6 +134,7 @@ export default function LayoutsScreen() {
       <Chips labels={ANIMATIONS.map((a) => a.label)} selected={anim} onSelect={setAnim} />
 
       <View style={styles.toggles}>
+        <Toggle label="Liquid images (media above the cards)" value={liquid} onChange={setLiquid} />
         <Toggle label="Peek at neighbors (pageSize 72%)" value={peek} onChange={setPeekOverride} />
         <Toggle label="Loop" value={loop} onChange={setLoop} />
         <Toggle label="Vertical" value={vertical} onChange={setVertical} />
@@ -132,16 +143,28 @@ export default function LayoutsScreen() {
   );
 }
 
-/** The card. Its title slides at half speed using the page's `offset`. */
-function Card({ item, offset }: { item: Product; offset: SharedValue<number> }) {
+/**
+ * The card. Its title slides at half speed using the page's `offset`. With the
+ * liquid media on, the image lives in the media area instead of the card.
+ */
+function Card({
+  item,
+  offset,
+  showImage,
+}: {
+  item: Product;
+  offset: SharedValue<number>;
+  showImage: boolean;
+}) {
   const title = useAnimatedStyle(() => ({
     transform: [{ translateX: interpolate(offset.value, [-1, 0, 1], [-60, 0, 60]) }],
     opacity: interpolate(Math.abs(offset.value), [0, 0.8], [1, 0.3]),
   }));
   return (
     <View style={[styles.card, { backgroundColor: item.color }]}>
-      <Image source={item.image} style={styles.cardImage} resizeMode="contain" />
+      {showImage && <Image source={item.image} style={styles.cardImage} resizeMode="contain" />}
       <Animated.Text style={[styles.cardTitle, title]}>{item.title}</Animated.Text>
+      {!showImage && <Text style={styles.cardText}>{item.description}</Text>}
     </View>
   );
 }
@@ -195,6 +218,8 @@ function Toggle({
 const styles = StyleSheet.create({
   screen: { padding: 16, gap: 10 },
   carousel: { height: 380 },
+  carouselWithMedia: { height: 500, borderRadius: 26, backgroundColor: '#fff' },
+  cardText: { fontSize: 14, lineHeight: 19, color: '#ffffffd9', textAlign: 'center', paddingHorizontal: 18 },
   card: {
     flex: 1,
     margin: 8,

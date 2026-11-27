@@ -142,6 +142,8 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 
 Không có `getImage` thì carousel là carousel thẻ thuần: `renderItem` là cả tấm thẻ và `pageEffect` quyết định thẻ chuyển động thế nào. Có `getImage` thì page effect áp cho phần nội dung bên dưới vùng media.
 
+Hai loại hiệu ứng độc lập và kết hợp được với nhau: `effect` (mặc định `liquid`) morph ảnh trong vùng media, còn `pageEffect` di chuyển các trang. Liquid vẫn là mặc định; page effect được thêm vào bên cạnh chứ không thay thế nó. Màn Layouts trong app ví dụ cho thấy ảnh liquid phía trên và các thẻ chuyển động theo từng page effect bên dưới.
+
 ```tsx
 import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 

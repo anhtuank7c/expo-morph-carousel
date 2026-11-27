@@ -142,6 +142,8 @@ The liquid effect works best with images on a transparent background, such as pr
 
 Without `getImage` the carousel is a plain card carousel: `renderItem` is the whole card and `pageEffect` decides how cards move. With `getImage` the page effect moves the content under the media area.
 
+The two kinds of effect are independent and combine: `effect` (default `liquid`) morphs the images in the media area, `pageEffect` moves the pages. The liquid morph stays the default; a page effect is added on top of it, never instead of it. The Layouts screen of the example shows the liquid images over cards that move with each page effect.
+
 ```tsx
 import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 
