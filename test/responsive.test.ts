@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  sameSource,
   makeTarget,
   normalizeSource,
   pickCandidate,
@@ -97,5 +98,36 @@ describe('stepUp and makeTarget', () => {
     assert.equal(t.width, 1080);
     assert.equal(t.height, 810);
     assert.equal(makeTarget({ width: 360, height: 640 }, 2, 'cover').width, 1440);
+  });
+});
+
+describe('sameSource', () => {
+  it('compares candidates by value', () => {
+    const a = normalizeSource([
+      { uri: 'a', width: 640 },
+      { uri: 'b', width: 1280 },
+    ]);
+    const b = normalizeSource([
+      { uri: 'a', width: 640 },
+      { uri: 'b', width: 1280 },
+    ]);
+    assert.equal(sameSource(a, b), true);
+    assert.equal(sameSource(a, normalizeSource([{ uri: 'a', width: 640 }])), false);
+    assert.equal(
+      sameSource(
+        a,
+        normalizeSource([
+          { uri: 'a', width: 640 },
+          { uri: 'c', width: 1280 },
+        ]),
+      ),
+      false,
+    );
+  });
+  it('handles bundled and missing sources', () => {
+    assert.equal(sameSource(normalizeSource(3), normalizeSource(3)), true);
+    assert.equal(sameSource(normalizeSource(3), normalizeSource(4)), false);
+    assert.equal(sameSource(normalizeSource(null), normalizeSource(undefined)), true);
+    assert.equal(sameSource(normalizeSource(3), normalizeSource({ uri: 'x' })), false);
   });
 });

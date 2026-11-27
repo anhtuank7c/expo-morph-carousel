@@ -378,6 +378,7 @@ await imageCache.prefetch(urls, cacheOptions, 'low');
 | `maxEntries` | 500 | Số file trên đĩa |
 | `maxConcurrent` | 4 | Số lượt tải song song; phần còn lại chờ theo thứ tự ưu tiên |
 | `decodedImages` | 24 | Số ảnh đã decode giữ trong bộ nhớ cho hiệu ứng liquid. Mỗi ảnh tốn rộng × cao × 4 byte (ảnh 1080×810 ≈ 3,5 MB), nên 24 ảnh như vậy ≈ 84 MB. Hạ xuống nếu dùng ảnh lớn trên máy ít RAM |
+| `decodedBytes` | 96 MB | Ngân sách bộ nhớ cho các ảnh đã decode đó; ảnh lâu không dùng nhất bị bỏ trước khi chạm một trong hai giới hạn |
 
 ```ts
 imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300, maxConcurrent: 6, decodedImages: 12 });

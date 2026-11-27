@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   I18nManager,
@@ -35,6 +35,7 @@ import {
   normalizeSource,
   pickCandidate,
   requiredWidth,
+  sameSource,
   type NormalizedSource,
 } from './responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from './useResponsiveImage';
@@ -187,8 +188,10 @@ export function MorphCarousel<T>({
       if (cur !== prev) runOnJS(onCenter)(cur);
     },
   );
+  // Mirrors the position into the caller's shared value. Without one, the
+  // reaction reads nothing that changes and never runs again.
   useAnimatedReaction(
-    () => position.value,
+    () => (positionValue ? position.value : 0),
     (value) => {
       if (positionValue) positionValue.value = value;
     },
@@ -466,12 +469,14 @@ export function MorphCarousel<T>({
      ratio decides which candidate is sharp enough. `getImage` also receives
      it as `target`, rounded to a few widths, to build CDN URLs.            */
   const pixelRatio = PixelRatio.get();
-  const imageArea = {
-    width: Math.max(mediaSize.width - mediaPadding * 2, 0),
-    height: Math.max(mediaSize.height - mediaPadding * 2, 0),
-  };
-  const target = makeTarget(imageArea, pixelRatio, mediaFit);
-  const area: ImageArea = { ...imageArea, pixelRatio, fit: mediaFit };
+  const imageWidth = Math.max(mediaSize.width - mediaPadding * 2, 0);
+  const imageHeight = Math.max(mediaSize.height - mediaPadding * 2, 0);
+  // Stable between renders, so memoized media items can compare it by identity.
+  const area = useMemo<ImageArea>(
+    () => ({ width: imageWidth, height: imageHeight, pixelRatio, fit: mediaFit }),
+    [imageHeight, imageWidth, mediaFit, pixelRatio],
+  );
+  const target = makeTarget({ width: imageWidth, height: imageHeight }, pixelRatio, mediaFit);
   const hasMedia = !!getImage;
   const sourceOf = (i: number): NormalizedSource => {
     if (!getImage) return { kind: 'none' };
@@ -557,7 +562,7 @@ export function MorphCarousel<T>({
         pages.map((v) => {
           const i = wrap(v, count);
           return (
-            <ViewMediaItem
+            <ViewMediaItemMemo
               key={v}
               virtual={v}
               identity={keyOf(data[i], i)}
@@ -667,7 +672,7 @@ export function MorphCarousel<T>({
               pages.map((v) => {
                 const i = wrap(v, count);
                 return (
-                  <Page
+                  <PageMemo
                     key={v}
                     virtual={v}
                     position={position}
@@ -679,7 +684,9 @@ export function MorphCarousel<T>({
                     direction={direction}
                     rtl={rtl}
                     style={pageStyle}
-                    render={(offset) => renderItem({ item: data[i], index: i, offset })}
+                    item={data[i]}
+                    index={i}
+                    renderItem={renderItem as PageRenderItem}
                   />
                 );
               })}
@@ -736,7 +743,9 @@ function Page({
   direction,
   rtl,
   style,
-  render,
+  item,
+  index,
+  renderItem,
 }: {
   virtual: number;
   position: SharedValue<number>;
@@ -748,7 +757,9 @@ function Page({
   direction: CarouselDirection;
   rtl: boolean;
   style: MorphCarouselProps<unknown>['pageStyle'];
-  render: (offset: SharedValue<number>) => React.ReactNode;
+  item: unknown;
+  index: number;
+  renderItem: PageRenderItem;
 }) {
   const vertical = direction === 'vertical';
   const width = vertical ? viewport.width : pageMain;
@@ -775,10 +786,23 @@ function Page({
       : { left: lead, top: 0 };
   return (
     <Animated.View style={[{ position: 'absolute', width, height }, frame, style, animated]}>
-      {render(offset)}
+      {renderItem({ item, index, offset })}
     </Animated.View>
   );
 }
+
+type PageRenderItem = (info: {
+  item: unknown;
+  index: number;
+  offset: SharedValue<number>;
+}) => React.ReactNode;
+
+/**
+ * The current page changes halfway through a swipe and re-renders the
+ * carousel. Pages whose props did not change keep their element: their item
+ * is not rendered again in the middle of the animation.
+ */
+const PageMemo = memo(Page);
 
 function ViewMediaItem({
   virtual,
@@ -853,6 +877,17 @@ function ViewMediaItem({
     </Animated.View>
   );
 }
+
+const ViewMediaItemMemo = memo(ViewMediaItem, (a, b) => {
+  for (const k of Object.keys(a) as (keyof typeof a)[]) {
+    if (k === 'source') {
+      if (!sameSource(a.source, b.source)) return false;
+    } else if (k === 'size') {
+      if (a.size.width !== b.size.width || a.size.height !== b.size.height) return false;
+    } else if (a[k] !== b[k]) return false;
+  }
+  return true;
+});
 
 /**
  * One image of a view-based media item. A replacing layer stays transparent

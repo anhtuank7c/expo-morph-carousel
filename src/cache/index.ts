@@ -39,6 +39,12 @@ export type ImageCacheConfig = ImageCacheLimits & {
    * (a 1080×810 photo ≈ 3.5 MB). Default 24.
    */
   decodedImages?: number;
+  /**
+   * Memory budget for those decoded images, in bytes (width × height × 4
+   * each). The least recently used go first when either limit is reached.
+   * Default 96 MB.
+   */
+  decodedBytes?: number;
 };
 
 const DEFAULT_CONFIG: Required<ImageCacheConfig> = {
@@ -46,6 +52,7 @@ const DEFAULT_CONFIG: Required<ImageCacheConfig> = {
   maxEntries: 500,
   maxConcurrent: 4,
   decodedImages: 24,
+  decodedBytes: 96 * 1024 * 1024,
 };
 
 let config: Required<ImageCacheConfig> = { ...DEFAULT_CONFIG };
@@ -63,6 +70,11 @@ function getCache(): ImageCache | null {
 /** Current limit for decoded images in memory (read by the liquid layer). */
 export function decodedImageLimit(): number {
   return config.decodedImages;
+}
+
+/** Current memory budget for decoded images, in bytes (read by the liquid layer). */
+export function decodedByteLimit(): number {
+  return config.decodedBytes;
 }
 
 /** Whether `uri` has a cache entry (fresh or stale). Synchronous, for choosing between candidates. */
@@ -243,7 +255,8 @@ export const imageCache = {
   /**
    * Limits. Defaults: `maxSize` 100 MB and `maxEntries` 500 on disk (least
    * recently used files go first), `maxConcurrent` 4 downloads, 24
-   * `decodedImages` in memory. Takes effect immediately; shrinking evicts.
+   * `decodedImages` and 96 MB `decodedBytes` in memory. Takes effect
+   * immediately; shrinking evicts.
    */
   configure(next: ImageCacheConfig) {
     config = { ...config, ...next };

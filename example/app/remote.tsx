@@ -174,7 +174,8 @@ export default function RemoteScreen() {
           {'\n'}304 {stats.notModified} · updated {stats.updates} · errors {stats.errors}
           {'\n'}downloading {stats.active} · queued {stats.queued}
           {'\n'}limits {Math.round(config.maxSize / 1048576)} MB · {config.maxEntries} files ·{' '}
-          {config.maxConcurrent} parallel · {config.decodedImages} decoded
+          {config.maxConcurrent} parallel · {config.decodedImages} decoded ·{' '}
+          {Math.round(config.decodedBytes / 1048576)} MB
         </Text>
       </View>
 

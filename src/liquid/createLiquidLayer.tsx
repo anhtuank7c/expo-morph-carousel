@@ -18,8 +18,8 @@
  * Types come from a type-only import, which does not exist at runtime.
  */
 import type * as SkiaModule from '@shopify/react-native-skia';
-import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { Platform, StyleSheet } from 'react-native';
 import {
   runOnJS,
   useDerivedValue,
@@ -28,14 +28,15 @@ import {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { decodedImageLimit, useCachedUri, type LoadPriority } from '../cache';
+import { decodedByteLimit, decodedImageLimit, useCachedUri, type LoadPriority } from '../cache';
 import type { ResolvedCacheOptions } from '../cache/ImageCache';
 import { clamp, transitionPeak } from '../math';
-import type { NormalizedSource } from '../responsive';
+import { sameSource, type NormalizedSource } from '../responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from '../useResponsiveImage';
 
 type Skia = typeof SkiaModule;
 type SkImage = SkiaModule.SkImage;
+type SkPaint = SkiaModule.SkPaint;
 
 export type LiquidItem = {
   key: string;
@@ -48,6 +49,15 @@ export type LiquidItem = {
   /** Download priority: the current page first, then its neighbors. */
   priority: LoadPriority;
 };
+
+/**
+ * Filter levels per transition. The layer paint is looked up by the
+ * transition's progress rounded to one of these levels instead of being
+ * built every frame (a paint, a blur and a color filter per frame was the
+ * main UI thread cost of the effect). 48 levels: below one point of blur
+ * per step at the default blur, finer than a swipe moves per frame.
+ */
+const FILTER_LEVELS = 48;
 
 export type LiquidLayerProps = {
   items: LiquidItem[];
@@ -84,11 +94,40 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
    * or a loop wrapping around, reuses the decoded image instead of reading
    * and decoding the file again.
    */
-  const decoded = new Map<string, SkImage>();
+  const decoded = new Map<string, { image: SkImage; bytes: number }>();
+  let decodedBytes = 0;
   const remember = (uri: string, image: SkImage) => {
-    decoded.delete(uri);
-    decoded.set(uri, image);
-    while (decoded.size > decodedImageLimit()) decoded.delete(decoded.keys().next().value!);
+    const old = decoded.get(uri);
+    if (old) {
+      decoded.delete(uri);
+      decodedBytes -= old.bytes;
+    }
+    const bytes = image.width() * image.height() * 4;
+    decoded.set(uri, { image, bytes });
+    decodedBytes += bytes;
+    // Least recently used first; the newest one always stays.
+    while (decoded.size > 1 && (decoded.size > decodedImageLimit() || decodedBytes > decodedByteLimit())) {
+      const [key, entry] = decoded.entries().next().value!;
+      decoded.delete(key);
+      decodedBytes -= entry.bytes;
+    }
+  };
+  const decodedImage = (uri: string) => decoded.get(uri)?.image ?? null;
+
+  /**
+   * Skia decodes an encoded image lazily, on its first draw. That draw is on
+   * the UI thread in the middle of a swipe (a neighbor coming into view), so
+   * a large photo would stall the animation for as long as its JPEG takes to
+   * decode. Decoding it here, on the JS thread when the page is mounted
+   * ahead of time, moves that work out of the animation.
+   */
+  const decodeNow = (image: SkImage): SkImage => {
+    if (Platform.OS === 'web') return image; // CanvasKit decodes on creation
+    try {
+      return image.makeNonTextureImage() ?? image;
+    } catch {
+      return image; // no GPU context on this thread: decode on first draw
+    }
   };
 
   function useSkImage(source: number | string | null): SkImage | null {
@@ -97,12 +136,12 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     const bundled = useImage(uri === null ? (source ?? undefined) : undefined);
     const [state, setState] = useState<{ uri: string | null; image: SkImage | null }>(() => ({
       uri,
-      image: uri ? (decoded.get(uri) ?? null) : null,
+      image: uri ? decodedImage(uri) : null,
     }));
 
     useEffect(() => {
       if (!uri) return;
-      const known = decoded.get(uri);
+      const known = decodedImage(uri);
       if (known) {
         remember(uri, known);
         setState((prev) => (prev.uri === uri && prev.image === known ? prev : { uri, image: known }));
@@ -111,8 +150,9 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       let alive = true;
       SkiaApi.Data.fromURI(uri)
         .then((data) => {
-          const image = SkiaApi.Image.MakeImageFromEncoded(data);
-          if (!image) return;
+          const encoded = SkiaApi.Image.MakeImageFromEncoded(data);
+          if (!encoded) return;
+          const image = decodeNow(encoded);
           remember(uri, image);
           if (alive) setState({ uri, image });
         })
@@ -123,7 +163,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     }, [uri]);
 
     if (!uri) return bundled;
-    return state.uri === uri ? state.image : (decoded.get(uri) ?? null);
+    return state.uri === uri ? state.image : decodedImage(uri);
   }
 
   /**
@@ -191,6 +231,16 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     const cx = useDerivedValue(() => rect.x + rect.width.value / 2);
     const cy = useDerivedValue(() => rect.y + rect.height.value / 2);
     const r = useDerivedValue(() => Math.min(rect.width.value, rect.height.value) * 0.32);
+    // A page more than one page away has opacity 0 but would still be drawn
+    // (and blurred with the layer). A zero size skips it, decided on the UI
+    // thread in the same frame as the position, so a fast fling never shows
+    // a page a frame late.
+    const drawWidth = useDerivedValue(() => (opacity.value > 0 ? rect.width.value : 0));
+    const drawHeight = useDerivedValue(() => (opacity.value > 0 ? rect.height.value : 0));
+    const drawRect = useMemo<Rect>(
+      () => ({ x: rect.x, y: rect.y, width: drawWidth, height: drawHeight }),
+      [drawHeight, drawWidth, rect.x, rect.y],
+    );
 
     if (layers.length === 0) {
       if (!item.placeholderColor) return null;
@@ -205,7 +255,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
             image={l.value}
             fadeIn={i > 0}
             opacity={opacity}
-            rect={rect}
+            rect={drawRect}
             fit={area.fit}
             onShown={onShown}
           />
@@ -213,6 +263,23 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       </Group>
     );
   }
+
+  const LiquidImageMemo = memo(LiquidImage, (a, b) => {
+    const x = a.item;
+    const y = b.item;
+    return (
+      a.position === b.position &&
+      a.rect === b.rect &&
+      a.area === b.area &&
+      a.cache === b.cache &&
+      x.key === y.key &&
+      x.identity === y.identity &&
+      x.virtual === y.virtual &&
+      sameSource(x.source, y.source) &&
+      x.placeholderColor === y.placeholderColor &&
+      x.priority === y.priority
+    );
+  });
 
   function LiquidLayer({
     items,
@@ -236,51 +303,65 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     const rectWidth = useDerivedValue(() => Math.max(canvasSize.value.width - padding * 2, 0));
     const rectHeight = useDerivedValue(() => Math.max(canvasSize.value.height - padding * 2, 0));
 
-    const layer = useDerivedValue(() => {
-      const t = transitionPeak(position.value);
-      const paint = SkiaApi.Paint();
-      if (t < 0.002) return paint;
-      const sigma = blur * t;
-      if (preserveShape) {
-        // Photos keep their rectangle: the blur stays inside the image area
-        // and repeats the edge pixels (Clamp) instead of mixing in the
-        // transparent outside, so edges stay opaque and corners square. No
-        // alpha threshold, which is what rounds the corners off.
-        const crop = SkiaApi.XYWHRect(padding, padding, rectWidth.value, rectHeight.value);
-        paint.setImageFilter(SkiaApi.ImageFilter.MakeBlur(sigma, sigma, TileMode.Clamp, null, crop));
-        return paint;
+    // Every paint the transition can use, built once on the JS thread when
+    // the options or the size change. A frame only picks one: no allocation
+    // on the UI thread while swiping.
+    const imageWidth = Math.max(width - padding * 2, 0);
+    const imageHeight = Math.max(height - padding * 2, 0);
+    const paints = useMemo(() => {
+      const list: SkPaint[] = [];
+      for (let i = 0; i <= FILTER_LEVELS; i++) {
+        const t = i / FILTER_LEVELS;
+        const paint = SkiaApi.Paint();
+        list.push(paint);
+        if (i === 0) continue; // at rest: no filter, the image is drawn untouched
+        const sigma = blur * t;
+        if (preserveShape) {
+          // Photos keep their rectangle: the blur stays inside the image area
+          // and repeats the edge pixels (Clamp) instead of mixing in the
+          // transparent outside, so edges stay opaque and corners square. No
+          // alpha threshold, which is what rounds the corners off.
+          const crop = SkiaApi.XYWHRect(padding, padding, imageWidth, imageHeight);
+          paint.setImageFilter(SkiaApi.ImageFilter.MakeBlur(sigma, sigma, TileMode.Clamp, null, crop));
+          continue;
+        }
+        // alpha' = a·alpha + b. At t = 1 the line crosses 0.5 at `threshold`
+        // with slope `sharpness`; at t = 0 it is the identity.
+        const a = IDENTITY_ALPHA.a + (sharpness - 1) * t;
+        const b = IDENTITY_ALPHA.b + (0.5 - sharpness * threshold) * t;
+        // prettier-ignore
+        const matrix = [
+          1, 0, 0, 0, 0,
+          0, 1, 0, 0, 0,
+          0, 0, 1, 0, 0,
+          0, 0, 0, a, b,
+        ];
+        const blurred = SkiaApi.ImageFilter.MakeBlur(sigma, sigma, TileMode.Decal, null);
+        paint.setImageFilter(
+          SkiaApi.ImageFilter.MakeColorFilter(SkiaApi.ColorFilter.MakeMatrix(matrix), blurred),
+        );
       }
-      // alpha' = a·alpha + b. At t = 1 the line crosses 0.5 at `threshold`
-      // with slope `sharpness`; at t = 0 it is the identity.
-      const a = IDENTITY_ALPHA.a + (sharpness - 1) * t;
-      const b = IDENTITY_ALPHA.b + (0.5 - sharpness * threshold) * t;
-      // prettier-ignore
-      const matrix = [
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1, 0, 0,
-        0, 0, 0, a, b,
-      ];
-      const blurred = SkiaApi.ImageFilter.MakeBlur(sigma, sigma, TileMode.Decal, null);
-      paint.setImageFilter(
-        SkiaApi.ImageFilter.MakeColorFilter(SkiaApi.ColorFilter.MakeMatrix(matrix), blurred),
-      );
-      return paint;
-    });
+      return list;
+    }, [blur, imageHeight, imageWidth, padding, preserveShape, sharpness, threshold]);
+
+    const layer = useDerivedValue(() => paints[Math.round(transitionPeak(position.value) * FILTER_LEVELS)]);
+
+    // Stable objects, so the memoized images do not re-render with the layer.
+    const rect = useMemo<Rect>(
+      () => ({ x: padding, y: padding, width: rectWidth, height: rectHeight }),
+      [padding, rectHeight, rectWidth],
+    );
+    const area = useMemo<ImageArea>(
+      () => ({ width: imageWidth, height: imageHeight, pixelRatio, fit }),
+      [fit, imageHeight, imageWidth, pixelRatio],
+    );
 
     if (width <= 0 || height <= 0) return null;
-    const rect: Rect = { x: padding, y: padding, width: rectWidth, height: rectHeight };
-    const area: ImageArea = {
-      width: Math.max(width - padding * 2, 0),
-      height: Math.max(height - padding * 2, 0),
-      pixelRatio,
-      fit,
-    };
     return (
       <Canvas style={StyleSheet.absoluteFill} onSize={canvasSize} pointerEvents="none">
         <Group layer={layer}>
           {items.map((item) => (
-            <LiquidImage
+            <LiquidImageMemo
               key={item.key}
               item={item}
               position={position}

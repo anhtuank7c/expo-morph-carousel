@@ -59,6 +59,23 @@ type AnySource =
  * becomes one candidate of unknown (infinite) width; an array of
  * `{ uri, width, height }` is a `srcset`.
  */
+/**
+ * Whether two normalized sources describe the same images. `getImage` builds
+ * a new object on every render; comparing by value lets memoized media items
+ * skip the re-render when only the current page changed.
+ */
+export function sameSource(a: NormalizedSource, b: NormalizedSource): boolean {
+  if (a === b) return true;
+  if (a.kind !== b.kind) return false;
+  if (a.kind === 'bundled') return b.kind === 'bundled' && a.asset === b.asset;
+  if (a.kind === 'none') return true;
+  if (b.kind !== 'uri' || a.candidates.length !== b.candidates.length) return false;
+  return a.candidates.every((c, i) => {
+    const d = b.candidates[i];
+    return c.uri === d.uri && c.width === d.width && c.height === d.height && c.headers === d.headers;
+  });
+}
+
 export function normalizeSource(source: AnySource): NormalizedSource {
   if (typeof source === 'number') return { kind: 'bundled', asset: source };
   if (!source) return { kind: 'none' };

@@ -378,6 +378,7 @@ await imageCache.prefetch(urls, cacheOptions, 'low');
 | `maxEntries` | 500 | Files on disk |
 | `maxConcurrent` | 4 | Parallel downloads; the rest wait in priority order |
 | `decodedImages` | 24 | Decoded images kept in memory for the liquid effect. Each costs width × height × 4 bytes (a 1080×810 photo ≈ 3.5 MB), so 24 such photos ≈ 84 MB. Lower it for large photos on low-memory devices |
+| `decodedBytes` | 96 MB | Memory budget for those decoded images; the least recently used go first when either limit is reached |
 
 ```ts
 imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300, maxConcurrent: 6, decodedImages: 12 });
