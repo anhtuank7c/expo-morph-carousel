@@ -3,6 +3,7 @@ import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 import type { ImageCacheOptions } from './cache/ImageCache';
+import type { ImageTarget } from './responsive';
 
 /**
  * Style a media effect returns for one image. Only properties that are cheap to
@@ -126,8 +127,19 @@ export type MorphCarouselRef = {
 
 export type MorphCarouselProps<T> = {
   data: readonly T[];
-  /** Image shown in the media area for an item. A `require(...)` or `{ uri }`. */
-  getImage: (item: T, index: number) => ImageSourcePropType;
+  /**
+   * Image shown in the media area for an item:
+   * - `require(...)` or `{ uri }`;
+   * - an array of `{ uri, width, height }` variants, like `srcset`: the
+   *   carousel picks the smallest one that is sharp for the measured area and
+   *   pixel ratio;
+   * - or build the URL from `target` (physical pixels, rounded to a few
+   *   widths), for image CDNs: `(p, i, t) => ({ uri: `${p.url}?w=${t.width}` })`.
+   *
+   * After a rotation to a larger area a sharper variant is loaded and
+   * cross-faded in; after a rotation to a smaller one the current image stays.
+   */
+  getImage: (item: T, index: number, target: ImageTarget) => ImageSourcePropType;
   /** Page content that slides with the gesture: title, description, anything. */
   renderItem?: (info: RenderItemInfo<T>) => ReactNode;
   keyExtractor?: (item: T, index: number) => string;

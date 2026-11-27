@@ -17,6 +17,7 @@ A carousel for Expo in which the images melt into each other like liquid while t
 - **Control from code.** `ref.scrollTo(index)`, `next()`, `prev()`, `onIndexChange`, a shared value that mirrors the position for your own animations, and a footer render prop with the current item.
 - **Morphing pagination dots** that follow the finger and can be tapped.
 - **Images.** Local `require()` or remote `{ uri }`, `contain` or `cover`, a placeholder color per item, neighbors kept loaded so a swipe rarely waits.
+- **Responsive images.** Give a list of sizes (`srcset`) or build CDN URLs from the measured size; the carousel picks the right one for the area and pixel ratio, and after a rotation cross-fades to a sharper one without a flash.
 - **Image cache with expiry.** Remote images are stored on disk (Cache Storage on web) with a lifetime from `maxAge` or the server's `Cache-Control`. `stale-while-revalidate` by default: cached images show instantly, expired ones are revalidated with `ETag` (a 304 costs no image bytes) and swapped when the server has a new version.
 - **Accessibility.** The carousel is one adjustable element: swipe up or down with VoiceOver or TalkBack to change page, and the current item is announced. Arrow keys, Home and End on web. Reduce Motion switches the effect to a cross-fade.
 - **iOS, Android and web.** Runs in Expo Go.
@@ -98,7 +99,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | Prop | Default | Description |
 | --- | --- | --- |
 | `data` | required | Items |
-| `getImage(item, index)` | required | Image for the media area: `require(...)` or `{ uri }` |
+| `getImage(item, index, target)` | required | Image for the media area: `require(...)`, `{ uri }`, a list of `{ uri, width, height }` variants, or a URL built from `target` (see [Responsive images](#responsive-images-srcset)) |
 | `renderItem({ item, index })` | | Page content that slides with the gesture |
 | `keyExtractor(item, index)` | index | Stable key for each item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` or a worklet function (see below) |
@@ -124,6 +125,36 @@ The liquid effect works best with images on a transparent background, such as pr
 | `getAccessibilityLabel(item, index)` | key | Screen reader text for the current item |
 | `ref` | | `{ scrollTo(index, { animated }), next(), prev(), getIndex() }` |
 | `style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |
+
+## Responsive images (srcset)
+
+The carousel measures its media area, multiplies by the device pixel ratio and picks an image that is sharp enough without downloading more than needed. There are two ways to offer sizes.
+
+**A list of variants**, the React Native form of `srcset` (`width` is the `w` descriptor):
+
+```tsx
+getImage={(p) => [
+  { uri: `${p.base}-640.jpg`, width: 640, height: 480 },
+  { uri: `${p.base}-1280.jpg`, width: 1280, height: 960 },
+  { uri: `${p.base}-2560.jpg`, width: 2560, height: 1920 },
+]}
+```
+
+The smallest variant at least as wide as needed wins; with `height` set, `cover` and `contain` account for the aspect ratio. A variant already in the cache is preferred when it is at most twice the needed width.
+
+**A URL built for the size**, for image CDNs (imgix, Cloudinary, Unsplash, a Next.js-style resizer). The third argument is the target in physical pixels, rounded up to one of a few widths (`WIDTH_STEPS`: 320, 480, 640, 750, 828, 1080, 1200, 1440, 1920, 2560, …) so the CDN and the cache see a handful of URLs per image, not one per device:
+
+```tsx
+getImage={(p, i, target) => ({
+  uri: `https://images.unsplash.com/photo-${p.id}?w=${target.width}&h=${target.height}&fit=crop`,
+})}
+```
+
+`target` has `width`, `height`, `pixelRatio`, `layoutWidth`, `layoutHeight` (dp) and `fit`.
+
+There is no `sizes`: HTML needs it because the browser chooses before layout, the carousel chooses after.
+
+**Rotation and resizing.** When the area grows (portrait to landscape, a split-screen resize, a window on web), the sharper variant is downloaded in the background while the current image stays on screen, then cross-faded in over 220 ms once decoded. When the area shrinks, the sharper image already shown is kept and nothing is downloaded, like browsers do. The image is redrawn at the new size in the same frame as the layout change, so a rotation shows no frame at the old size and no empty frame.
 
 ## Remote images and caching
 

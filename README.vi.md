@@ -17,6 +17,7 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
 - **Điều khiển từ code.** `ref.scrollTo(index)`, `next()`, `prev()`, `onIndexChange`, một shared value phản chiếu vị trí để dùng cho animation khác, và render prop cho footer kèm item hiện tại.
 - **Chấm phân trang biến hình** chạy theo ngón tay và bấm được.
 - **Ảnh.** `require()` cục bộ hoặc `{ uri }` từ mạng, `contain` hoặc `cover`, màu placeholder cho từng item, ảnh lân cận được tải sẵn nên vuốt hiếm khi phải chờ.
+- **Ảnh responsive.** Khai báo danh sách kích thước (`srcset`) hoặc dựng URL CDN theo kích thước đo được; carousel chọn ảnh phù hợp với vùng hiển thị và mật độ điểm ảnh, và sau khi xoay màn hình thì crossfade sang ảnh nét hơn mà không chớp.
 - **Cache ảnh có thời hạn.** Ảnh từ mạng được lưu trên đĩa (Cache Storage trên web) với thời hạn lấy từ `maxAge` hoặc header `Cache-Control` của server. Mặc định là `stale-while-revalidate`: ảnh đã cache hiện ngay, ảnh hết hạn được kiểm tra lại bằng `ETag` (một phản hồi 304 không tốn byte ảnh nào) và được thay khi server có bản mới.
 - **Accessibility.** Carousel là một phần tử adjustable: với VoiceOver hoặc TalkBack, vuốt lên hoặc xuống để đổi trang, item hiện tại được đọc lên. Trên web dùng phím mũi tên, Home và End. Khi bật Reduce Motion, hiệu ứng chuyển về cross-fade.
 - **iOS, Android và web.** Chạy được trong Expo Go.
@@ -98,7 +99,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | Prop | Mặc định | Mô tả |
 | --- | --- | --- |
 | `data` | bắt buộc | Danh sách item |
-| `getImage(item, index)` | bắt buộc | Ảnh cho vùng media: `require(...)` hoặc `{ uri }` |
+| `getImage(item, index, target)` | bắt buộc | Ảnh cho vùng media: `require(...)`, `{ uri }`, danh sách biến thể `{ uri, width, height }`, hoặc URL dựng từ `target` (xem [Ảnh responsive](#ảnh-responsive-srcset)) |
 | `renderItem({ item, index })` | | Nội dung trang, trượt theo cử chỉ |
 | `keyExtractor(item, index)` | index | Key ổn định cho từng item |
 | `effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` hoặc một worklet (xem bên dưới) |
@@ -124,6 +125,36 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `getAccessibilityLabel(item, index)` | key | Văn bản đọc cho item hiện tại |
 | `ref` | | `{ scrollTo(index, { animated }), next(), prev(), getIndex() }` |
 | `style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |
+
+## Ảnh responsive (srcset)
+
+Carousel đo vùng media, nhân với mật độ điểm ảnh của thiết bị và chọn ảnh vừa đủ nét mà không tải thừa. Có hai cách khai báo các kích thước.
+
+**Danh sách biến thể**, dạng `srcset` của React Native (`width` là `w`-descriptor):
+
+```tsx
+getImage={(p) => [
+  { uri: `${p.base}-640.jpg`, width: 640, height: 480 },
+  { uri: `${p.base}-1280.jpg`, width: 1280, height: 960 },
+  { uri: `${p.base}-2560.jpg`, width: 2560, height: 1920 },
+]}
+```
+
+Biến thể nhỏ nhất mà vẫn đủ rộng sẽ được chọn; nếu có `height`, `cover` và `contain` tính cả tỉ lệ khung hình. Biến thể đã có trong cache được ưu tiên nếu không lớn quá 2 lần mức cần.
+
+**URL dựng theo kích thước**, cho các CDN ảnh (imgix, Cloudinary, Unsplash, resizer kiểu Next.js). Tham số thứ ba là kích thước cần, tính bằng pixel vật lý, làm tròn lên một trong vài bậc (`WIDTH_STEPS`: 320, 480, 640, 750, 828, 1080, 1200, 1440, 1920, 2560, …) để CDN và cache chỉ thấy vài URL cho mỗi ảnh, thay vì mỗi thiết bị một URL:
+
+```tsx
+getImage={(p, i, target) => ({
+  uri: `https://images.unsplash.com/photo-${p.id}?w=${target.width}&h=${target.height}&fit=crop`,
+})}
+```
+
+`target` gồm `width`, `height`, `pixelRatio`, `layoutWidth`, `layoutHeight` (dp) và `fit`.
+
+Không cần `sizes`: HTML cần nó vì trình duyệt chọn ảnh trước khi layout, còn carousel chọn sau khi layout.
+
+**Xoay màn hình và đổi kích thước.** Khi vùng ảnh lớn lên (dọc sang ngang, chia đôi màn hình, đổi cỡ cửa sổ trên web), biến thể nét hơn được tải ở nền trong khi ảnh hiện tại vẫn hiển thị, rồi crossfade trong 220 ms sau khi decode xong. Khi vùng ảnh nhỏ đi, ảnh nét đang hiện được giữ nguyên và không tải gì thêm, giống trình duyệt. Ảnh được vẽ lại theo kích thước mới ngay trong khung hình đổi layout, nên khi xoay không có khung nào vẽ theo kích thước cũ hay bị trống.
 
 ## Ảnh từ mạng và cache
 

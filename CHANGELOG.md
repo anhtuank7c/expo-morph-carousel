@@ -19,6 +19,7 @@ First public release.
 - `Pagination` with dots that stretch into a pill and follow the gesture; usable on its own.
 - Images from `require()` or `{ uri }`, `contain` or `cover`, placeholder colors, `windowSize` to keep neighbors loaded.
 - Disk cache for remote images with expiry (`imageCache` prop, on by default): `stale-while-revalidate`, `cache-first` or `network-first`; lifetime from `maxAge` or `Cache-Control` / `Expires`; conditional revalidation with `ETag` / `Last-Modified`; `maxStale`, `headers`, `getCacheKey` for signed URLs; LRU size and count limits. Stored with expo-file-system on native (optional) and Cache Storage on web. Decoded Skia images are kept in a small in-memory LRU.
+- Responsive images: `getImage` may return a list of `{ uri, width, height }` variants (`srcset`) or build a URL from its third argument `target` (physical pixels, rounded to `WIDTH_STEPS`). The carousel picks by measured area, pixel ratio and fit, prefers a cached variant, never downgrades a mounted image, and cross-fades to a sharper variant after a rotation or resize. Images are redrawn at the new size in the layout frame (Skia `onSize`), so a rotation shows no stale or empty frame.
 - `imageCache` API: `configure`, `prefetch`, `getEntry`, `stats`, `onStats`, `remove`, `clear`.
 - Accessibility: one adjustable element with increment and decrement actions, keyboard navigation on web.
 - `configureSkiaWeb` to set where CanvasKit is loaded from on web.

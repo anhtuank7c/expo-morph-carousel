@@ -3,7 +3,7 @@
     "name": "Morph Carousel",
     "slug": "morph-carousel",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "morphcarousel",
     "userInterfaceStyle": "light",
     "ios": {

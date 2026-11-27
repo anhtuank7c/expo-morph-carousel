@@ -3,6 +3,7 @@ import {
   AccessibilityInfo,
   I18nManager,
   Image,
+  PixelRatio,
   Platform,
   StyleSheet,
   View,
@@ -19,6 +20,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withSpring,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 
@@ -26,10 +28,14 @@ import { resolveEffect } from './effects';
 import { resolveCacheOptions, useCachedUri } from './cache';
 import type { ResolvedCacheOptions } from './cache/ImageCache';
 import { useLiquidLayer, type LiquidItem } from './liquid';
+import { makeTarget, normalizeSource, type NormalizedSource } from './responsive';
+import { useChosenUri, useImageLayers, type ImageArea } from './useResponsiveImage';
 import { clamp, nearestVirtual, pageWindow, rubberBand, snapTarget, wrap } from './math';
 import { Pagination } from './Pagination';
 import type { AutoplayOptions, CarouselDirection, MediaEffectFn, MorphCarouselProps } from './types';
 
+/** Duration of the cross-fade when an image is replaced by a sharper or newer one. */
+const SWAP_MS = 220;
 const DEFAULT_SPRING = { damping: 26, stiffness: 220, mass: 1 };
 const DEFAULT_LIQUID = { blur: 28, threshold: 0.5, sharpness: 24 };
 const DEFAULT_AUTOPLAY: Required<AutoplayOptions> = {
@@ -252,6 +258,27 @@ export function MorphCarousel<T>({
     effect === 'liquid' ? 'crossfade' : reduceMotion && typeof effect === 'string' ? 'crossfade' : effect,
   );
 
+  /* --- responsive images ------------------------------------------------
+     The area an image is drawn in (media area minus padding) times the pixel
+     ratio decides which candidate is sharp enough. `getImage` also receives
+     it as `target`, rounded to a few widths, to build CDN URLs.            */
+  const pixelRatio = PixelRatio.get();
+  const imageArea = {
+    width: Math.max(mediaSize.width - mediaPadding * 2, 0),
+    height: Math.max(mediaSize.height - mediaPadding * 2, 0),
+  };
+  const target = makeTarget(imageArea, pixelRatio, mediaFit);
+  const area: ImageArea = { ...imageArea, pixelRatio, fit: mediaFit };
+  const sourceOf = (i: number): NormalizedSource => {
+    const n = normalizeSource(getImage(data[i], i, target));
+    // A single URI built for `target` is as wide as the target asked for;
+    // without a width it would count as infinitely sharp and never upgrade.
+    if (n.kind === 'uri' && n.candidates.length === 1 && !Number.isFinite(n.candidates[0].width)) {
+      n.candidates[0] = { ...n.candidates[0], width: target.width };
+    }
+    return n;
+  };
+
   const media =
     mediaSize.width > 0 && count > 0 ? (
       LiquidLayer ? (
@@ -263,8 +290,9 @@ export function MorphCarousel<T>({
             const i = wrap(v, count);
             return {
               key: String(v),
+              identity: keyOf(data[i], i),
               virtual: v,
-              source: toSkiaSource(getImage(data[i], i)),
+              source: sourceOf(i),
               placeholderColor: getPlaceholderColor?.(data[i], i),
             };
           })}
@@ -277,6 +305,7 @@ export function MorphCarousel<T>({
           threshold={liquidConfig.threshold}
           sharpness={liquidConfig.sharpness}
           cache={cacheOptions}
+          pixelRatio={pixelRatio}
         />
       ) : (
         pages.map((v) => {
@@ -285,8 +314,10 @@ export function MorphCarousel<T>({
             <ViewMediaItem
               key={v}
               virtual={v}
+              identity={keyOf(data[i], i)}
               position={position}
-              source={getImage(data[i], i)}
+              source={sourceOf(i)}
+              area={area}
               placeholderColor={getPlaceholderColor?.(data[i], i)}
               effect={viewEffect}
               size={mediaSize}
@@ -440,8 +471,10 @@ function Page({
 
 function ViewMediaItem({
   virtual,
+  identity,
   position,
   source,
+  area,
   placeholderColor,
   effect,
   size,
@@ -452,8 +485,10 @@ function ViewMediaItem({
   cache,
 }: {
   virtual: number;
+  identity: string;
   position: SharedValue<number>;
-  source: ImageSourcePropType;
+  source: NormalizedSource;
+  area: ImageArea;
   placeholderColor?: string;
   effect: MediaEffectFn;
   size: Size;
@@ -463,50 +498,85 @@ function ViewMediaItem({
   padding: number;
   cache: ResolvedCacheOptions | null;
 }) {
-  const remote = toRemoteUri(source);
-  const cached = useCachedUri(remote, cache);
-  // Remote: the cached file (or the URL), nothing while it downloads.
-  const shown: ImageSourcePropType | null = remote
-    ? cached
-      ? { ...(source as object), uri: cached }
-      : null
-    : source;
-  const [loadedUri, setLoadedUri] = useState<string | null>(null);
-  const shownKey = typeof shown === 'number' ? String(shown) : remote ? cached : 'local';
-  const loaded = loadedUri !== null && loadedUri === shownKey;
+  const chosen = useChosenUri(identity, source, area, cache);
+  const cached = useCachedUri(chosen, cache);
+  const value: number | string | null = source.kind === 'bundled' ? source.asset : cached;
+  const { layers, onShown } = useImageLayers(value);
+  const [baseLoaded, setBaseLoaded] = useState<number | null>(null);
   const animated = useAnimatedStyle(() =>
     effect({ offset: virtual - position.value, width: size.width, height: size.height, direction, rtl }),
   );
   const blob = Math.min(size.width, size.height) * 0.64;
+  // Anchored to the edges so it follows the native layout in the same frame
+  // (after a rotation, a size from React state would lag one render behind).
+  // The Image inside fills it by percentage (see styles.fill).
+  const frame = {
+    position: 'absolute' as const,
+    left: padding,
+    top: padding,
+    right: padding,
+    bottom: padding,
+  };
+  const showPlaceholder = placeholderColor && (layers.length === 0 || baseLoaded !== layers[0].id);
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.center, { padding }, animated]}>
-      {!loaded && placeholderColor && (
+      {showPlaceholder && (
         <View
           style={{ width: blob, height: blob, borderRadius: blob / 2, backgroundColor: placeholderColor }}
         />
       )}
-      {shown !== null && (
-        <Image
-          source={shown}
-          resizeMode={fit}
-          onLoad={() => setLoadedUri(shownKey)}
-          style={{
-            position: 'absolute',
-            left: padding,
-            top: padding,
-            width: Math.max(size.width - padding * 2, 0),
-            height: Math.max(size.height - padding * 2, 0),
-          }}
+      {layers.map((l, i) => (
+        <ImageLayer
+          key={l.id}
+          id={l.id}
+          source={typeof l.value === 'number' ? l.value : { uri: l.value }}
+          fadeIn={i > 0}
+          fit={fit}
+          style={frame}
+          onLoad={i === 0 ? setBaseLoaded : undefined}
+          onShown={onShown}
         />
-      )}
+      ))}
     </Animated.View>
   );
 }
 
-function toSkiaSource(source: ImageSourcePropType): number | string | null {
-  if (typeof source === 'number') return source;
-  if (Array.isArray(source)) return source[0]?.uri ?? null;
-  return (source as { uri?: string }).uri ?? null;
+/**
+ * One image of a view-based media item. A replacing layer stays transparent
+ * while it downloads and decodes, then fades in over the one below, so the
+ * swap after a rotation never shows an empty frame.
+ */
+function ImageLayer({
+  id,
+  source,
+  fadeIn,
+  fit,
+  style,
+  onLoad,
+  onShown,
+}: {
+  id: number;
+  source: ImageSourcePropType;
+  fadeIn: boolean;
+  fit: 'contain' | 'cover';
+  style: object;
+  onLoad?: (id: number) => void;
+  onShown: (id: number) => void;
+}) {
+  const opacity = useSharedValue(fadeIn ? 0 : 1);
+  const animated = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const handleLoad = () => {
+    onLoad?.(id);
+    if (!fadeIn) return;
+    opacity.value = withTiming(1, { duration: SWAP_MS }, (finished) => {
+      if (finished) runOnJS(onShown)(id);
+    });
+  };
+  return (
+    <Animated.View style={[style, animated]}>
+      <Image source={source} resizeMode={fit} onLoad={handleLoad} style={styles.fill} />
+    </Animated.View>
+  );
 }
 
 function useScreenReaderEnabled() {
@@ -532,11 +602,7 @@ const styles = StyleSheet.create({
   pages: { flex: 1, overflow: 'hidden' },
   footer: { alignItems: 'center', gap: 16, paddingVertical: 12 },
   center: { alignItems: 'center', justifyContent: 'center' },
+  // Percent size, not absoluteFill: on Android an Image placed only by its
+  // edges is drawn at the image's intrinsic size.
+  fill: { width: '100%', height: '100%' },
 });
-
-/** The http(s) URI of a `{ uri }` source, or null for bundled and local images. */
-function toRemoteUri(source: ImageSourcePropType): string | null {
-  if (typeof source !== 'object' || Array.isArray(source)) return null;
-  const uri = (source as { uri?: string }).uri;
-  return uri && /^https?:\/\//i.test(uri) ? uri : null;
-}

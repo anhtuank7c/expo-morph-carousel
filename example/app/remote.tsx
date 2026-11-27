@@ -5,11 +5,22 @@ import {
   type CacheStrategy,
   type ImageCacheOptions,
   type MorphCarouselRef,
+  WIDTH_STEPS,
 } from 'expo-morph-carousel';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  PixelRatio,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
-import { photos } from '../data/products';
+import { photos, unsplashUrl } from '../data/products';
 
 /**
  * Remote images through the carousel's disk cache.
@@ -37,6 +48,11 @@ const localItems = [0, 1, 2, 3, 4].map((n) => ({
   color: ['#6a4fd8', '#f0a020', '#20a890', '#3478f6', '#eb405a'][n],
 }));
 
+type Item = { id: string; title: string; uri: string; color: string; unsplash?: string };
+
+/** Photos are requested at 4:3; the carousel covers its area and crops the rest. */
+const heightFor = (width: number) => Math.round((width * 3) / 4);
+
 const STRATEGIES: CacheStrategy[] = ['stale-while-revalidate', 'cache-first', 'network-first'];
 const AGES: { label: string; ms: number }[] = [
   { label: '10 s', ms: 10_000 },
@@ -54,10 +70,11 @@ export default function RemoteScreen() {
   const [note, setNote] = useState('');
   const carousel = useRef<MorphCarouselRef>(null);
 
-  const items =
+  const items: Item[] =
     source === 'local'
       ? localItems
-      : photos.map((p) => ({ id: p.id, title: p.title, uri: p.uri, color: p.color }));
+      : photos.map((p) => ({ id: p.id, title: p.title, uri: p.uri, color: p.color, unsplash: p.id }));
+  const screen = useWindowDimensions();
 
   // Stable options object: the carousel memoizes on identity.
   const cache = useMemo<ImageCacheOptions | false>(
@@ -68,7 +85,14 @@ export default function RemoteScreen() {
   const stats = useSyncExternalStore(imageCache.onStats, statsSnapshot);
   const now = useNow();
   const current = items[index];
-  const entry = current ? imageCache.getEntry(current.uri) : undefined;
+  // Unsplash items exist in several sizes (one URL per target width); show
+  // every cached variant, newest first, to see the upgrade after a rotation.
+  const variants = current?.unsplash
+    ? WIDTH_STEPS.map((w) => ({ w, e: imageCache.getEntry(unsplashUrl(current.unsplash!, w, heightFor(w))) }))
+        .filter((v) => v.e)
+        .sort((a, b) => b.e!.fetchedAt - a.e!.fetchedAt)
+    : [];
+  const entry = current?.unsplash ? variants[0]?.e : current ? imageCache.getEntry(current.uri) : undefined;
 
   const call = async (path: string) => {
     try {
@@ -87,7 +111,11 @@ export default function RemoteScreen() {
         testID="remote-carousel"
         data={items}
         keyExtractor={(p) => p.id}
-        getImage={(p) => ({ uri: p.uri })}
+        // Unsplash: ask the CDN for exactly the size the media area needs
+        // (target is in physical pixels, rounded to a few widths).
+        getImage={(p, _i, t) => ({
+          uri: p.unsplash ? unsplashUrl(p.unsplash, t.width, heightFor(t.width)) : p.uri,
+        })}
         getPlaceholderColor={(p) => p.color}
         getAccessibilityLabel={(p) => p.title}
         accessibilityLabel="Remote images"
@@ -121,6 +149,12 @@ export default function RemoteScreen() {
             : enabled
               ? 'not cached yet'
               : 'cache off'}
+          {variants.length > 0 && `\nvariants: ${variants.map((v) => `${v.w}w`).join(', ')} (newest first)`}
+        </Text>
+        <Text style={styles.panelTitle}>Screen</Text>
+        <Text style={styles.mono}>
+          {Math.round(screen.width)}×{Math.round(screen.height)} dp @{PixelRatio.get()}x ·{' '}
+          {screen.width > screen.height ? 'landscape' : 'portrait'}
         </Text>
         <Text style={styles.panelTitle}>Cache</Text>
         <Text style={styles.mono}>

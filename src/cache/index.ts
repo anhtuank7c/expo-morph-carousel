@@ -42,6 +42,11 @@ function getCache(): ImageCache | null {
   return instance;
 }
 
+/** Whether `uri` has a cache entry (fresh or stale). Synchronous, for choosing between candidates. */
+export function isCachedSync(uri: string, options: ResolvedCacheOptions): boolean {
+  return !!getCache()?.getEntry(uri, options);
+}
+
 export function resolveCacheOptions(
   options: ImageCacheOptions | false | undefined,
 ): ResolvedCacheOptions | null {

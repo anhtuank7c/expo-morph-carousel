@@ -48,9 +48,17 @@ export const products: Product[] = [
 ];
 
 /**
+ * An Unsplash image URL at a given size. Unsplash serves through imgix, which
+ * resizes on the fly: `w` and `h` in pixels, `fit=crop` fills the box.
+ */
+export function unsplashUrl(id: string, width: number, height: number) {
+  return `https://images.unsplash.com/photo-${id}?w=${width}&h=${height}&fit=crop&q=80&fm=jpg`;
+}
+
+/**
  * Remote photos for the image-loading demo, from Unsplash (free to use under
- * the Unsplash License, https://unsplash.com/license). The imgix parameters
- * ask for an 800 px wide JPEG cropped to 4:3, about 60–200 KB each.
+ * the Unsplash License, https://unsplash.com/license). `uri` is a fixed 800 px
+ * variant; the remote screen builds the URL per size with `unsplashUrl`.
  *
  * Unsplash answers with `Cache-Control: max-age=31536000` (one year), so with
  * `respectHttpHeaders` on, the cache keeps these for a year.
@@ -65,5 +73,5 @@ export const photos = [
   { id: '1433086966358-54859d0ed716', title: 'Waterfall', color: '#3f6b3a' },
 ].map((p) => ({
   ...p,
-  uri: `https://images.unsplash.com/photo-${p.id}?w=800&h=600&fit=crop&q=80&fm=jpg`,
+  uri: unsplashUrl(p.id, 800, 600),
 }));

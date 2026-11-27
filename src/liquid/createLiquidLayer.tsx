@@ -19,20 +19,31 @@
  */
 import type * as SkiaModule from '@shopify/react-native-skia';
 import { useEffect, useState } from 'react';
-import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native';
+import {
+  runOnJS,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 import { useCachedUri } from '../cache';
 import type { ResolvedCacheOptions } from '../cache/ImageCache';
 import { clamp, transitionPeak } from '../math';
+import type { NormalizedSource } from '../responsive';
+import { useChosenUri, useImageLayers, type ImageArea } from '../useResponsiveImage';
 
 type Skia = typeof SkiaModule;
 type SkImage = SkiaModule.SkImage;
 
 export type LiquidItem = {
   key: string;
+  /** Item identity (its key in `data`); the chosen image variant sticks to it. */
+  identity: string;
   /** Virtual page index (unbounded with loop). */
   virtual: number;
-  source: number | string | null;
+  source: NormalizedSource;
   placeholderColor?: string;
 };
 
@@ -48,7 +59,14 @@ export type LiquidLayerProps = {
   sharpness: number;
   /** Disk cache options for remote images, or null to load them directly. */
   cache: ResolvedCacheOptions | null;
+  pixelRatio: number;
 };
+
+/** Duration of the cross-fade when an image is replaced by a sharper or newer one. */
+const SWAP_MS = 220;
+
+/** Where images are drawn: fixed padding, size following the canvas on the UI thread. */
+type Rect = { x: number; y: number; width: SharedValue<number>; height: SharedValue<number> };
 
 /** Decoded images kept in memory per app. */
 const DECODED_LIMIT = 24;
@@ -107,38 +125,92 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     return state.uri === uri ? state.image : (decoded.get(uri) ?? null);
   }
 
+  /**
+   * One image layer. A layer that replaces another (sharper variant after a
+   * rotation, new content after revalidation) starts transparent and fades
+   * in over the one below; the image is already decoded when the layer
+   * mounts, so the fade starts on its first frame.
+   */
+  function FadeLayer({
+    image,
+    id,
+    fadeIn,
+    opacity,
+    rect,
+    fit,
+    onShown,
+  }: {
+    image: SkImage;
+    id: number;
+    fadeIn: boolean;
+    opacity: SharedValue<number>;
+    rect: Rect;
+    fit: 'contain' | 'cover';
+    onShown: (id: number) => void;
+  }) {
+    const mix = useSharedValue(fadeIn ? 0 : 1);
+    useEffect(() => {
+      if (!fadeIn) return;
+      mix.value = withTiming(1, { duration: SWAP_MS }, (finished) => {
+        if (finished) runOnJS(onShown)(id);
+      });
+    }, [fadeIn, id, mix, onShown]);
+    const layerOpacity = useDerivedValue(() => opacity.value * mix.value);
+    return (
+      <Image
+        image={image}
+        fit={fit}
+        opacity={layerOpacity}
+        x={rect.x}
+        y={rect.y}
+        width={rect.width}
+        height={rect.height}
+      />
+    );
+  }
+
   function LiquidImage({
     item,
     position,
     rect,
-    fit,
+    area,
     cache,
   }: {
     item: LiquidItem;
     position: SharedValue<number>;
-    rect: { x: number; y: number; width: number; height: number };
-    fit: 'contain' | 'cover';
+    rect: Rect;
+    area: ImageArea;
     cache: ResolvedCacheOptions | null;
   }) {
-    const remote = typeof item.source === 'string' ? item.source : null;
-    const cached = useCachedUri(remote, cache);
-    const image = useSkImage(remote === null ? item.source : cached);
+    const chosen = useChosenUri(item.identity, item.source, area, cache);
+    const cached = useCachedUri(chosen, cache);
+    const image = useSkImage(item.source.kind === 'bundled' ? item.source.asset : cached);
+    const { layers, onShown } = useImageLayers(image);
     const opacity = useDerivedValue(() => clamp(1 - Math.abs(item.virtual - position.value), 0, 1));
+    const cx = useDerivedValue(() => rect.x + rect.width.value / 2);
+    const cy = useDerivedValue(() => rect.y + rect.height.value / 2);
+    const r = useDerivedValue(() => Math.min(rect.width.value, rect.height.value) * 0.32);
 
-    if (!image) {
+    if (layers.length === 0) {
       if (!item.placeholderColor) return null;
-      const r = Math.min(rect.width, rect.height) * 0.32;
-      return (
-        <Circle
-          cx={rect.x + rect.width / 2}
-          cy={rect.y + rect.height / 2}
-          r={r}
-          color={item.placeholderColor}
-          opacity={opacity}
-        />
-      );
+      return <Circle cx={cx} cy={cy} r={r} color={item.placeholderColor} opacity={opacity} />;
     }
-    return <Image image={image} fit={fit} opacity={opacity} {...rect} />;
+    return (
+      <Group>
+        {layers.map((l, i) => (
+          <FadeLayer
+            key={l.id}
+            id={l.id}
+            image={l.value}
+            fadeIn={i > 0}
+            opacity={opacity}
+            rect={rect}
+            fit={area.fit}
+            onShown={onShown}
+          />
+        ))}
+      </Group>
+    );
   }
 
   function LiquidLayer({
@@ -152,6 +224,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     threshold,
     sharpness,
     cache,
+    pixelRatio,
   }: LiquidLayerProps) {
     const layer = useDerivedValue(() => {
       const t = transitionPeak(position.value);
@@ -176,18 +249,34 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       return paint;
     });
 
+    // The canvas fills the media area and reports its size on the UI thread,
+    // in the same frame as the layout. Drawing from React state instead lags
+    // a render behind, which after a rotation shows one frame drawn at the
+    // old width.
+    const canvasSize = useSharedValue({ width, height });
+    const rectWidth = useDerivedValue(() => Math.max(canvasSize.value.width - padding * 2, 0));
+    const rectHeight = useDerivedValue(() => Math.max(canvasSize.value.height - padding * 2, 0));
+
     if (width <= 0 || height <= 0) return null;
-    const rect = {
-      x: padding,
-      y: padding,
+    const rect: Rect = { x: padding, y: padding, width: rectWidth, height: rectHeight };
+    const area: ImageArea = {
       width: Math.max(width - padding * 2, 0),
       height: Math.max(height - padding * 2, 0),
+      pixelRatio,
+      fit,
     };
     return (
-      <Canvas style={{ width, height }} pointerEvents="none">
+      <Canvas style={StyleSheet.absoluteFill} onSize={canvasSize} pointerEvents="none">
         <Group layer={layer}>
           {items.map((item) => (
-            <LiquidImage key={item.key} item={item} position={position} rect={rect} fit={fit} cache={cache} />
+            <LiquidImage
+              key={item.key}
+              item={item}
+              position={position}
+              rect={rect}
+              area={area}
+              cache={cache}
+            />
           ))}
         </Group>
       </Canvas>

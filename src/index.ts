@@ -2,6 +2,7 @@ export { MorphCarousel } from './MorphCarousel';
 export { Pagination, type PaginationProps } from './Pagination';
 export { presets as mediaEffects } from './effects';
 export { configureSkiaWeb } from './liquid';
+export { WIDTH_STEPS, type ImageCandidate, type ImageTarget } from './responsive';
 export {
   imageCache,
   type CacheEntry,
