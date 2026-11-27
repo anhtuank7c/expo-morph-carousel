@@ -44,7 +44,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test \"test/*.test.ts\"",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --import ./test/resolve-ts.mjs --test \"test/*.test.ts\"",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
     "prepack": "npm run clean && npm run build",
     "example": "cd example && expo start",
@@ -71,10 +71,14 @@
     "react": ">=19.0.0",
     "react-native": ">=0.80.0",
     "react-native-gesture-handler": ">=3.0.0",
-    "react-native-reanimated": ">=4.0.0"
+    "react-native-reanimated": ">=4.0.0",
+    "expo-file-system": ">=58.0.0"
   },
   "peerDependenciesMeta": {
     "@shopify/react-native-skia": {
+      "optional": true
+    },
+    "expo-file-system": {
       "optional": true
     }
   },
@@ -86,6 +90,7 @@
     "eslint-config-expo": "~58.0.4",
     "eslint-config-prettier": "^10.1.8",
     "expo": "~58.0.26",
+    "expo-file-system": "~58.0.15",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.2",
     "prettier": "^3.10.1",

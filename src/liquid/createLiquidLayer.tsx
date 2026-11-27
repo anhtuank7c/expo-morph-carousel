@@ -18,11 +18,15 @@
  * Types come from a type-only import, which does not exist at runtime.
  */
 import type * as SkiaModule from '@shopify/react-native-skia';
+import { useEffect, useState } from 'react';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
+import { useCachedUri } from '../cache';
+import type { ResolvedCacheOptions } from '../cache/ImageCache';
 import { clamp, transitionPeak } from '../math';
 
 type Skia = typeof SkiaModule;
+type SkImage = SkiaModule.SkImage;
 
 export type LiquidItem = {
   key: string;
@@ -42,7 +46,12 @@ export type LiquidLayerProps = {
   blur: number;
   threshold: number;
   sharpness: number;
+  /** Disk cache options for remote images, or null to load them directly. */
+  cache: ResolvedCacheOptions | null;
 };
+
+/** Decoded images kept in memory per app. */
+const DECODED_LIMIT = 24;
 
 export type LiquidLayerComponent = (props: LiquidLayerProps) => React.ReactElement | null;
 
@@ -51,18 +60,69 @@ const IDENTITY_ALPHA = { a: 1, b: 0 };
 export function createLiquidLayer(S: Skia): LiquidLayerComponent {
   const { Canvas, Group, Image, Circle, useImage, Skia: SkiaApi, TileMode } = S;
 
+  /**
+   * Decoded images by URI, most recently used last. Swiping back and forth,
+   * or a loop wrapping around, reuses the decoded image instead of reading
+   * and decoding the file again.
+   */
+  const decoded = new Map<string, SkImage>();
+  const remember = (uri: string, image: SkImage) => {
+    decoded.delete(uri);
+    decoded.set(uri, image);
+    while (decoded.size > DECODED_LIMIT) decoded.delete(decoded.keys().next().value!);
+  };
+
+  function useSkImage(source: number | string | null): SkImage | null {
+    const uri = typeof source === 'string' ? source : null;
+    // Bundled assets (`require`) go through Skia's own loader, which resolves them.
+    const bundled = useImage(uri === null ? (source ?? undefined) : undefined);
+    const [state, setState] = useState<{ uri: string | null; image: SkImage | null }>(() => ({
+      uri,
+      image: uri ? (decoded.get(uri) ?? null) : null,
+    }));
+
+    useEffect(() => {
+      if (!uri) return;
+      const known = decoded.get(uri);
+      if (known) {
+        remember(uri, known);
+        setState((prev) => (prev.uri === uri && prev.image === known ? prev : { uri, image: known }));
+        return;
+      }
+      let alive = true;
+      SkiaApi.Data.fromURI(uri)
+        .then((data) => {
+          const image = SkiaApi.Image.MakeImageFromEncoded(data);
+          if (!image) return;
+          remember(uri, image);
+          if (alive) setState({ uri, image });
+        })
+        .catch(() => {});
+      return () => {
+        alive = false;
+      };
+    }, [uri]);
+
+    if (!uri) return bundled;
+    return state.uri === uri ? state.image : (decoded.get(uri) ?? null);
+  }
+
   function LiquidImage({
     item,
     position,
     rect,
     fit,
+    cache,
   }: {
     item: LiquidItem;
     position: SharedValue<number>;
     rect: { x: number; y: number; width: number; height: number };
     fit: 'contain' | 'cover';
+    cache: ResolvedCacheOptions | null;
   }) {
-    const image = useImage(item.source ?? undefined);
+    const remote = typeof item.source === 'string' ? item.source : null;
+    const cached = useCachedUri(remote, cache);
+    const image = useSkImage(remote === null ? item.source : cached);
     const opacity = useDerivedValue(() => clamp(1 - Math.abs(item.virtual - position.value), 0, 1));
 
     if (!image) {
@@ -91,6 +151,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     blur,
     threshold,
     sharpness,
+    cache,
   }: LiquidLayerProps) {
     const layer = useDerivedValue(() => {
       const t = transitionPeak(position.value);
@@ -126,7 +187,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       <Canvas style={{ width, height }} pointerEvents="none">
         <Group layer={layer}>
           {items.map((item) => (
-            <LiquidImage key={item.key} item={item} position={position} rect={rect} fit={fit} />
+            <LiquidImage key={item.key} item={item} position={position} rect={rect} fit={fit} cache={cache} />
           ))}
         </Group>
       </Canvas>

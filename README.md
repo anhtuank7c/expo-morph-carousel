@@ -17,17 +17,23 @@ A carousel for Expo in which the images melt into each other like liquid while t
 - **Control from code.** `ref.scrollTo(index)`, `next()`, `prev()`, `onIndexChange`, a shared value that mirrors the position for your own animations, and a footer render prop with the current item.
 - **Morphing pagination dots** that follow the finger and can be tapped.
 - **Images.** Local `require()` or remote `{ uri }`, `contain` or `cover`, a placeholder color per item, neighbors kept loaded so a swipe rarely waits.
+- **Image cache with expiry.** Remote images are stored on disk (Cache Storage on web) with a lifetime from `maxAge` or the server's `Cache-Control`. `stale-while-revalidate` by default: cached images show instantly, expired ones are revalidated with `ETag` (a 304 costs no image bytes) and swapped when the server has a new version.
 - **Accessibility.** The carousel is one adjustable element: swipe up or down with VoiceOver or TalkBack to change page, and the current item is announced. Arrow keys, Home and End on web. Reduce Motion switches the effect to a cross-fade.
 - **iOS, Android and web.** Runs in Expo Go.
 
 ## Installation
 
 ```bash
-npx expo install expo-morph-carousel @shopify/react-native-skia \
+npx expo install expo-morph-carousel @shopify/react-native-skia expo-file-system \
   react-native-reanimated react-native-worklets react-native-gesture-handler
 ```
 
-`@shopify/react-native-skia` is only needed for the `liquid` effect (the default). Without it, the carousel uses `crossfade` and logs nothing.
+Two of these are optional:
+
+| Package | Needed for | Without it |
+| --- | --- | --- |
+| `@shopify/react-native-skia` | The `liquid` effect (the default) | The carousel uses `crossfade` |
+| `expo-file-system` | The disk cache for remote images on iOS and Android | Remote images load from the network each time (the platform's HTTP cache still applies) |
 
 `babel.config.js` must use `babel-preset-expo`, which enables the worklets Babel plugin. Wrap the app in `GestureHandlerRootView`.
 
@@ -102,6 +108,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `mediaFit` | `'contain'` | `'contain'` or `'cover'` |
 | `mediaPadding` | `16` | Space around the image inside the media area |
 | `getPlaceholderColor(item, index)` | | Color of the soft blob shown while an image loads |
+| `imageCache` | on | Options for remote images (see [Remote images and caching](#remote-images-and-caching)), or `false` |
 | `direction` | `'horizontal'` | `'horizontal'` or `'vertical'` |
 | `loop` | `false` | Swipe past the last page to the first, and back |
 | `initialIndex` | `0` | Page shown first |
@@ -117,6 +124,70 @@ The liquid effect works best with images on a transparent background, such as pr
 | `getAccessibilityLabel(item, index)` | key | Screen reader text for the current item |
 | `ref` | | `{ scrollTo(index, { animated }), next(), prev(), getIndex() }` |
 | `style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |
+
+## Remote images and caching
+
+Remote images (`{ uri: 'https://…' }`) go through a disk cache that is on by default. Each image is stored with the time it was fetched and when it expires.
+
+```tsx
+// A module constant (or useMemo): the carousel memoizes the options on identity.
+const CACHE = {
+  strategy: 'stale-while-revalidate', // default
+  maxAge: 6 * 60 * 60 * 1000, // 6 hours when the server sends no Cache-Control
+} as const;
+
+<MorphCarousel imageCache={CACHE} getImage={(p) => ({ uri: p.imageUrl })} … />
+```
+
+| Strategy | Cached and fresh | Cached and expired | Not cached |
+| --- | --- | --- | --- |
+| `stale-while-revalidate` (default) | Shown, no request | Shown at once, revalidated in the background, swapped if the server has a new version. Past `maxStale` it waits for the network instead | Downloaded |
+| `cache-first` | Shown, no request | Waits for the network; the old copy is the fallback when offline | Downloaded |
+| `network-first` | Revalidated before showing; the cached copy is the fallback when offline | Same | Downloaded |
+
+How long an image is fresh:
+
+- If the server sends `Cache-Control: max-age` (or `Expires`), that lifetime is used. `no-cache` means "always revalidate", `no-store` means "do not write it to disk". Set `respectHttpHeaders: false` to always use `maxAge`.
+- Otherwise `maxAge` (default 24 hours).
+
+Revalidation sends `If-None-Match` / `If-Modified-Since`. When the image has not changed, the server answers 304 and no image data is transferred. When it has changed, the new file gets a new name, so the image view reloads, and the old file is deleted. An image that stays on screen is revalidated when it expires, not only when it mounts.
+
+Options of `imageCache`:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `strategy` | `'stale-while-revalidate'` | See the table above |
+| `maxAge` | 24 h | Lifetime in ms when the server sends none |
+| `maxStale` | 7 days | How long past expiry `stale-while-revalidate` may still show an old image while the new one loads |
+| `respectHttpHeaders` | `true` | Use `Cache-Control` / `Expires` and honor `no-store` |
+| `headers` | | Request headers, for example `Authorization` |
+| `getCacheKey(url)` | the URL | For signed URLs whose query changes on every request: `(url) => url.split('?')[0]` |
+
+Pass `imageCache={false}` to load straight from the network.
+
+The cache is shared by all carousels and has a programmatic API:
+
+```ts
+import { imageCache } from 'expo-morph-carousel';
+
+imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300 }); // defaults: 100 MB, 500 files, LRU eviction
+await imageCache.prefetch(urls); // warm up before the screen opens
+imageCache.getEntry(url); // { fetchedAt, expiresAt, etag, size, … }
+imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size }
+await imageCache.remove(url);
+await imageCache.clear(); // for example on sign out
+```
+
+Files live in `<cache directory>/expo-morph-carousel/` on iOS and Android (the OS may clear it when storage is low) and in Cache Storage on web. Decoded images are also kept in memory (the last 24), so swiping back and forth does not decode them again.
+
+To try it, the example app has a local image server that sends `ETag` and `Cache-Control` and can swap its images:
+
+```bash
+npm run image-server --workspace example   # http://localhost:8090, max-age 30 s
+adb reverse tcp:8090 tcp:8090               # Android emulator
+```
+
+Open "Remote images" in the example app. The panel shows when the current image was fetched, how long it stays fresh, and the cache counters; "Swap images on server" changes what every URL returns.
 
 ## Controlling the carousel
 
@@ -197,14 +268,15 @@ Both filters scale with a triangle curve that is 0 on a page and 1 halfway betwe
 | Cross-fade instead of liquid | Skia is not installed, Reduce Motion is on, or (web) CanvasKit has not loaded yet. Check that `public/canvaskit.wasm` exists (`npx setup-skia-web public`) |
 | Swiping scrolls the parent ScrollView instead | Horizontal carousels claim horizontal drags of more than 10 px; vertical drags go to the parent. In a vertical carousel inside a vertical ScrollView, give the carousel a fixed height and expect the two to compete |
 | Worklet errors such as "… is not a worklet" | A custom effect is missing `'worklet';`, or `babel.config.js` does not use `babel-preset-expo`. Clear the Metro cache with `npx expo start -c` |
-| Remote images stay as placeholders on Android | Skia downloads them itself; HTTPS errors (for example a proxy certificate) are logged as `System.err` in logcat |
+| Remote images stay as placeholders | The download failed; `imageCache.stats().errors` counts failures. On Android, HTTPS errors (for example a proxy certificate) show as `System.err` in logcat. Cleartext `http://` URLs need `usesCleartextTraffic` in a release build |
+| An updated image on the server does not show up | It is still fresh: lower `maxAge`, send a shorter `Cache-Control: max-age` from the server, or call `imageCache.remove(url)` |
 
 ## Platform status
 
 | Platform | Verified with |
 | --- | --- |
-| Android | Android 17 emulator (API 37), Expo Go: every effect, loop, vertical, dots, the ref API |
-| Web | Desktop Chrome: liquid effect with CanvasKit, keyboard navigation, remote images |
+| Android | Android 17 emulator (API 37), Expo Go: every effect, loop, vertical, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
+| Web | Desktop Chrome: liquid effect with CanvasKit, keyboard navigation, remote images, the Cache Storage cache across page reloads |
 | iOS | Not verified yet |
 
 Reports from iOS are welcome.

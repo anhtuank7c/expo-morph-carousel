@@ -23,6 +23,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { resolveEffect } from './effects';
+import { resolveCacheOptions, useCachedUri } from './cache';
+import type { ResolvedCacheOptions } from './cache/ImageCache';
 import { useLiquidLayer, type LiquidItem } from './liquid';
 import { clamp, nearestVirtual, pageWindow, rubberBand, snapTarget, wrap } from './math';
 import { Pagination } from './Pagination';
@@ -50,6 +52,7 @@ export function MorphCarousel<T>({
   mediaFit = 'contain',
   mediaPadding = 16,
   getPlaceholderColor,
+  imageCache,
   direction = 'horizontal',
   loop = false,
   initialIndex = 0,
@@ -76,6 +79,9 @@ export function MorphCarousel<T>({
   const reduceMotion = useReducedMotion();
   const springConfig = useMemo(() => ({ ...DEFAULT_SPRING, ...spring }), [spring]);
   const liquidConfig = { ...DEFAULT_LIQUID, ...liquid };
+  // Memoized on identity: pass a module constant or a memoized object, or each
+  // parent render makes every visible image look its URI up again.
+  const cacheOptions = useMemo(() => resolveCacheOptions(imageCache), [imageCache]);
 
   const startIndex = clamp(initialIndex, 0, Math.max(count - 1, 0));
   const position = useSharedValue(startIndex);
@@ -270,6 +276,7 @@ export function MorphCarousel<T>({
           blur={liquidConfig.blur}
           threshold={liquidConfig.threshold}
           sharpness={liquidConfig.sharpness}
+          cache={cacheOptions}
         />
       ) : (
         pages.map((v) => {
@@ -287,6 +294,7 @@ export function MorphCarousel<T>({
               rtl={rtl}
               fit={mediaFit}
               padding={mediaPadding}
+              cache={cacheOptions}
             />
           );
         })
@@ -441,6 +449,7 @@ function ViewMediaItem({
   rtl,
   fit,
   padding,
+  cache,
 }: {
   virtual: number;
   position: SharedValue<number>;
@@ -452,8 +461,19 @@ function ViewMediaItem({
   rtl: boolean;
   fit: 'contain' | 'cover';
   padding: number;
+  cache: ResolvedCacheOptions | null;
 }) {
-  const [loaded, setLoaded] = useState(false);
+  const remote = toRemoteUri(source);
+  const cached = useCachedUri(remote, cache);
+  // Remote: the cached file (or the URL), nothing while it downloads.
+  const shown: ImageSourcePropType | null = remote
+    ? cached
+      ? { ...(source as object), uri: cached }
+      : null
+    : source;
+  const [loadedUri, setLoadedUri] = useState<string | null>(null);
+  const shownKey = typeof shown === 'number' ? String(shown) : remote ? cached : 'local';
+  const loaded = loadedUri !== null && loadedUri === shownKey;
   const animated = useAnimatedStyle(() =>
     effect({ offset: virtual - position.value, width: size.width, height: size.height, direction, rtl }),
   );
@@ -465,18 +485,20 @@ function ViewMediaItem({
           style={{ width: blob, height: blob, borderRadius: blob / 2, backgroundColor: placeholderColor }}
         />
       )}
-      <Image
-        source={source}
-        resizeMode={fit}
-        onLoad={() => setLoaded(true)}
-        style={{
-          position: 'absolute',
-          left: padding,
-          top: padding,
-          width: Math.max(size.width - padding * 2, 0),
-          height: Math.max(size.height - padding * 2, 0),
-        }}
-      />
+      {shown !== null && (
+        <Image
+          source={shown}
+          resizeMode={fit}
+          onLoad={() => setLoadedUri(shownKey)}
+          style={{
+            position: 'absolute',
+            left: padding,
+            top: padding,
+            width: Math.max(size.width - padding * 2, 0),
+            height: Math.max(size.height - padding * 2, 0),
+          }}
+        />
+      )}
     </Animated.View>
   );
 }
@@ -511,3 +533,10 @@ const styles = StyleSheet.create({
   footer: { alignItems: 'center', gap: 16, paddingVertical: 12 },
   center: { alignItems: 'center', justifyContent: 'center' },
 });
+
+/** The http(s) URI of a `{ uri }` source, or null for bundled and local images. */
+function toRemoteUri(source: ImageSourcePropType): string | null {
+  if (typeof source !== 'object' || Array.isArray(source)) return null;
+  const uri = (source as { uri?: string }).uri;
+  return uri && /^https?:\/\//i.test(uri) ? uri : null;
+}

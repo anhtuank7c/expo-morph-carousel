@@ -17,17 +17,23 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
 - **Điều khiển từ code.** `ref.scrollTo(index)`, `next()`, `prev()`, `onIndexChange`, một shared value phản chiếu vị trí để dùng cho animation khác, và render prop cho footer kèm item hiện tại.
 - **Chấm phân trang biến hình** chạy theo ngón tay và bấm được.
 - **Ảnh.** `require()` cục bộ hoặc `{ uri }` từ mạng, `contain` hoặc `cover`, màu placeholder cho từng item, ảnh lân cận được tải sẵn nên vuốt hiếm khi phải chờ.
+- **Cache ảnh có thời hạn.** Ảnh từ mạng được lưu trên đĩa (Cache Storage trên web) với thời hạn lấy từ `maxAge` hoặc header `Cache-Control` của server. Mặc định là `stale-while-revalidate`: ảnh đã cache hiện ngay, ảnh hết hạn được kiểm tra lại bằng `ETag` (một phản hồi 304 không tốn byte ảnh nào) và được thay khi server có bản mới.
 - **Accessibility.** Carousel là một phần tử adjustable: với VoiceOver hoặc TalkBack, vuốt lên hoặc xuống để đổi trang, item hiện tại được đọc lên. Trên web dùng phím mũi tên, Home và End. Khi bật Reduce Motion, hiệu ứng chuyển về cross-fade.
 - **iOS, Android và web.** Chạy được trong Expo Go.
 
 ## Cài đặt
 
 ```bash
-npx expo install expo-morph-carousel @shopify/react-native-skia \
+npx expo install expo-morph-carousel @shopify/react-native-skia expo-file-system \
   react-native-reanimated react-native-worklets react-native-gesture-handler
 ```
 
-`@shopify/react-native-skia` chỉ cần cho hiệu ứng `liquid` (mặc định). Nếu không cài, carousel dùng `crossfade` và không báo lỗi gì.
+Hai gói trong số này là tuỳ chọn:
+
+| Gói | Cần cho | Nếu không cài |
+| --- | --- | --- |
+| `@shopify/react-native-skia` | Hiệu ứng `liquid` (mặc định) | Carousel dùng `crossfade` |
+| `expo-file-system` | Cache ảnh từ mạng trên đĩa ở iOS và Android | Ảnh từ mạng được tải lại mỗi lần (HTTP cache của nền tảng vẫn có tác dụng) |
 
 `babel.config.js` phải dùng `babel-preset-expo`, preset này bật Babel plugin cho worklets. Bọc app trong `GestureHandlerRootView`.
 
@@ -102,6 +108,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `mediaFit` | `'contain'` | `'contain'` hoặc `'cover'` |
 | `mediaPadding` | `16` | Khoảng cách quanh ảnh trong vùng media |
 | `getPlaceholderColor(item, index)` | | Màu của khối mờ hiển thị khi ảnh đang tải |
+| `imageCache` | bật | Tuỳ chọn cho ảnh từ mạng (xem [Ảnh từ mạng và cache](#ảnh-từ-mạng-và-cache)), hoặc `false` |
 | `direction` | `'horizontal'` | `'horizontal'` hoặc `'vertical'` |
 | `loop` | `false` | Vuốt qua trang cuối về trang đầu, và ngược lại |
 | `initialIndex` | `0` | Trang hiển thị đầu tiên |
@@ -117,6 +124,70 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `getAccessibilityLabel(item, index)` | key | Văn bản đọc cho item hiện tại |
 | `ref` | | `{ scrollTo(index, { animated }), next(), prev(), getIndex() }` |
 | `style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |
+
+## Ảnh từ mạng và cache
+
+Ảnh từ mạng (`{ uri: 'https://…' }`) đi qua một cache trên đĩa, bật sẵn mặc định. Mỗi ảnh được lưu kèm thời điểm tải và thời điểm hết hạn.
+
+```tsx
+// Hằng số ở cấp module (hoặc useMemo): carousel memo tuỳ chọn theo identity.
+const CACHE = {
+  strategy: 'stale-while-revalidate', // mặc định
+  maxAge: 6 * 60 * 60 * 1000, // 6 giờ khi server không gửi Cache-Control
+} as const;
+
+<MorphCarousel imageCache={CACHE} getImage={(p) => ({ uri: p.imageUrl })} … />
+```
+
+| Chiến lược | Đã cache, còn hạn | Đã cache, hết hạn | Chưa cache |
+| --- | --- | --- | --- |
+| `stale-while-revalidate` (mặc định) | Hiện ngay, không gửi request | Hiện ngay, kiểm tra lại ở nền, thay ảnh nếu server có bản mới. Quá `maxStale` thì chờ mạng | Tải về |
+| `cache-first` | Hiện ngay, không gửi request | Chờ mạng; bản cũ là phương án dự phòng khi mất mạng | Tải về |
+| `network-first` | Kiểm tra lại trước khi hiện; bản đã cache là dự phòng khi mất mạng | Như cột bên | Tải về |
+
+Thời hạn của ảnh:
+
+- Nếu server gửi `Cache-Control: max-age` (hoặc `Expires`), dùng thời hạn đó. `no-cache` nghĩa là "luôn kiểm tra lại", `no-store` nghĩa là "không ghi xuống đĩa". Đặt `respectHttpHeaders: false` để luôn dùng `maxAge`.
+- Nếu không, dùng `maxAge` (mặc định 24 giờ).
+
+Khi kiểm tra lại, cache gửi `If-None-Match` / `If-Modified-Since`. Nếu ảnh không đổi, server trả 304 và không có dữ liệu ảnh nào được truyền. Nếu ảnh đã đổi, file mới mang tên mới nên view ảnh tải lại, và file cũ bị xoá. Ảnh đang nằm trên màn hình cũng được kiểm tra lại khi hết hạn, không chỉ lúc mount.
+
+Tuỳ chọn của `imageCache`:
+
+| Tuỳ chọn | Mặc định | Mô tả |
+| --- | --- | --- |
+| `strategy` | `'stale-while-revalidate'` | Xem bảng trên |
+| `maxAge` | 24 giờ | Thời hạn (ms) khi server không gửi |
+| `maxStale` | 7 ngày | `stale-while-revalidate` còn được hiện ảnh cũ bao lâu sau khi hết hạn, trong lúc chờ ảnh mới |
+| `respectHttpHeaders` | `true` | Dùng `Cache-Control` / `Expires` và tuân theo `no-store` |
+| `headers` | | Header cho request, ví dụ `Authorization` |
+| `getCacheKey(url)` | URL | Cho URL ký (signed URL) có query đổi mỗi lần: `(url) => url.split('?')[0]` |
+
+Truyền `imageCache={false}` để tải thẳng từ mạng.
+
+Cache được dùng chung cho mọi carousel và có API để gọi từ code:
+
+```ts
+import { imageCache } from 'expo-morph-carousel';
+
+imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300 }); // mặc định: 100 MB, 500 file, xoá theo LRU
+await imageCache.prefetch(urls); // tải trước khi màn hình mở
+imageCache.getEntry(url); // { fetchedAt, expiresAt, etag, size, … }
+imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size }
+await imageCache.remove(url);
+await imageCache.clear(); // ví dụ khi đăng xuất
+```
+
+File được lưu trong `<thư mục cache>/expo-morph-carousel/` trên iOS và Android (hệ điều hành có thể xoá khi thiếu dung lượng) và trong Cache Storage trên web. Ảnh đã decode cũng được giữ trong bộ nhớ (24 ảnh gần nhất), nên vuốt qua lại không phải decode lại.
+
+Để thử, app ví dụ có một server ảnh local gửi `ETag` và `Cache-Control`, và có thể đổi ảnh:
+
+```bash
+npm run image-server --workspace example   # http://localhost:8090, max-age 30 giây
+adb reverse tcp:8090 tcp:8090               # Android emulator
+```
+
+Mở "Remote images" trong app ví dụ. Bảng thông tin hiện thời điểm tải ảnh hiện tại, ảnh còn hạn bao lâu, và các bộ đếm của cache; nút "Swap images on server" đổi nội dung mà mọi URL trả về.
 
 ## Điều khiển carousel
 
@@ -197,14 +268,15 @@ Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở �
 | Thấy cross-fade thay vì liquid | Chưa cài Skia, đang bật Reduce Motion, hoặc (web) CanvasKit chưa tải xong. Kiểm tra `public/canvaskit.wasm` đã có chưa (`npx setup-skia-web public`) |
 | Vuốt lại cuộn ScrollView cha | Carousel ngang nhận cử chỉ kéo ngang quá 10 px; kéo dọc thuộc về parent. Carousel dọc trong ScrollView dọc thì đặt chiều cao cố định cho carousel và chấp nhận hai bên tranh nhau cử chỉ |
 | Lỗi worklet như "… is not a worklet" | Hiệu ứng tự viết thiếu `'worklet';`, hoặc `babel.config.js` không dùng `babel-preset-expo`. Xoá cache Metro bằng `npx expo start -c` |
-| Ảnh từ mạng mãi là placeholder trên Android | Skia tự tải ảnh; lỗi HTTPS (ví dụ chứng chỉ của proxy) được ghi vào logcat dưới dạng `System.err` |
+| Ảnh từ mạng mãi là placeholder | Tải ảnh thất bại; `imageCache.stats().errors` đếm số lần lỗi. Trên Android, lỗi HTTPS (ví dụ chứng chỉ của proxy) hiện trong logcat dưới dạng `System.err`. URL `http://` không mã hoá cần `usesCleartextTraffic` ở bản release |
+| Ảnh đã cập nhật trên server mà app chưa hiện | Ảnh vẫn còn hạn: giảm `maxAge`, cho server gửi `Cache-Control: max-age` ngắn hơn, hoặc gọi `imageCache.remove(url)` |
 
 ## Trạng thái nền tảng
 
 | Nền tảng | Đã kiểm tra bằng |
 | --- | --- |
-| Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng, loop, trượt dọc, chấm phân trang, ref API |
-| Web | Chrome desktop: hiệu ứng liquid với CanvasKit, điều hướng bằng bàn phím, ảnh từ mạng |
+| Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng, loop, trượt dọc, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
+| Web | Chrome desktop: hiệu ứng liquid với CanvasKit, điều hướng bằng bàn phím, ảnh từ mạng, cache bằng Cache Storage qua các lần tải lại trang |
 | iOS | Chưa kiểm tra |
 
 Hoan nghênh các báo cáo từ iOS.

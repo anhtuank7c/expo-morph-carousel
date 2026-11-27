@@ -2,6 +2,14 @@ export { MorphCarousel } from './MorphCarousel';
 export { Pagination, type PaginationProps } from './Pagination';
 export { presets as mediaEffects } from './effects';
 export { configureSkiaWeb } from './liquid';
+export {
+  imageCache,
+  type CacheEntry,
+  type CacheStrategy,
+  type ImageCacheLimits,
+  type ImageCacheOptions,
+  type ImageCacheStats,
+} from './cache';
 export type {
   AutoplayOptions,
   CarouselApi,

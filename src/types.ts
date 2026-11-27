@@ -2,6 +2,8 @@ import type { ReactNode, Ref } from 'react';
 import type { ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
+import type { ImageCacheOptions } from './cache/ImageCache';
+
 /**
  * Style a media effect returns for one image. Only properties that are cheap to
  * animate on the UI thread are allowed.
@@ -146,6 +148,13 @@ export type MorphCarouselProps<T> = {
   mediaPadding?: number;
   /** Color shown as a soft blob while an item's image loads. */
   getPlaceholderColor?: (item: T, index: number) => string;
+  /**
+   * Disk cache for remote (`{ uri }`) images, with expiry. On by default with
+   * `stale-while-revalidate` and a 24 hour `maxAge`; `false` loads every image
+   * from the network (the platform's HTTP cache still applies). Needs
+   * expo-file-system on native; on web it uses Cache Storage.
+   */
+  imageCache?: false | ImageCacheOptions;
 
   direction?: CarouselDirection;
   /** Swipe past the last page to the first and the other way. Default false. */

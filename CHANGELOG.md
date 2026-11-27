@@ -18,6 +18,8 @@ First public release.
 - `ref` API (`scrollTo`, `next`, `prev`, `getIndex`), `onIndexChange`, `positionValue`, `renderFooter`.
 - `Pagination` with dots that stretch into a pill and follow the gesture; usable on its own.
 - Images from `require()` or `{ uri }`, `contain` or `cover`, placeholder colors, `windowSize` to keep neighbors loaded.
+- Disk cache for remote images with expiry (`imageCache` prop, on by default): `stale-while-revalidate`, `cache-first` or `network-first`; lifetime from `maxAge` or `Cache-Control` / `Expires`; conditional revalidation with `ETag` / `Last-Modified`; `maxStale`, `headers`, `getCacheKey` for signed URLs; LRU size and count limits. Stored with expo-file-system on native (optional) and Cache Storage on web. Decoded Skia images are kept in a small in-memory LRU.
+- `imageCache` API: `configure`, `prefetch`, `getEntry`, `stats`, `onStats`, `remove`, `clear`.
 - Accessibility: one adjustable element with increment and decrement actions, keyboard navigation on web.
 - `configureSkiaWeb` to set where CanvasKit is loaded from on web.
 
