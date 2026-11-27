@@ -238,7 +238,7 @@ export default function StressScreen() {
     };
   }, [autoGap, autoSteps]);
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
       {carousel}
       <View style={styles.row}>
         <Pressable style={styles.button} onPress={reset} testID="reset">

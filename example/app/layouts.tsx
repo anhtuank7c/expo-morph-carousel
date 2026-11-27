@@ -85,7 +85,7 @@ export default function LayoutsScreen() {
   const data = useMemo(() => [...products, ...products.map((p) => ({ ...p, id: `${p.id}-2` }))], []);
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
       <MorphCarousel
         key={`${vertical ? 'v' : 'h'}-${liquid ? 'liquid' : 'cards'}`}
         testID="layouts-carousel"

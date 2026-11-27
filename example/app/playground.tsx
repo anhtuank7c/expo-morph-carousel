@@ -32,7 +32,7 @@ export default function PlaygroundScreen() {
   const [index, setIndex] = useState(0);
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
       <MorphCarousel
         // Remount when the direction changes: the pages are laid out per axis.
         key={vertical ? 'v' : 'h'}

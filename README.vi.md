@@ -296,7 +296,7 @@ getImage={(p, i, target) => ({
 
 Không cần `sizes`: HTML cần nó vì trình duyệt chọn ảnh trước khi layout, còn carousel chọn sau khi layout.
 
-**Xoay màn hình và đổi kích thước.** Khi vùng ảnh lớn lên (dọc sang ngang, chia đôi màn hình, đổi cỡ cửa sổ trên web), biến thể nét hơn được tải ở nền trong khi ảnh hiện tại vẫn hiển thị, rồi crossfade trong 220 ms sau khi decode xong. Khi vùng ảnh nhỏ đi, ảnh nét đang hiện được giữ nguyên và không tải gì thêm, giống trình duyệt. Ảnh được vẽ lại theo kích thước mới ngay trong khung hình đổi layout, nên khi xoay không có khung nào vẽ theo kích thước cũ hay bị trống.
+**Xoay màn hình và đổi kích thước.** Khi vùng ảnh lớn lên (dọc sang ngang, chia đôi màn hình, đổi cỡ cửa sổ trên web), biến thể nét hơn được tải ở nền trong khi ảnh hiện tại vẫn hiển thị, rồi crossfade trong 220 ms sau khi decode xong. Khi vùng ảnh nhỏ đi, ảnh nét đang hiện được giữ nguyên và không tải gì thêm, giống trình duyệt. Không bao giờ có khung hình trống. Với hiệu ứng liquid, ảnh theo kích thước mới chậm một khung hình sau khi layout đổi (lần render đọc kích thước đó): nếu đo canvas trên UI thread thay vào đó thì mỗi khung hình đều phải đo một lần, suốt thời gian carousel còn mount.
 
 ## Ảnh từ mạng và cache
 

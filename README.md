@@ -296,7 +296,7 @@ getImage={(p, i, target) => ({
 
 There is no `sizes`: HTML needs it because the browser chooses before layout, the carousel chooses after.
 
-**Rotation and resizing.** When the area grows (portrait to landscape, a split-screen resize, a window on web), the sharper variant is downloaded in the background while the current image stays on screen, then cross-faded in over 220 ms once decoded. When the area shrinks, the sharper image already shown is kept and nothing is downloaded, like browsers do. The image is redrawn at the new size in the same frame as the layout change, so a rotation shows no frame at the old size and no empty frame.
+**Rotation and resizing.** When the area grows (portrait to landscape, a split-screen resize, a window on web), the sharper variant is downloaded in the background while the current image stays on screen, then cross-faded in over 220 ms once decoded. When the area shrinks, the sharper image already shown is kept and nothing is downloaded, like browsers do. There is never an empty frame. With the liquid effect, the image follows the new size one frame after the layout change (the re-render that reads it): measuring the canvas on the UI thread instead would cost a measurement in every frame for as long as the carousel is mounted.
 
 ## Remote images and caching
 

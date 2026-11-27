@@ -1,5 +1,5 @@
 import { MorphCarousel } from 'expo-morph-carousel';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { products } from '../data/products';
 
@@ -11,7 +11,9 @@ import { products } from '../data/products';
  */
 export default function ProductScreen() {
   return (
-    <View style={styles.screen}>
+    // "automatic": on iOS the native header is translucent and the screen
+    // starts under it; the scroll view insets its content below the header.
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
       <Text style={styles.section}>Demo</Text>
       <MorphCarousel
         testID="product-carousel"
@@ -38,12 +40,12 @@ export default function ProductScreen() {
           </Pressable>
         )}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16 },
+  screen: { padding: 16 },
   section: { fontSize: 13, color: '#6e6e73', marginBottom: 8, marginLeft: 4 },
   card: { height: 560, borderRadius: 28, backgroundColor: '#fff' },
   page: { flex: 1, alignItems: 'center', paddingHorizontal: 28, paddingTop: 12, gap: 10 },

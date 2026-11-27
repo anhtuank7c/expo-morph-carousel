@@ -110,7 +110,7 @@ function NumberDot({ index, active, onPress }: DotSlotProps) {
 
 export default function SlotsScreen() {
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
       <Text style={styles.section}>Pagination, MediaOverlay and MediaBackground slots</Text>
       <MorphCarousel
         testID="slots-carousel"

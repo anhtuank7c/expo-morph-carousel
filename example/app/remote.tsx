@@ -105,7 +105,7 @@ export default function RemoteScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
       <MorphCarousel
         key={source}
         ref={carousel}

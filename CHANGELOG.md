@@ -4,6 +4,11 @@ All notable changes to this package are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed
+
+- Reanimated warning "The view has some undefined, not-yet-computed or meaningless value of `LayoutMetrics` type" with the liquid effect (seen on iOS). The Skia canvas no longer uses `onSize`, which measured the view on the UI thread in every frame, idle or not, for as long as the canvas was mounted, and warned while the view had no layout yet. The drawing size now comes from the media area's layout; after a rotation it follows one frame later.
+- Example: screens are inset below the iOS header (`contentInsetAdjustmentBehavior="automatic"`); on iOS 26 the native header is translucent and content started under it. The Product screen is now a scroll view.
+
 ### Performance
 
 - Photos for the liquid effect are decoded on the JS thread when their page mounts, ahead of time, through a queue (one per task, the page in view first, skipped when the page left the window). Skia decodes lazily on first draw, which put a 20–45 ms JPEG decode (1080×810 photo, Android emulator) on the UI thread in the middle of a swipe. On a Redmi Note 8 Pro, 40 pages dropped 40–41 frames before and 0–1 after.

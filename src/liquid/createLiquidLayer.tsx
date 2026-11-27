@@ -85,7 +85,9 @@ export type LiquidLayerProps = {
 const SWAP_MS = 220;
 
 /** Where images are drawn: fixed padding, size following the canvas on the UI thread. */
-type Rect = { x: number; y: number; width: SharedValue<number>; height: SharedValue<number> };
+type Rect = { x: number; y: number; width: number; height: number };
+/** A rect whose size is decided on the UI thread (zero while the image is not visible). */
+type DrawRect = { x: number; y: number; width: SharedValue<number>; height: SharedValue<number> };
 
 export type LiquidLayerComponent = (props: LiquidLayerProps) => React.ReactElement | null;
 
@@ -224,7 +226,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     id: number;
     fadeIn: boolean;
     opacity: SharedValue<number>;
-    rect: Rect;
+    rect: DrawRect;
     fit: 'contain' | 'cover';
     onShown: (id: number) => void;
   }) {
@@ -273,16 +275,17 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     );
     const { layers, onShown } = useImageLayers(image);
     const opacity = useDerivedValue(() => clamp(1 - Math.abs(item.virtual - position.value), 0, 1));
-    const cx = useDerivedValue(() => rect.x + rect.width.value / 2);
-    const cy = useDerivedValue(() => rect.y + rect.height.value / 2);
-    const r = useDerivedValue(() => Math.min(rect.width.value, rect.height.value) * 0.32);
+    const cx = rect.x + rect.width / 2;
+    const cy = rect.y + rect.height / 2;
+    const r = Math.min(rect.width, rect.height) * 0.32;
     // A page more than one page away has opacity 0 but would still be drawn
     // (and blurred with the layer). A zero size skips it, decided on the UI
     // thread in the same frame as the position, so a fast fling never shows
     // a page a frame late.
-    const drawWidth = useDerivedValue(() => (opacity.value > 0 ? rect.width.value : 0));
-    const drawHeight = useDerivedValue(() => (opacity.value > 0 ? rect.height.value : 0));
-    const drawRect = useMemo<Rect>(
+    const { width, height } = rect;
+    const drawWidth = useDerivedValue(() => (opacity.value > 0 ? width : 0));
+    const drawHeight = useDerivedValue(() => (opacity.value > 0 ? height : 0));
+    const drawRect = useMemo<DrawRect>(
       () => ({ x: rect.x, y: rect.y, width: drawWidth, height: drawHeight }),
       [drawHeight, drawWidth, rect.x, rect.y],
     );
@@ -342,14 +345,6 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     cache,
     pixelRatio,
   }: LiquidLayerProps) {
-    // The canvas fills the media area and reports its size on the UI thread,
-    // in the same frame as the layout. Drawing from React state instead lags
-    // a render behind, which after a rotation shows one frame drawn at the
-    // old width.
-    const canvasSize = useSharedValue({ width, height });
-    const rectWidth = useDerivedValue(() => Math.max(canvasSize.value.width - padding * 2, 0));
-    const rectHeight = useDerivedValue(() => Math.max(canvasSize.value.height - padding * 2, 0));
-
     // Every paint the transition can use, built once on the JS thread when
     // the options or the size change. A frame only picks one: no allocation
     // on the UI thread while swiping.
@@ -395,8 +390,8 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
 
     // Stable objects, so the memoized images do not re-render with the layer.
     const rect = useMemo<Rect>(
-      () => ({ x: padding, y: padding, width: rectWidth, height: rectHeight }),
-      [padding, rectHeight, rectWidth],
+      () => ({ x: padding, y: padding, width: imageWidth, height: imageHeight }),
+      [imageHeight, imageWidth, padding],
     );
     const area = useMemo<ImageArea>(
       () => ({ width: imageWidth, height: imageHeight, pixelRatio, fit }),
@@ -405,7 +400,12 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
 
     if (width <= 0 || height <= 0) return null;
     return (
-      <Canvas style={StyleSheet.absoluteFill} onSize={canvasSize} pointerEvents="none">
+      // The size comes from the media area's layout (React state), not from
+      // Canvas onSize: onSize measures the view on the UI thread in every
+      // frame, for as long as the canvas is mounted, and warns while the view
+      // has no layout yet. After a rotation, the image is drawn at the old
+      // size for the one frame before the re-render.
+      <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Group layer={layer}>
           {items.map((item) => (
             <LiquidImageMemo

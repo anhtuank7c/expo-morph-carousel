@@ -65,7 +65,7 @@ export default function Home() {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.list}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.list}>
       <Text style={styles.prefetch} testID="prefetch-status">
         Remote images prefetched: {prefetch.loaded}/{prefetch.total}
         {prefetch.failed ? ` · ${prefetch.failed} failed` : ''} at {target.width}w
