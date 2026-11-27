@@ -28,7 +28,7 @@ import {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { useCachedUri } from '../cache';
+import { decodedImageLimit, useCachedUri, type LoadPriority } from '../cache';
 import type { ResolvedCacheOptions } from '../cache/ImageCache';
 import { clamp, transitionPeak } from '../math';
 import type { NormalizedSource } from '../responsive';
@@ -45,6 +45,8 @@ export type LiquidItem = {
   virtual: number;
   source: NormalizedSource;
   placeholderColor?: string;
+  /** Download priority: the current page first, then its neighbors. */
+  priority: LoadPriority;
 };
 
 export type LiquidLayerProps = {
@@ -68,9 +70,6 @@ const SWAP_MS = 220;
 /** Where images are drawn: fixed padding, size following the canvas on the UI thread. */
 type Rect = { x: number; y: number; width: SharedValue<number>; height: SharedValue<number> };
 
-/** Decoded images kept in memory per app. */
-const DECODED_LIMIT = 24;
-
 export type LiquidLayerComponent = (props: LiquidLayerProps) => React.ReactElement | null;
 
 const IDENTITY_ALPHA = { a: 1, b: 0 };
@@ -87,7 +86,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
   const remember = (uri: string, image: SkImage) => {
     decoded.delete(uri);
     decoded.set(uri, image);
-    while (decoded.size > DECODED_LIMIT) decoded.delete(decoded.keys().next().value!);
+    while (decoded.size > decodedImageLimit()) decoded.delete(decoded.keys().next().value!);
   };
 
   function useSkImage(source: number | string | null): SkImage | null {
@@ -183,7 +182,7 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     cache: ResolvedCacheOptions | null;
   }) {
     const chosen = useChosenUri(item.identity, item.source, area, cache);
-    const cached = useCachedUri(chosen, cache);
+    const cached = useCachedUri(chosen, cache, item.priority);
     const image = useSkImage(item.source.kind === 'bundled' ? item.source.asset : cached);
     const { layers, onShown } = useImageLayers(image);
     const opacity = useDerivedValue(() => clamp(1 - Math.abs(item.virtual - position.value), 0, 1));

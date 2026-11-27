@@ -176,6 +176,15 @@ export type MorphCarouselProps<T> = {
   autoplay?: boolean | AutoplayOptions;
   /** Pages kept rendered and images kept loaded on each side of the current one. Default 2. */
   windowSize?: number;
+  /**
+   * Pages beyond `windowSize` on each side whose remote images are downloaded
+   * into the cache ahead of time, at low priority, without rendering them.
+   * Default 1; 0 turns it off. Needs the image cache.
+   *
+   * Images inside the window load by distance: the current page at high
+   * priority, its neighbors at normal, the rest at low.
+   */
+  prefetch?: number;
   /** Spring used when a page snaps into place. */
   spring?: SpringOptions;
   /** Allow swiping. Default true. Programmatic navigation still works when false. */

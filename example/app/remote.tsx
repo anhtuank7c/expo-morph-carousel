@@ -5,9 +5,10 @@ import {
   type CacheStrategy,
   type ImageCacheOptions,
   type MorphCarouselRef,
+  useImageCacheStats,
   WIDTH_STEPS,
 } from 'expo-morph-carousel';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   PixelRatio,
   Platform,
@@ -20,7 +21,7 @@ import {
   View,
 } from 'react-native';
 
-import { photos, unsplashUrl } from '../data/products';
+import { heightFor, photos, REMOTE_MEDIA_HEIGHT, REMOTE_SIDE_MARGIN, unsplashUrl } from '../data/products';
 
 /**
  * Remote images through the carousel's disk cache.
@@ -49,9 +50,6 @@ const localItems = [0, 1, 2, 3, 4].map((n) => ({
 }));
 
 type Item = { id: string; title: string; uri: string; color: string; unsplash?: string };
-
-/** Photos are requested at 4:3; the carousel covers its area and crops the rest. */
-const heightFor = (width: number) => Math.round((width * 3) / 4);
 
 const STRATEGIES: CacheStrategy[] = ['stale-while-revalidate', 'cache-first', 'network-first'];
 const AGES: { label: string; ms: number }[] = [
@@ -82,7 +80,8 @@ export default function RemoteScreen() {
     [enabled, strategy, maxAge, serverHeaders],
   );
 
-  const stats = useSyncExternalStore(imageCache.onStats, statsSnapshot);
+  const stats = useImageCacheStats();
+  const config = imageCache.getConfig();
   const now = useNow();
   const current = items[index];
   // Unsplash items exist in several sizes (one URL per target width); show
@@ -122,7 +121,7 @@ export default function RemoteScreen() {
         imageCache={cache}
         mediaFit={source === 'local' ? 'contain' : 'cover'}
         mediaPadding={source === 'local' ? 24 : 0}
-        mediaHeight={240}
+        mediaHeight={REMOTE_MEDIA_HEIGHT}
         liquid={source === 'local' ? undefined : { blur: 36, threshold: 0.35 }}
         loop
         onIndexChange={setIndex}
@@ -162,6 +161,9 @@ export default function RemoteScreen() {
           {stats.entries} files · {(stats.size / 1024).toFixed(0)} KB{'\n'}
           hits {stats.hits} · downloads {stats.misses} · revalidations {stats.revalidations}
           {'\n'}304 {stats.notModified} · updated {stats.updates} · errors {stats.errors}
+          {'\n'}downloading {stats.active} · queued {stats.queued}
+          {'\n'}limits {Math.round(config.maxSize / 1048576)} MB · {config.maxEntries} files ·{' '}
+          {config.maxConcurrent} parallel · {config.decodedImages} decoded
         </Text>
       </View>
 
@@ -225,13 +227,6 @@ export default function RemoteScreen() {
       )}
     </ScrollView>
   );
-}
-
-let lastStats = imageCache.stats();
-function statsSnapshot() {
-  const next = imageCache.stats();
-  if (JSON.stringify(next) !== JSON.stringify(lastStats)) lastStats = next;
-  return lastStats;
 }
 
 function useNow() {
@@ -313,7 +308,7 @@ function Button({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: 16, gap: 12 },
+  screen: { padding: REMOTE_SIDE_MARGIN, gap: 12 },
   card: { height: 380, borderRadius: 24, backgroundColor: '#fff' },
   page: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 16 },
   title: { fontSize: 22, fontWeight: '700', color: '#1c1c1e' },

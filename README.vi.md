@@ -115,6 +115,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `initialIndex` | `0` | Trang hiển thị đầu tiên |
 | `autoplay` | `false` | `true` hoặc `{ interval = 4000, reverse = false, whenScreenReaderEnabled = false }` |
 | `windowSize` | `2` | Số trang được render và số ảnh được giữ tải ở mỗi bên trang hiện tại |
+| `prefetch` | `1` | Số trang ngoài cửa sổ mỗi bên được tải ảnh trước, ở mức ưu tiên thấp |
 | `spring` | | `{ damping, stiffness, mass }` cho animation snap |
 | `gestureEnabled` | `true` | Cho phép vuốt. Điều hướng qua `ref` vẫn hoạt động khi tắt |
 | `pagination` | `true` | `false`, hoặc tuỳ chọn: `activeColor`, `inactiveColor`, `size`, `activeWidth`, `gap`, `pressable`, `style` |
@@ -196,15 +197,60 @@ Tuỳ chọn của `imageCache`:
 
 Truyền `imageCache={false}` để tải thẳng từ mạng.
 
-Cache được dùng chung cho mọi carousel và có API để gọi từ code:
+### Thứ tự tải và tải trước
+
+Mọi lượt tải đi qua một hàng đợi, giới hạn số request song song (mặc định 4), với ba mức ưu tiên:
+
+| Mức ưu tiên | Dùng cho |
+| --- | --- |
+| `high` | Ảnh của trang đang xem |
+| `normal` | Các trang kế bên (cách một trang) |
+| `low` | Các trang xa hơn trong cửa sổ render, prefetch, revalidate ở nền |
+
+Khi người dùng vuốt, ảnh của trang mới được đẩy lên đầu hàng đợi, nên vuốt nhanh không phải chờ ảnh của các trang đã đi qua.
+
+Ngoài cửa sổ render (`windowSize`), carousel tải trước ảnh của `prefetch` trang nữa mỗi bên (mặc định 1) mà không render, chọn đúng biến thể mà trang đó sẽ chọn khi mount. `prefetch={0}` để tắt.
+
+Để tải ảnh trước khi carousel tồn tại (màn hình tiếp theo, một item trong danh sách sắp hiện ra), dùng hook hoặc hàm:
+
+```tsx
+import { imageTargetFor, usePrefetchImages, imageCache } from 'expo-morph-carousel';
+
+// Ở màn hình trước: dựng đúng các URL mà carousel sẽ yêu cầu
+const target = imageTargetFor({ width: screenWidth - 32, height: 240 }, PixelRatio.get(), 'cover');
+const { loaded, total, failed, done } = usePrefetchImages(
+  products.map((p) => cdnUrl(p.image, target.width)),
+  { priority: 'low' }, // mặc định; `enabled: false` để chờ
+);
+
+// Hoặc gọi trực tiếp, ví dụ sau khi API danh sách trả về
+await imageCache.prefetch(urls, cacheOptions, 'low');
+```
+
+`imageTargetFor` chính là hàm carousel dùng để tạo `target` cho `getImage`, nên URL tải trước trùng với URL carousel sẽ yêu cầu.
+
+### Giới hạn
+
+| Cấu hình | Mặc định | |
+| --- | --- | --- |
+| `maxSize` | 100 MB | Dung lượng trên đĩa. File ít dùng nhất bị xoá trước |
+| `maxEntries` | 500 | Số file trên đĩa |
+| `maxConcurrent` | 4 | Số lượt tải song song; phần còn lại chờ theo thứ tự ưu tiên |
+| `decodedImages` | 24 | Số ảnh đã decode giữ trong bộ nhớ cho hiệu ứng liquid. Mỗi ảnh tốn rộng × cao × 4 byte (ảnh 1080×810 ≈ 3,5 MB), nên 24 ảnh như vậy ≈ 84 MB. Hạ xuống nếu dùng ảnh lớn trên máy ít RAM |
 
 ```ts
-import { imageCache } from 'expo-morph-carousel';
+imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300, maxConcurrent: 6, decodedImages: 12 });
+imageCache.getConfig(); // giá trị hiện tại
+```
 
-imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300 }); // mặc định: 100 MB, 500 file, xoá theo LRU
-await imageCache.prefetch(urls); // tải trước khi màn hình mở
+`configure` có hiệu lực ngay; hạ `maxSize` hoặc `maxEntries` sẽ xoá bớt ngay. Nên gọi một lần lúc khởi động (ví dụ trong root layout).
+
+### Xem và xoá cache
+
+```ts
 imageCache.getEntry(url); // { fetchedAt, expiresAt, etag, size, … }
-imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size }
+imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size, active, queued }
+const stats = useImageCacheStats(); // như trên, cập nhật trực tiếp, cho bảng debug
 await imageCache.remove(url);
 await imageCache.clear(); // ví dụ khi đăng xuất
 ```

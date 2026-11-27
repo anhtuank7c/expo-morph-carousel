@@ -38,7 +38,8 @@ Code map:
 | `src/cache/policy.ts` | Pure cache rules: freshness, `Cache-Control` parsing, eviction. Unit tested |
 | `src/cache/ImageCache.ts` | Cache engine with injected storage and fetch. Unit tested with fakes |
 | `src/cache/store.ts`, `store.web.ts` | expo-file-system store (native), Cache Storage store (web) |
-| `src/cache/index.ts` | Shared instance, `useCachedUri` hook, public `imageCache` API |
+| `src/cache/scheduler.ts` | Download queue with priorities and a parallel limit. Unit tested |
+| `src/cache/index.ts` | Shared instance, `useCachedUri`, `usePrefetchImages`, `useImageCacheStats`, public `imageCache` API |
 
 To test the cache by hand, run `npm run image-server --workspace example` and open "Remote images" in the example app (on an Android emulator, also `adb reverse tcp:8090 tcp:8090`).
 

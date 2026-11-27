@@ -25,10 +25,16 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { resolveEffect } from './effects';
-import { resolveCacheOptions, useCachedUri } from './cache';
+import { imageCache, isCachedSync, resolveCacheOptions, useCachedUri, type LoadPriority } from './cache';
 import type { ResolvedCacheOptions } from './cache/ImageCache';
 import { useLiquidLayer, type LiquidItem } from './liquid';
-import { makeTarget, normalizeSource, type NormalizedSource } from './responsive';
+import {
+  makeTarget,
+  normalizeSource,
+  pickCandidate,
+  requiredWidth,
+  type NormalizedSource,
+} from './responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from './useResponsiveImage';
 import { clamp, nearestVirtual, pageWindow, rubberBand, snapTarget, wrap } from './math';
 import { Pagination } from './Pagination';
@@ -58,7 +64,8 @@ export function MorphCarousel<T>({
   mediaFit = 'contain',
   mediaPadding = 16,
   getPlaceholderColor,
-  imageCache,
+  imageCache: imageCacheProp,
+  prefetch = 1,
   direction = 'horizontal',
   loop = false,
   initialIndex = 0,
@@ -87,7 +94,7 @@ export function MorphCarousel<T>({
   const liquidConfig = { ...DEFAULT_LIQUID, ...liquid };
   // Memoized on identity: pass a module constant or a memoized object, or each
   // parent render makes every visible image look its URI up again.
-  const cacheOptions = useMemo(() => resolveCacheOptions(imageCache), [imageCache]);
+  const cacheOptions = useMemo(() => resolveCacheOptions(imageCacheProp), [imageCacheProp]);
 
   const startIndex = clamp(initialIndex, 0, Math.max(count - 1, 0));
   const position = useSharedValue(startIndex);
@@ -279,6 +286,45 @@ export function MorphCarousel<T>({
     return n;
   };
 
+  /** The page in view downloads first, its neighbors next, the rest after. */
+  const priorityFor = (v: number): LoadPriority => {
+    const d = Math.abs(v - center);
+    return d === 0 ? 'high' : d === 1 ? 'normal' : 'low';
+  };
+
+  /* --- prefetch beyond the render window ------------------------------
+     Pages just outside the window are not rendered, but their images are
+     downloaded at low priority so they are on disk when the user gets there.
+     The URL is chosen exactly as the page will choose it when it mounts. */
+  const prefetchKey =
+    cacheOptions && prefetch > 0 && mediaSize.width > 0 && count > 0
+      ? (() => {
+          const radius = Math.max(windowSize, 1);
+          const urls: string[] = [];
+          for (let k = radius + 1; k <= radius + prefetch; k++) {
+            for (const v of [center + k, center - k]) {
+              if (!loop && (v < 0 || v >= count)) continue;
+              const n = sourceOf(wrap(v, count));
+              if (n.kind !== 'uri') continue;
+              const aspectSrc = n.candidates.find((c) => c.height && Number.isFinite(c.width));
+              const need = requiredWidth(
+                area,
+                pixelRatio,
+                mediaFit,
+                aspectSrc ? aspectSrc.width / aspectSrc.height! : undefined,
+              );
+              const pick = pickCandidate(n.candidates, need, (u) => isCachedSync(u, cacheOptions));
+              if (pick) urls.push(pick.uri);
+            }
+          }
+          return [...new Set(urls)].join('\n');
+        })()
+      : '';
+  useEffect(() => {
+    if (!prefetchKey || !cacheOptions) return;
+    void imageCache.prefetch(prefetchKey.split('\n'), cacheOptions, 'low');
+  }, [prefetchKey, cacheOptions]);
+
   const media =
     mediaSize.width > 0 && count > 0 ? (
       LiquidLayer ? (
@@ -294,6 +340,7 @@ export function MorphCarousel<T>({
               virtual: v,
               source: sourceOf(i),
               placeholderColor: getPlaceholderColor?.(data[i], i),
+              priority: priorityFor(v),
             };
           })}
           position={position}
@@ -318,6 +365,7 @@ export function MorphCarousel<T>({
               position={position}
               source={sourceOf(i)}
               area={area}
+              priority={priorityFor(v)}
               placeholderColor={getPlaceholderColor?.(data[i], i)}
               effect={viewEffect}
               size={mediaSize}
@@ -475,6 +523,7 @@ function ViewMediaItem({
   position,
   source,
   area,
+  priority,
   placeholderColor,
   effect,
   size,
@@ -489,6 +538,7 @@ function ViewMediaItem({
   position: SharedValue<number>;
   source: NormalizedSource;
   area: ImageArea;
+  priority: LoadPriority;
   placeholderColor?: string;
   effect: MediaEffectFn;
   size: Size;
@@ -499,7 +549,7 @@ function ViewMediaItem({
   cache: ResolvedCacheOptions | null;
 }) {
   const chosen = useChosenUri(identity, source, area, cache);
-  const cached = useCachedUri(chosen, cache);
+  const cached = useCachedUri(chosen, cache, priority);
   const value: number | string | null = source.kind === 'bundled' ? source.asset : cached;
   const { layers, onShown } = useImageLayers(value);
   const [baseLoaded, setBaseLoaded] = useState<number | null>(null);

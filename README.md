@@ -115,6 +115,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `initialIndex` | `0` | Page shown first |
 | `autoplay` | `false` | `true` or `{ interval = 4000, reverse = false, whenScreenReaderEnabled = false }` |
 | `windowSize` | `2` | Pages rendered and images kept loaded on each side of the current page |
+| `prefetch` | `1` | Pages beyond the window on each side whose images are downloaded ahead, at low priority |
 | `spring` | | `{ damping, stiffness, mass }` for the snap animation |
 | `gestureEnabled` | `true` | Allow swiping. `ref` navigation works either way |
 | `pagination` | `true` | `false`, or options: `activeColor`, `inactiveColor`, `size`, `activeWidth`, `gap`, `pressable`, `style` |
@@ -196,15 +197,60 @@ Options of `imageCache`:
 
 Pass `imageCache={false}` to load straight from the network.
 
-The cache is shared by all carousels and has a programmatic API:
+### Load order and prefetching
+
+Downloads go through one queue with a limit of parallel requests (4 by default) and three priorities:
+
+| Priority | Used for |
+| --- | --- |
+| `high` | The image of the page in view |
+| `normal` | Its neighbors (one page away) |
+| `low` | Pages further away in the render window, prefetches, background revalidations |
+
+When the user swipes, the images of the new page are moved up the queue, so a fast swipe does not wait behind downloads for pages already passed.
+
+Beyond the render window (`windowSize`), the carousel downloads the images of `prefetch` more pages on each side (default 1) without rendering them, choosing the same variant the page will choose when it mounts. `prefetch={0}` turns it off.
+
+To download images before the carousel exists (the next screen, a list item scrolling into view), use the hook or the function:
+
+```tsx
+import { imageTargetFor, usePrefetchImages, imageCache } from 'expo-morph-carousel';
+
+// In the screen before: build the URLs the carousel will request
+const target = imageTargetFor({ width: screenWidth - 32, height: 240 }, PixelRatio.get(), 'cover');
+const { loaded, total, failed, done } = usePrefetchImages(
+  products.map((p) => cdnUrl(p.image, target.width)),
+  { priority: 'low' }, // default; `enabled: false` to wait
+);
+
+// Or imperatively, for example after a list request resolves
+await imageCache.prefetch(urls, cacheOptions, 'low');
+```
+
+`imageTargetFor` is the function the carousel uses for `getImage`'s `target`, so the prefetched URL is the one the carousel asks for.
+
+### Limits
+
+| Setting | Default | |
+| --- | --- | --- |
+| `maxSize` | 100 MB | Bytes on disk. Least recently used files are deleted first |
+| `maxEntries` | 500 | Files on disk |
+| `maxConcurrent` | 4 | Parallel downloads; the rest wait in priority order |
+| `decodedImages` | 24 | Decoded images kept in memory for the liquid effect. Each costs width × height × 4 bytes (a 1080×810 photo ≈ 3.5 MB), so 24 such photos ≈ 84 MB. Lower it for large photos on low-memory devices |
 
 ```ts
-import { imageCache } from 'expo-morph-carousel';
+imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300, maxConcurrent: 6, decodedImages: 12 });
+imageCache.getConfig(); // current values
+```
 
-imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300 }); // defaults: 100 MB, 500 files, LRU eviction
-await imageCache.prefetch(urls); // warm up before the screen opens
+`configure` takes effect immediately; lowering `maxSize` or `maxEntries` evicts right away. Call it once at startup (for example in the root layout).
+
+### Inspecting and clearing
+
+```ts
 imageCache.getEntry(url); // { fetchedAt, expiresAt, etag, size, … }
-imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size }
+imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size, active, queued }
+const stats = useImageCacheStats(); // the same, live, for a debug panel
 await imageCache.remove(url);
 await imageCache.clear(); // for example on sign out
 ```

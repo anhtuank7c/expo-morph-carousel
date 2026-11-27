@@ -47,6 +47,14 @@ export const products: Product[] = [
   },
 ];
 
+/** Media height of the remote screen's carousel; the home screen prefetches for it. */
+export const REMOTE_MEDIA_HEIGHT = 240;
+/** Horizontal padding of the remote screen around the carousel. */
+export const REMOTE_SIDE_MARGIN = 16;
+
+/** Photos are requested at 4:3; the carousel covers its area and crops the rest. */
+export const heightFor = (width: number) => Math.round((width * 3) / 4);
+
 /**
  * An Unsplash image URL at a given size. Unsplash serves through imgix, which
  * resizes on the fly: `w` and `h` in pixels, `fit=crop` fills the box.

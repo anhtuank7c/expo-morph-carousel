@@ -20,7 +20,10 @@ First public release.
 - Images from `require()` or `{ uri }`, `contain` or `cover`, placeholder colors, `windowSize` to keep neighbors loaded.
 - Disk cache for remote images with expiry (`imageCache` prop, on by default): `stale-while-revalidate`, `cache-first` or `network-first`; lifetime from `maxAge` or `Cache-Control` / `Expires`; conditional revalidation with `ETag` / `Last-Modified`; `maxStale`, `headers`, `getCacheKey` for signed URLs; LRU size and count limits. Stored with expo-file-system on native (optional) and Cache Storage on web. Decoded Skia images are kept in a small in-memory LRU.
 - Responsive images: `getImage` may return a list of `{ uri, width, height }` variants (`srcset`) or build a URL from its third argument `target` (physical pixels, rounded to `WIDTH_STEPS`). The carousel picks by measured area, pixel ratio and fit, prefers a cached variant, never downgrades a mounted image, and cross-fades to a sharper variant after a rotation or resize. Images are redrawn at the new size in the layout frame (Skia `onSize`), so a rotation shows no stale or empty frame.
-- `imageCache` API: `configure`, `prefetch`, `getEntry`, `stats`, `onStats`, `remove`, `clear`.
+- Download queue with priorities (`high` for the page in view, `normal` for neighbors, `low` for the rest, prefetches and revalidations) and a parallel limit; queued downloads move up when their page comes into view.
+- `prefetch` prop (default 1): images of pages beyond the render window are downloaded ahead without rendering.
+- `usePrefetchImages(urls, { enabled, priority, cache })` with progress, `useImageCacheStats()`, and `imageTargetFor()` to build the same URLs the carousel will request.
+- `imageCache` API: `configure` (`maxSize` 100 MB, `maxEntries` 500, `maxConcurrent` 4, `decodedImages` 24 by default), `getConfig`, `prefetch` (with priority, returns loaded and failed counts), `getEntry`, `stats` (now with `active` and `queued`), `onStats`, `remove`, `clear`.
 - Accessibility: one adjustable element with increment and decrement actions, keyboard navigation on web.
 - `configureSkiaWeb` to set where CanvasKit is loaded from on web.
 

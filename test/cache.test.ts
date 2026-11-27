@@ -280,3 +280,72 @@ describe('ImageCache', () => {
     assert.equal(cache.stats().updates, 0);
   });
 });
+
+describe('ImageCache priorities', () => {
+  it('serves the image in view before queued prefetches', async () => {
+    const order: string[] = [];
+    const waiting: (() => void)[] = [];
+    const cache = new ImageCache(
+      {
+        load: async () => [],
+        saveIndex: async () => {},
+        write: async () => {},
+        remove: async () => {},
+        displayUri: async (f) => `file:///${f}`,
+        clear: async () => {},
+      },
+      (url) =>
+        new Promise((resolve) => {
+          order.push(url);
+          waiting.push(() => resolve({ status: 200, headers: {}, bytes: png(1) }));
+        }),
+      { maxConcurrent: 1 },
+    );
+    const prefetch = cache.prefetch(['https://x/p1', 'https://x/p2', 'https://x/p3']);
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    await tick();
+    const inView = cache.load('https://x/current', DEFAULT_CACHE_OPTIONS, 'high');
+    // p1 already holds the only slot; current must come right after it.
+    for (let i = 0; i < 4; i++) {
+      await tick();
+      waiting.shift()?.();
+    }
+    await Promise.all([prefetch, inView]);
+    assert.deepEqual(order, ['https://x/p1', 'https://x/current', 'https://x/p2', 'https://x/p3']);
+    assert.deepEqual(
+      { active: cache.stats().active, queued: cache.stats().queued },
+      { active: 0, queued: 0 },
+    );
+  });
+
+  it('prioritize moves a waiting prefetch up', async () => {
+    const order: string[] = [];
+    const waiting: (() => void)[] = [];
+    const cache = new ImageCache(
+      {
+        load: async () => [],
+        saveIndex: async () => {},
+        write: async () => {},
+        remove: async () => {},
+        displayUri: async (f) => `file:///${f}`,
+        clear: async () => {},
+      },
+      (url) =>
+        new Promise((resolve) => {
+          order.push(url);
+          waiting.push(() => resolve({ status: 200, headers: {}, bytes: png(1) }));
+        }),
+      { maxConcurrent: 1 },
+    );
+    const all = cache.prefetch(['https://x/a', 'https://x/b', 'https://x/c']);
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    await tick();
+    cache.prioritize('https://x/c', {}, 'high'); // the user swiped to c's page
+    for (let i = 0; i < 3; i++) {
+      await tick();
+      waiting.shift()?.();
+    }
+    await all;
+    assert.deepEqual(order, ['https://x/a', 'https://x/c', 'https://x/b']);
+  });
+});

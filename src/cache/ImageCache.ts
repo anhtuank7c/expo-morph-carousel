@@ -25,6 +25,7 @@ import {
   type CacheEntry,
   type CacheStrategy,
 } from './policy';
+import { Scheduler, type LoadPriority } from './scheduler';
 
 export type CacheStore = {
   /** Entries persisted by a previous session. */
@@ -94,6 +95,10 @@ export type ImageCacheStats = {
   entries: number;
   /** Bytes on disk. */
   size: number;
+  /** Downloads running now. */
+  active: number;
+  /** Downloads waiting for a free slot. */
+  queued: number;
 };
 
 export type ImageCacheLimits = {
@@ -101,6 +106,8 @@ export type ImageCacheLimits = {
   maxSize?: number;
   /** Default 500. */
   maxEntries?: number;
+  /** Downloads at the same time; the rest wait, highest priority first. Default 4. */
+  maxConcurrent?: number;
 };
 
 type Listener = (uri: string) => void;
@@ -119,6 +126,7 @@ export class ImageCache {
   private store: CacheStore;
   private fetcher: Fetcher;
   private now: () => number;
+  private scheduler: Scheduler;
 
   constructor(
     store: CacheStore,
@@ -131,6 +139,7 @@ export class ImageCache {
     this.now = now;
     this.maxSize = limits.maxSize ?? 100 * 1024 * 1024;
     this.maxEntries = limits.maxEntries ?? 500;
+    this.scheduler = new Scheduler(limits.maxConcurrent ?? 4, () => this.emitStats());
     this.ready = store.load().then(
       (list) => {
         for (const e of list) this.entries.set(e.key, e);
@@ -142,6 +151,7 @@ export class ImageCache {
   setLimits(limits: ImageCacheLimits) {
     if (limits.maxSize !== undefined) this.maxSize = limits.maxSize;
     if (limits.maxEntries !== undefined) this.maxEntries = limits.maxEntries;
+    if (limits.maxConcurrent !== undefined) this.scheduler.setLimit(limits.maxConcurrent);
     void this.enforceLimits();
   }
 
@@ -160,7 +170,11 @@ export class ImageCache {
    * The URI to display for `url`. Rejects only when the image is neither
    * cached nor downloadable; callers then fall back to the remote URL.
    */
-  async load(url: string, options: ResolvedCacheOptions = DEFAULT_CACHE_OPTIONS): Promise<string> {
+  async load(
+    url: string,
+    options: ResolvedCacheOptions = DEFAULT_CACHE_OPTIONS,
+    priority: LoadPriority = 'normal',
+  ): Promise<string> {
     await this.ready;
     const key = this.keyOf(url, options);
     const entry = this.entries.get(key);
@@ -171,7 +185,8 @@ export class ImageCache {
       entry.lastUsed = this.now();
       this.scheduleSave();
       if (decision === 'use-and-revalidate') {
-        void this.refresh(url, key, options, entry).catch(() => {});
+        // Background revalidation never competes with images being shown.
+        void this.refresh(url, key, options, entry, 'low').catch(() => {});
       }
       this.emitStats();
       return this.uriOf(entry);
@@ -180,7 +195,7 @@ export class ImageCache {
     // Counted in `download` (miss or revalidation), once per actual request:
     // concurrent lookups of one URL share a request.
     try {
-      const fresh = await this.refresh(url, key, options, entry);
+      const fresh = await this.refresh(url, key, options, entry, priority);
       return fresh ? await this.uriOf(fresh) : url;
     } catch (error) {
       // Offline or server error: a stale copy beats nothing.
@@ -209,9 +224,30 @@ export class ImageCache {
   }
 
   /** Download (or revalidate) images ahead of time. Failures are ignored. */
-  async prefetch(urls: string[], options: ImageCacheOptions = {}): Promise<void> {
+  async prefetch(
+    urls: string[],
+    options: ImageCacheOptions = {},
+    priority: LoadPriority = 'low',
+  ): Promise<{ loaded: number; failed: number }> {
     const resolved = { ...DEFAULT_CACHE_OPTIONS, ...options };
-    await Promise.all(urls.map((u) => this.load(u, resolved).catch(() => undefined)));
+    const results = await Promise.all(
+      urls.map((u) =>
+        this.load(u, resolved, priority).then(
+          () => true,
+          () => false,
+        ),
+      ),
+    );
+    const loaded = results.filter(Boolean).length;
+    return { loaded, failed: results.length - loaded };
+  }
+
+  /**
+   * Raise the priority of a download that is still waiting for a slot, for
+   * example when the user swipes to its page. No effect once it runs.
+   */
+  prioritize(url: string, options: Pick<ImageCacheOptions, 'getCacheKey'>, priority: LoadPriority) {
+    this.scheduler.bump(this.keyOf(url, options), priority);
   }
 
   /** Fetch time and expiry of a cached URL, for debugging and UI. */
@@ -243,7 +279,7 @@ export class ImageCache {
   stats(): ImageCacheStats {
     let size = 0;
     for (const e of this.entries.values()) size += e.size;
-    return { ...this.counters, entries: this.entries.size, size };
+    return { ...this.counters, entries: this.entries.size, size, ...this.scheduler.counts() };
   }
 
   onStats(listener: () => void): () => void {
@@ -282,10 +318,17 @@ export class ImageCache {
     key: string,
     options: ResolvedCacheOptions,
     previous: CacheEntry | undefined,
+    priority: LoadPriority,
   ): Promise<CacheEntry | null> {
     const running = this.inflight.get(key);
-    if (running) return running;
-    const task = this.download(url, key, options, previous).finally(() => this.inflight.delete(key));
+    if (running) {
+      // Someone needs it sooner now: move it up the queue.
+      this.scheduler.bump(key, priority);
+      return running;
+    }
+    const task = this.download(url, key, options, previous, priority).finally(() =>
+      this.inflight.delete(key),
+    );
     this.inflight.set(key, task);
     return task;
   }
@@ -295,6 +338,7 @@ export class ImageCache {
     key: string,
     options: ResolvedCacheOptions,
     previous: (CacheEntry & { contentHash?: string }) | undefined,
+    priority: LoadPriority,
   ): Promise<CacheEntry | null> {
     const headers: Record<string, string> = { ...options.headers };
     if (previous?.etag) headers['If-None-Match'] = previous.etag;
@@ -304,7 +348,7 @@ export class ImageCache {
 
     let res: FetchResult;
     try {
-      res = await this.fetcher(url, headers);
+      res = await this.scheduler.run(key, priority, () => this.fetcher(url, headers));
     } catch (error) {
       this.counters.errors++;
       this.emitStats();
