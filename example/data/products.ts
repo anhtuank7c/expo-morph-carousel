@@ -47,13 +47,23 @@ export const products: Product[] = [
   },
 ];
 
-/** Remote photos for the image-loading demo (picsum.photos, fixed ids). */
+/**
+ * Remote photos for the image-loading demo, from Unsplash (free to use under
+ * the Unsplash License, https://unsplash.com/license). The imgix parameters
+ * ask for an 800 px wide JPEG cropped to 4:3, about 60–200 KB each.
+ *
+ * Unsplash answers with `Cache-Control: max-age=31536000` (one year), so with
+ * `respectHttpHeaders` on, the cache keeps these for a year.
+ */
 export const photos = [
-  { id: '1015', title: 'River', color: '#55707a' },
-  { id: '1039', title: 'Waterfall', color: '#4d5a3d' },
-  { id: '1043', title: 'Lake', color: '#6b7f96' },
-  { id: '1050', title: 'Coast', color: '#9fb2c4' },
-  { id: '1069', title: 'Jellyfish', color: '#1c2a4a' },
-  { id: '1074', title: 'Lion', color: '#8a7a55' },
-  { id: '1080', title: 'Strawberries', color: '#a3242c' },
-].map((p) => ({ ...p, uri: `https://picsum.photos/id/${p.id}/800/600` }));
+  { id: '1506905925346-21bda4d32df4', title: 'Sea of clouds', color: '#5b6478' },
+  { id: '1501785888041-af3ef285b470', title: 'Alpine lake', color: '#2fa7a0' },
+  { id: '1470071459604-3b5ec3a7fe05', title: 'Misty valley', color: '#6e7a5a' },
+  { id: '1441974231531-c6227db76b6e', title: 'Forest path', color: '#3e4a2c' },
+  { id: '1507525428034-b723cf961d3e', title: 'Beach at sunset', color: '#7fc4c8' },
+  { id: '1500530855697-b586d89ba3ee', title: 'Desert road', color: '#a0553c' },
+  { id: '1433086966358-54859d0ed716', title: 'Waterfall', color: '#3f6b3a' },
+].map((p) => ({
+  ...p,
+  uri: `https://images.unsplash.com/photo-${p.id}?w=800&h=600&fit=crop&q=80&fm=jpg`,
+}));

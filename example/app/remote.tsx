@@ -20,7 +20,7 @@ import { photos } from '../data/products';
  * new image replacing a stale one after "Swap images on server".
  */
 
-type Source = 'local' | 'picsum';
+type Source = 'local' | 'unsplash';
 
 /** Host of the computer running Metro, which also runs the image server. */
 function serverHost() {
@@ -133,8 +133,8 @@ export default function RemoteScreen() {
 
       <Section label="Source">
         <Chips
-          values={['local', 'picsum'] as Source[]}
-          labels={{ local: 'Local server', picsum: 'picsum.photos' }}
+          values={['local', 'unsplash'] as Source[]}
+          labels={{ local: 'Local server', unsplash: 'Unsplash' }}
           value={source}
           onChange={setSource}
         />
@@ -180,6 +180,13 @@ export default function RemoteScreen() {
         <Text style={styles.note}>
           Server: {SERVER}. Start it with `npm run image-server --workspace example`; on an Android emulator
           also run `adb reverse tcp:8090 tcp:8090`.
+        </Text>
+      )}
+      {source === 'unsplash' && (
+        <Text style={styles.note}>
+          Photos from Unsplash (unsplash.com, Unsplash License). The CDN sends Cache-Control max-age of one
+          year: with the “Use server Cache-Control” switch on, the cache keeps them that long; turn it off to
+          use maxAge.
         </Text>
       )}
     </ScrollView>
