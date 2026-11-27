@@ -108,7 +108,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `pageGap` | `0` | Space between pages |
 | `pageAlign` | `'center'` | `'center'` or `'start'` |
 | `snapMode` | `'page'` | `'page'`, `'momentum'` or `'free'` |
-| `tapToNavigate` | `false` | `true` or `{ mode: 'sides' | 'forward', backZone: 0.3, area: 'all' | 'media' }`: tap to change page (see [Tap to navigate](#tap-to-navigate)) |
+| `tapToNavigate` | `false` | `true` or `{ mode, backZone, area }` (`mode` `'sides'` or `'forward'`, `backZone` 0.3, `area` `'all'` or `'media'`): tap to change page (see [Tap to navigate](#tap-to-navigate)) |
 | `animation` | spring | `{ type: 'spring', damping, stiffness, mass }` or `{ type: 'timing', duration }` |
 | `components` | | Slots: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (see [Slots](#slots)) |
 | `configureGesture(pan)` | | Adjust the pan gesture (thresholds, simultaneous gestures) and return it. Memoize it |

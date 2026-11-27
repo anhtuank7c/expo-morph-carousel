@@ -108,7 +108,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `pageGap` | `0` | Khoảng cách giữa các trang |
 | `pageAlign` | `'center'` | `'center'` hoặc `'start'` |
 | `snapMode` | `'page'` | `'page'`, `'momentum'` hoặc `'free'` |
-| `tapToNavigate` | `false` | `true` hoặc `{ mode: 'sides' | 'forward', backZone: 0.3, area: 'all' | 'media' }`: chạm để chuyển trang (xem [Chạm để chuyển trang](#chạm-để-chuyển-trang)) |
+| `tapToNavigate` | `false` | `true` hoặc `{ mode, backZone, area }` (`mode` là `'sides'` hoặc `'forward'`, `backZone` 0.3, `area` là `'all'` hoặc `'media'`): chạm để chuyển trang (xem [Chạm để chuyển trang](#chạm-để-chuyển-trang)) |
 | `animation` | spring | `{ type: 'spring', damping, stiffness, mass }` hoặc `{ type: 'timing', duration }` |
 | `components` | | Slot: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (xem [Slots](#slots)) |
 | `configureGesture(pan)` | | Chỉnh pan gesture (ngưỡng, gesture chạy song song) rồi trả về. Nên memo |
