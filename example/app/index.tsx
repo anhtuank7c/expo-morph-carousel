@@ -9,8 +9,14 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
   {
     href: '/product',
     title: 'Product showcase',
-    subtitle: 'Liquid morph between product shots, sliding text, dots and a button',
+    subtitle: 'A watch, a phone, a laptop, a mini and a desktop melting into each other',
     icon: 'cube-outline',
+  },
+  {
+    href: '/order',
+    title: 'Order a drink',
+    subtitle: 'Cup sizes S, M and L: the liquid effect pours one size into the next',
+    icon: 'cafe-outline',
   },
   {
     href: '/onboarding',

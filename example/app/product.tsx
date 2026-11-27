@@ -1,7 +1,7 @@
 import { MorphCarousel } from 'expo-morph-carousel';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { products } from '../data/products';
+import { devices } from '../data/products';
 
 /**
  * The layout from the SwiftUI "morphing carousel": a card with the product
@@ -17,7 +17,7 @@ export default function ProductScreen() {
       <Text style={styles.section}>Demo</Text>
       <MorphCarousel
         testID="product-carousel"
-        data={products}
+        data={devices}
         keyExtractor={(p) => p.id}
         getImage={(p) => p.image}
         getPlaceholderColor={(p) => p.color}

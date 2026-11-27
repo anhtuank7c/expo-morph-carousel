@@ -522,7 +522,7 @@ npm test                 # chỉ unit test cho phần toán phân trang
 npm run build            # biên dịch ra lib/
 ```
 
-App ví dụ (`example/`) import package từ `src/` và có sáu màn: trưng bày sản phẩm, onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media và thư viện ảnh từ mạng kèm bảng thông tin cache. Các hình trong ví dụ được tạo bằng `npm run make-assets --workspace example` (cần ffmpeg).
+App ví dụ (`example/`) import package từ `src/` và có các màn: trưng bày thiết bị (đồng hồ, điện thoại, laptop, máy tính mini và máy để bàn tan vào nhau), đặt đồ uống với ly S, M, L (bộ chọn size là slot Pagination, quầng sáng và bóng đổ là slot MediaBackground), onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media, thư viện ảnh từ mạng kèm bảng thông tin cache và stress test. Hình trong ví dụ đều là hình vẽ nguyên bản: thiết bị và ly bằng `npm run make-devices --workspace example` (CanvasKit, cài sẵn cùng React Native Skia), các khối hình bằng `npm run make-assets --workspace example` (cần ffmpeg).
 
 `npm install` cũng cài một pre-commit hook chạy ESLint và Prettier trên các file đã stage và chạy typecheck.
 

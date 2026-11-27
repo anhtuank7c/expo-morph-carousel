@@ -522,7 +522,7 @@ npm test                 # paging math unit tests only
 npm run build            # compile to lib/
 ```
 
-The example app (`example/`) imports the package from `src/` and has six screens: a product showcase, a full-screen onboarding, page layouts, slots, a playground for the media effects and a remote image gallery with the cache panel. Its shapes are generated with `npm run make-assets --workspace example` (needs ffmpeg).
+The example app (`example/`) imports the package from `src/` and has these screens: a device showcase (a watch, a phone, a laptop, a mini computer and a desktop melting into each other), a drink order with S, M and L cups (the size picker is a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. Its images are original drawings: the devices and cups with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
 
 `npm install` also sets up a pre-commit hook that runs ESLint and Prettier on staged files and the typecheck.
 

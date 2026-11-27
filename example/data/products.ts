@@ -47,6 +47,49 @@ export const products: Product[] = [
   },
 ];
 
+/**
+ * Devices for the product showcase: original drawings (example/scripts/
+ * make-devices.mjs), cropped to their outline. Dark bodies and glowing
+ * screens of different colors make the liquid morph easy to follow.
+ */
+export const devices: Product[] = [
+  {
+    id: 'watch',
+    title: 'Meet Orbit Watch',
+    description: 'A rounded case on a woven band. Swipe and it melts into the next device.',
+    image: require('../assets/devices/watch.png'),
+    color: '#6a4fd8',
+  },
+  {
+    id: 'phone',
+    title: 'Nova Phone',
+    description: 'Edge-to-edge glass with an ocean wallpaper, tall and narrow.',
+    image: require('../assets/devices/phone.png'),
+    color: '#0b7fc4',
+  },
+  {
+    id: 'laptop',
+    title: 'Explore Slate Laptop',
+    description: 'A wide screen on a thin base: the blob stretches from tall to wide.',
+    image: require('../assets/devices/laptop.png'),
+    color: '#c2368f',
+  },
+  {
+    id: 'mini',
+    title: 'Cube Mini',
+    description: 'A small silver box with no screen at all, seen from above.',
+    image: require('../assets/devices/mini.png'),
+    color: '#8f959d',
+  },
+  {
+    id: 'desktop',
+    title: 'Vista Desktop',
+    description: 'A large display with a sunset on a round foot.',
+    image: require('../assets/devices/desktop.png'),
+    color: '#e0566b',
+  },
+];
+
 /** Media height of the remote screen's carousel; the home screen prefetches for it. */
 export const REMOTE_MEDIA_HEIGHT = 240;
 /** Horizontal padding of the remote screen around the carousel. */
