@@ -9,7 +9,7 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
   {
     href: '/product',
     title: 'Product showcase',
-    subtitle: 'A watch, a phone, a laptop, a mini and a desktop melting into each other',
+    subtitle: 'Watches, phones, a laptop and a Mac mini: tall and wide outlines melting into each other',
     icon: 'cube-outline',
   },
   {

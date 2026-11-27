@@ -90,6 +90,70 @@ export const devices: Product[] = [
   },
 ];
 
+/**
+ * Product photos for the showcase, cut out of their studio background and
+ * cropped to the product. Tall and wide products alternate, so the liquid
+ * blob visibly stretches from one outline to the next.
+ */
+export const showcase: Product[] = [
+  {
+    id: 'watch-plum',
+    title: 'Watch Series 12',
+    description: 'A plum sport band and an always-on display. Swipe and it melts into the next product.',
+    image: require('../assets/showcase/watch-plum.png'),
+    color: '#5c1f33',
+  },
+  {
+    id: 'macbook',
+    title: 'MacBook Pro 14',
+    description: 'From a tall watch to a wide laptop: the blob stretches sideways on the way.',
+    image: require('../assets/showcase/macbook.png'),
+    color: '#2c2c30',
+  },
+  {
+    id: 'iphone-red',
+    title: 'iPhone 18 Pro',
+    description: 'Tall and narrow again, in a deep red finish with a three-camera plateau.',
+    image: require('../assets/showcase/iphone-red.png'),
+    color: '#6e2334',
+  },
+  {
+    id: 'mini-front',
+    title: 'Mac mini',
+    description: 'The widest of all: a low silver box, seen from the front.',
+    image: require('../assets/showcase/mini-front.png'),
+    color: '#6b7076',
+  },
+  {
+    id: 'iphone-white',
+    title: 'iPhone 18 Pro, white',
+    description: 'The back and the side: two outlines the liquid has to join.',
+    image: require('../assets/showcase/iphone-white.png'),
+    color: '#7d7a76',
+  },
+  {
+    id: 'iphone-duo',
+    title: 'iPhone Duo',
+    description: 'A phone that unfolds into a small laptop, half open.',
+    image: require('../assets/showcase/iphone-duo.png'),
+    color: '#1f2b45',
+  },
+  {
+    id: 'watch-starlight',
+    title: 'Watch Series 12, starlight',
+    description: 'A light band and a vivid purple face, back to a tall outline.',
+    image: require('../assets/showcase/watch-starlight.png'),
+    color: '#6a3fc8',
+  },
+  {
+    id: 'mini-top',
+    title: 'Mac mini, from above',
+    description: 'A rounded square to finish: the blob settles into an even shape.',
+    image: require('../assets/showcase/mini-top.png'),
+    color: '#5e6369',
+  },
+];
+
 /** Media height of the remote screen's carousel; the home screen prefetches for it. */
 export const REMOTE_MEDIA_HEIGHT = 240;
 /** Horizontal padding of the remote screen around the carousel. */

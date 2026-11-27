@@ -21,7 +21,7 @@ All notable changes to this package are listed here. The format follows [Keep a 
 ### Added
 
 - `liquid.decode`: `'scheduled'` (default), `'immediate'` or `'onDraw'` (Skia's lazy decoding).
-- Example: the product showcase uses original device drawings (watch, phone, laptop, mini computer, desktop) cropped to their outline; new "Order a drink" screen with S, M and L cups, a size picker in the Pagination slot and a glow and floor shadow in the MediaBackground slot; `make-devices` script that draws both with CanvasKit.
+- Example: the product showcase uses product photos cut out to their outline, tall and wide ones in turn so the liquid morph stretches between them (Apple marketing images, for illustration only); original device drawings (watch, phone, laptop, mini computer, desktop) in `make-devices`; new "Order a drink" screen with S, M and L cups, a size picker in the Pagination slot and a glow and floor shadow in the MediaBackground slot; `make-devices` script that draws both with CanvasKit.
 - Example: Stress test screen (60 photos in a Tinder stack, JS and UI thread probes, unattended runs with `?decode=…&auto=40&gap=350`).
 - `imageCache.configure({ decodedBytes })`: memory budget for decoded images (default 96 MB), next to the `decodedImages` count.
 
