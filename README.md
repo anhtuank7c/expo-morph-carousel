@@ -173,6 +173,8 @@ import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 
 All effects work horizontally and vertically and mirror in right-to-left layouts. With Reduce Motion on, named effects fall back to `slide`.
 
+Right-to-left follows `I18nManager.isRTL`: forward is to the left, swiping to the right moves forward, dots and tap zones are mirrored. In an Expo app, RTL layouts are only enabled with `"extra": { "supportsRTL": true }` in `app.json`.
+
 A custom effect is a worklet from the page's offset to a style. It gets `offset` (0 in view, 1 next, -1 previous, fractions while moving), `step` (distance between pages), the page and viewport sizes, `direction` and `rtl`, and returns `opacity`, `zIndex`, `transform` and `transformOrigin`. It must include the translation:
 
 ```tsx
@@ -491,7 +493,7 @@ Both filters scale with a triangle curve that is 0 on a page and 1 halfway betwe
 
 | Platform | Verified with |
 | --- | --- |
-| Android | Android 17 emulator (API 37), Expo Go: every media effect and page effect, slots, loop, vertical, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
+| Android | Android 17 emulator (API 37), Expo Go: every media effect and page effect, slots, snap modes and tap navigation (horizontal, vertical and right-to-left), loop, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
 | Web | Desktop Chrome: liquid effect with CanvasKit, keyboard navigation, remote images, the Cache Storage cache across page reloads |
 | iOS | Not verified yet |
 

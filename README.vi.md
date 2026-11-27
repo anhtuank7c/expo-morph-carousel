@@ -173,6 +173,8 @@ import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 
 Mọi hiệu ứng chạy được cả ngang lẫn dọc và tự lật chiều trong bố cục phải sang trái. Khi bật Reduce Motion, các hiệu ứng theo tên chuyển về `slide`.
 
+Bố cục phải sang trái theo `I18nManager.isRTL`: chiều tiến là sang trái, vuốt sang phải để tiến, chấm phân trang và vùng chạm được lật lại. Trong app Expo, bố cục RTL chỉ được bật khi có `"extra": { "supportsRTL": true }` trong `app.json`.
+
 Hiệu ứng tự viết là một worklet nhận `offset` của trang (0 đang hiện, 1 trang sau, -1 trang trước, số lẻ khi đang chuyển), `step` (khoảng cách giữa hai trang), kích thước trang và viewport, `direction`, `rtl`, rồi trả về `opacity`, `zIndex`, `transform` và `transformOrigin`. Phải tự tính cả phần dịch chuyển:
 
 ```tsx
@@ -491,7 +493,7 @@ Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở �
 
 | Nền tảng | Đã kiểm tra bằng |
 | --- | --- |
-| Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng media và page effect, slots, loop, trượt dọc, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
+| Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng media và page effect, slots, snap mode và chạm để chuyển trang (ngang, dọc và phải sang trái), loop, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
 | Web | Chrome desktop: hiệu ứng liquid với CanvasKit, điều hướng bằng bàn phím, ảnh từ mạng, cache bằng Cache Storage qua các lần tải lại trang |
 | iOS | Chưa kiểm tra |
 

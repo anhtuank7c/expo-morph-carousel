@@ -8,6 +8,7 @@ import {
 } from 'expo-morph-carousel';
 import { useMemo, useState } from 'react';
 import {
+  I18nManager,
   Image,
   Pressable,
   ScrollView,
@@ -120,7 +121,8 @@ export default function LayoutsScreen() {
       />
 
       <Text style={styles.status} testID="layouts-status">
-        Page {page + 1} / {data.length} · {moving ? 'moving' : 'at rest'} · onScrollEnd ×{rests}
+        Page {page + 1} / {data.length} · {moving ? 'moving' : 'at rest'} · onScrollEnd ×{rests} ·{' '}
+        {I18nManager.isRTL ? 'RTL' : 'LTR'}
       </Text>
 
       <Label>Page effect</Label>
