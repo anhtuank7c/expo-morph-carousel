@@ -4,6 +4,7 @@ export { presets as mediaEffects } from './effects';
 export {
   pageEffects,
   type CoverflowOptions,
+  type CubeOptions,
   type PageEffect,
   type PageEffectFn,
   type PageEffectInput,

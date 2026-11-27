@@ -34,6 +34,8 @@ type Transform =
   | { translateX: number }
   | { translateY: number }
   | { scale: number }
+  | { scaleX: number }
+  | { scaleY: number }
   | { rotate: string }
   | { rotateX: string }
   | { rotateY: string }
@@ -194,27 +196,110 @@ export function coverflow({ angle = 48, scale = 0.82, spacing = 0.62 }: Coverflo
   };
 }
 
-/** Pages are the faces of a cube turning around its edge. */
-export function cube(): PageEffectFn {
+export type CubeOptions = {
+  /**
+   * Distance of the eye from the screen, in points. Smaller is a stronger
+   * perspective. Default 2.5 × the larger side of a page.
+   */
+  perspective?: number;
+};
+
+/**
+ * Where one face of the cube is drawn, as transforms React Native supports
+ * on every platform (no translateZ, which Android ignores).
+ *
+ * The cube has the page's length as its side and its center that length / 2
+ * behind the screen; it is turned by `offset × 90°` and seen by one eye at
+ * `eye` in front of the page's center. The face is drawn around its
+ * leading edge (u = 0): scaled (`along` the scroll axis, `across` it),
+ * turned by the real angle, seen through a perspective centered on that
+ * edge, then moved to the edge's projected position. With the scale applied
+ * first (the order of a view's own transform on Android), that perspective
+ * is the edge's depth from the eye times `along`. `across` is the edge's
+ * perspective factor; `along` also corrects for the eye being off the
+ * edge's axis. Every point of the face then lands where the real cube puts
+ * it (see test/cube.test.ts), so neighboring faces share their edge.
+ *
+ * Returns null when the face looks away from the eye (or is nearly edge-on).
+ */
+export function cubeFace(
+  offset: number,
+  side: number,
+  eye: number,
+): { translate: number; along: number; across: number; perspective: number; angle: number } | null {
+  'worklet';
+  const a = (offset * Math.PI) / 2;
+  const sin = Math.sin(a);
+  const cos = Math.cos(a);
+  if (cos < 0.05) return null;
+  const h = side / 2;
+  // Leading and trailing edges: position along the axis (from the page
+  // center) and depth (toward the eye, the screen at 0).
+  const x1 = h * (sin - cos);
+  const z1 = h * (sin + cos - 1);
+  const x2 = h * (sin + cos);
+  const z2 = h * (cos - sin - 1);
+  const d1 = eye - z1;
+  const p1 = (x1 * eye) / d1;
+  const p2 = (x2 * eye) / (eye - z2);
+  if (p2 - p1 < 1e-3) return null; // seen from behind
+  const across = eye / d1;
+  const along = (across * (cos - (x1 * sin) / d1)) / cos;
+  return {
+    translate: p1 + h,
+    along,
+    across,
+    perspective: along * d1,
+    angle: (a * 180) / Math.PI,
+  };
+}
+
+/**
+ * Pages are the faces of a turning cube: neighboring faces share an edge
+ * and the cube is seen through one perspective, so it reads as a solid
+ * block. Give the pages content that fills them edge to edge (no margin,
+ * no rounded corners) and no `pageGap`.
+ */
+export function cube({ perspective }: CubeOptions = {}): PageEffectFn {
   return (input) => {
     'worklet';
     const o = input.offset;
     if (Math.abs(o) >= 1) return { opacity: 0 };
     const vertical = input.direction === 'vertical';
-    const forward = input.rtl && !vertical ? o < 0 : o > 0;
-    // The face rotates around the edge it shares with the current face.
-    const origin = vertical
-      ? o > 0
-        ? 'center top'
-        : 'center bottom'
-      : forward
-        ? 'left center'
-        : 'right center';
+    const side = vertical ? input.height : input.width;
+    const eye = perspective ?? Math.max(input.width, input.height) * 2.5;
+    // In right-to-left layouts the next face is on the left.
+    const face = cubeFace(input.rtl && !vertical ? -o : o, side, eye);
+    if (!face) return { opacity: 0 };
+    const zIndex = Math.round(100 - Math.abs(o) * 10);
+    if (vertical) {
+      return {
+        opacity: 1,
+        zIndex,
+        transformOrigin: 'center top',
+        // Applied last to first: scale, turn, perspective, move.
+        transform: [
+          { translateY: face.translate },
+          { perspective: face.perspective },
+          // rotateX turns the bottom toward the eye for positive angles.
+          { rotateX: `${-face.angle}deg` },
+          { scaleY: face.along },
+          { scaleX: face.across },
+        ],
+      };
+    }
     return {
       opacity: 1,
-      zIndex: Math.round(100 - Math.abs(o) * 10),
-      transformOrigin: origin,
-      transform: [{ perspective: 1000 }, along(input, o * input.step), turn(input, o * 90)],
+      zIndex,
+      transformOrigin: 'left center',
+      // Applied last to first: scale, turn, perspective, move.
+      transform: [
+        { translateX: face.translate },
+        { perspective: face.perspective },
+        { rotateY: `${face.angle}deg` },
+        { scaleX: face.along },
+        { scaleY: face.across },
+      ],
     };
   };
 }
@@ -355,7 +440,7 @@ const BY_NAME: Record<PageEffectName, () => PageEffectFn> = {
   parallax: () => parallax(),
   stack: () => stack(),
   coverflow: () => coverflow(),
-  cube,
+  cube: () => cube(),
   flip,
   fade,
   'scale-fade': () => scaleFade(),

@@ -164,7 +164,7 @@ import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 | `parallax` | Current page full size, neighbors smaller and closer. Use with `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
 | `stack` | A deck: next cards wait behind, the current one slides off | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
 | `coverflow` | Neighbors turned away in 3D, overlapping | `angle` 48, `scale` 0.82, `spacing` 0.62 |
-| `cube` | Faces of a cube turning around their edge | |
+| `cube` | A solid cube turning: neighboring faces share their edge and the whole cube is seen through one perspective. Pages should fill their frame edge to edge (no margin, rounded corners or `pageGap`); a page narrower than the carousel leaves room for the near edge, which comes toward the eye | `perspective` 2.5 × the larger page side |
 | `flip` | The card turns over in place; the next card is its back | |
 | `fade` | Cross-fade in place | |
 | `scale-fade` | Outgoing shrinks and fades, incoming settles from slightly larger | `scale` 0.86 |

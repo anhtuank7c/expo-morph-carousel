@@ -164,7 +164,7 @@ import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 | `parallax` | Trang hiện tại đủ cỡ, trang kế bên nhỏ hơn và gần hơn. Dùng với `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
 | `stack` | Một chồng bài: thẻ sau nằm chờ phía sau, thẻ hiện tại trượt ra | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
 | `coverflow` | Trang kế bên xoay 3D và chồng lên nhau | `angle` 48, `scale` 0.82, `spacing` 0.62 |
-| `cube` | Các mặt của khối lập phương xoay quanh cạnh | |
+| `cube` | Một khối lập phương đặc đang xoay: các mặt kề nhau chung cạnh, cả khối được nhìn qua cùng một phối cảnh. Trang nên phủ kín khung (không margin, không bo góc, không `pageGap`); trang hẹp hơn carousel chừa chỗ cho cạnh gần mắt nhô ra khi xoay | `perspective` 2,5 × cạnh dài hơn của trang |
 | `flip` | Thẻ lật tại chỗ; trang sau là mặt lưng | |
 | `fade` | Crossfade tại chỗ | |
 | `scale-fade` | Trang cũ co lại và mờ dần, trang mới từ lớn hơn một chút thu về | `scale` 0.86 |

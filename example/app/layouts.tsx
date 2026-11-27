@@ -6,6 +6,7 @@ import {
   type PageEffectFn,
   type SnapMode,
 } from 'expo-morph-carousel';
+import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   I18nManager,
@@ -66,7 +67,15 @@ const ANIMATIONS: { label: string; value: AnimationConfig }[] = [
 
 export default function LayoutsScreen() {
   const { width } = useWindowDimensions();
-  const [effect, setEffect] = useState(0);
+  // `/layouts?effect=cube&autoplay=1` opens on an effect and plays it (handy
+  // for recordings and devices that block injected taps).
+  const params = useLocalSearchParams<{ effect?: string; autoplay?: string }>();
+  const [effect, setEffect] = useState(() =>
+    Math.max(
+      EFFECTS.findIndex((e) => e.label === params.effect),
+      0,
+    ),
+  );
   const [snap, setSnap] = useState<SnapMode>('page');
   const [anim, setAnim] = useState(0);
   const [loop, setLoop] = useState(true);
@@ -78,10 +87,17 @@ export default function LayoutsScreen() {
   const [liquid, setLiquid] = useState(true);
   const [tap, setTap] = useState(true);
   const peek = peekOverride ?? !!EFFECTS[effect].peek;
+  // A cube is drawn bigger than its page while it turns (the near edge comes
+  // toward the eye), so it gets room around it and edge-to-edge faces.
+  const isCube = EFFECTS[effect].value === 'cube';
 
   const viewport = width - 32;
   const animation = ANIMATIONS[anim].value;
-  const pageSize = peek ? Math.round((vertical ? 340 : viewport) * 0.72) : undefined;
+  const pageSize = peek
+    ? Math.round((vertical ? 340 : viewport) * 0.72)
+    : isCube
+      ? Math.round((vertical ? 300 : viewport) * 0.78)
+      : undefined;
   const data = useMemo(() => [...products, ...products.map((p) => ({ ...p, id: `${p.id}-2` }))], []);
 
   return (
@@ -102,6 +118,7 @@ export default function LayoutsScreen() {
         tapToNavigate={tap}
         animation={animation}
         loop={loop}
+        autoplay={params.autoplay ? { interval: 1800, whenScreenReaderEnabled: true } : undefined}
         direction={vertical ? 'vertical' : 'horizontal'}
         // The liquid morph of the images, above the cards.
         getImage={liquid ? (p) => p.image : undefined}
@@ -117,7 +134,14 @@ export default function LayoutsScreen() {
           setPage(i);
           setRests((n) => n + 1);
         }}
-        renderItem={({ item, offset }) => <Card item={item} offset={offset} showImage={!liquid} />}
+        renderItem={({ item, offset }) => (
+          <Card
+            item={item}
+            offset={offset}
+            showImage={!liquid}
+            face={isCube ? (vertical ? 'vertical' : 'horizontal') : undefined}
+          />
+        )}
       />
 
       <Text style={styles.status} testID="layouts-status">
@@ -158,20 +182,35 @@ function Card({
   item,
   offset,
   showImage,
+  face,
 }: {
   item: Product;
   offset: SharedValue<number>;
   showImage: boolean;
+  /** A face of the cube: fills the page along the axis it turns on. */
+  face?: 'horizontal' | 'vertical';
 }) {
+  // A face turning away from the light gets darker.
+  const shade = useAnimatedStyle(() => ({ opacity: Math.min(Math.abs(offset.value), 1) * 0.45 }));
   const title = useAnimatedStyle(() => ({
     transform: [{ translateX: interpolate(offset.value, [-1, 0, 1], [-60, 0, 60]) }],
     opacity: interpolate(Math.abs(offset.value), [0, 0.8], [1, 0.3]),
   }));
   return (
-    <View style={[styles.card, { backgroundColor: item.color }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: item.color },
+        face === 'horizontal' && styles.faceHorizontal,
+        face === 'vertical' && styles.faceVertical,
+      ]}
+    >
       {showImage && <Image source={item.image} style={styles.cardImage} resizeMode="contain" />}
       <Animated.Text style={[styles.cardTitle, title]}>{item.title}</Animated.Text>
       {!showImage && <Text style={styles.cardText}>{item.description}</Text>}
+      {face && (
+        <Animated.View style={[StyleSheet.absoluteFill, styles.faceShade, shade]} pointerEvents="none" />
+      )}
     </View>
   );
 }
@@ -241,6 +280,11 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   cardImage: { width: '62%', height: '52%' },
+  // Cube faces meet at their edges: no gap, no corners, no shadow (a shadow
+  // on a view turned in 3D is drawn flat on Android).
+  faceHorizontal: { marginHorizontal: 0, borderRadius: 0, elevation: 0, shadowOpacity: 0 },
+  faceVertical: { marginVertical: 0, borderRadius: 0, elevation: 0, shadowOpacity: 0 },
+  faceShade: { backgroundColor: '#000' },
   cardTitle: { fontSize: 24, fontWeight: '800', color: '#fff' },
   label: { marginTop: 6, fontSize: 13, color: '#6e6e73' },
   status: { fontSize: 13, fontWeight: '600', color: '#1c1c1e', textAlign: 'center' },

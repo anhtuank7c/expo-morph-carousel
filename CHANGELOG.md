@@ -6,6 +6,7 @@ All notable changes to this package are listed here. The format follows [Keep a 
 
 ### Fixed
 
+- `cube` page effect: the faces now form a solid cube. Each face is the exact projection of a real cube turning around its center, seen by one eye (React Native transforms only, no translateZ): neighbors share their edge and the perspective is consistent. Before, each face had its own vanishing point and moved by the page step, so faces came apart with a `pageGap` or narrow pages. New option `pageEffects.cube({ perspective })`.
 - Reanimated warning "The view has some undefined, not-yet-computed or meaningless value of `LayoutMetrics` type" with the liquid effect (seen on iOS). The Skia canvas no longer uses `onSize`, which measured the view on the UI thread in every frame, idle or not, for as long as the canvas was mounted, and warned while the view had no layout yet. The drawing size now comes from the media area's layout; after a rotation it follows one frame later.
 - Example: screens are inset below the iOS header (`contentInsetAdjustmentBehavior="automatic"`); on iOS 26 the native header is translucent and content started under it. The Product screen is now a scroll view.
 
