@@ -53,6 +53,8 @@ import type {
 const SWAP_MS = 220;
 const DEFAULT_SPRING = { damping: 26, stiffness: 220, mass: 1 };
 const DEFAULT_TIMING_MS = 380;
+/** Glide of `snapMode="free"`: the deceleration of a native scroll view. */
+const FREE_DECELERATION = 0.998;
 const DEFAULT_LIQUID = { blur: 28, threshold: 0.5, sharpness: 24 };
 const DEFAULT_AUTOPLAY: Required<AutoplayOptions> = {
   interval: 4000,
@@ -280,8 +282,8 @@ export function MorphCarousel<T>({
       if (snapMode === 'free') {
         position.value = withDecay(
           loop
-            ? { velocity, deceleration: 0.996 }
-            : { velocity, deceleration: 0.996, clamp: [0, Math.max(count - 1, 0)] },
+            ? { velocity, deceleration: FREE_DECELERATION }
+            : { velocity, deceleration: FREE_DECELERATION, clamp: [0, Math.max(count - 1, 0)] },
           (finished) => {
             if (finished) runOnJS(emitEnd)(Math.round(position.value));
           },

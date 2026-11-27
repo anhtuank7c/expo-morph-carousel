@@ -68,6 +68,9 @@ export default function LayoutsScreen() {
   const [loop, setLoop] = useState(true);
   const [vertical, setVertical] = useState(false);
   const [peekOverride, setPeekOverride] = useState<boolean | null>(null);
+  const [page, setPage] = useState(0);
+  const [moving, setMoving] = useState(false);
+  const [rests, setRests] = useState(0);
   const peek = peekOverride ?? !!EFFECTS[effect].peek;
 
   const viewport = width - 32;
@@ -92,8 +95,19 @@ export default function LayoutsScreen() {
         loop={loop}
         direction={vertical ? 'vertical' : 'horizontal'}
         style={styles.carousel}
+        onIndexChange={setPage}
+        onScrollStart={() => setMoving(true)}
+        onScrollEnd={(i) => {
+          setMoving(false);
+          setPage(i);
+          setRests((n) => n + 1);
+        }}
         renderItem={({ item, offset }) => <Card item={item} offset={offset} />}
       />
+
+      <Text style={styles.status} testID="layouts-status">
+        Page {page + 1} / {data.length} · {moving ? 'moving' : 'at rest'} · onScrollEnd ×{rests}
+      </Text>
 
       <Label>Page effect</Label>
       <Chips
@@ -197,6 +211,7 @@ const styles = StyleSheet.create({
   cardImage: { width: '62%', height: '52%' },
   cardTitle: { fontSize: 24, fontWeight: '800', color: '#fff' },
   label: { marginTop: 6, fontSize: 13, color: '#6e6e73' },
+  status: { fontSize: 13, fontWeight: '600', color: '#1c1c1e', textAlign: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: '#fff' },
   chipOn: { backgroundColor: '#5b4bd6' },
