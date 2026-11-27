@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Morph Carousel",
+    "slug": "morph-carousel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "morphcarousel",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "dev.example.morphcarousel"
+    },
+    "android": {
+      "package": "dev.example.morphcarousel"
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": ["expo-router"]
+  }
+}

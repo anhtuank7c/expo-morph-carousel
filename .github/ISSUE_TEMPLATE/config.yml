@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/anhtuank7c/expo-morph-carousel/discussions
+    about: Ask how to do something, or discuss an idea before filing a feature request.
+  - name: Troubleshooting
+    url: https://github.com/anhtuank7c/expo-morph-carousel#troubleshooting
+    about: Common setup problems and their fixes.
+  - name: Security vulnerability
+    url: https://github.com/anhtuank7c/expo-morph-carousel/security/advisories/new
+    about: Report security problems privately, not as a public issue.
