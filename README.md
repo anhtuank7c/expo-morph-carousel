@@ -108,6 +108,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `pageGap` | `0` | Space between pages |
 | `pageAlign` | `'center'` | `'center'` or `'start'` |
 | `snapMode` | `'page'` | `'page'`, `'momentum'` or `'free'` |
+| `tapToNavigate` | `false` | `true` or `{ mode: 'sides' | 'forward', backZone: 0.3, area: 'all' | 'media' }`: tap to change page (see [Tap to navigate](#tap-to-navigate)) |
 | `animation` | spring | `{ type: 'spring', damping, stiffness, mass }` or `{ type: 'timing', duration }` |
 | `components` | | Slots: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (see [Slots](#slots)) |
 | `configureGesture(pan)` | | Adjust the pan gesture (thresholds, simultaneous gestures) and return it. Memoize it |
@@ -212,6 +213,26 @@ const title = useAnimatedStyle(() => ({
 ```tsx
 const configureGesture = useCallback((pan) => pan.simultaneousWithExternalGesture(parentPan), [parentPan]);
 ```
+
+## Tap to navigate
+
+Some users tap rather than swipe. With `tapToNavigate`, a tap changes the page:
+
+```tsx
+<MorphCarousel tapToNavigate … /> // left 30% back, the rest forward
+<MorphCarousel tapToNavigate={{ mode: 'forward' }} … /> // any tap goes forward
+<MorphCarousel tapToNavigate={{ area: 'media' }} … /> // only taps on the media area
+```
+
+| Option | Default | |
+| --- | --- | --- |
+| `mode` | `'sides'` | `sides`: the leading `backZone` goes back, the rest forward, like stories. `forward`: any tap goes forward |
+| `backZone` | `0.3` | Fraction of the carousel that goes back |
+| `area` | `'all'` | `media` counts only taps on the media area |
+
+The leading side is the left, the top when vertical, the right in right-to-left layouts. With `pageSize` smaller than the carousel, a tap on a neighbor peeking at the side goes to that neighbor. Swiping keeps working: a tap counts only when the finger does not move, and a touch on a carousel at rest does not fire `onScrollEnd`.
+
+It is off by default because a tap on a button inside a page would also change the page; with buttons in your pages, use `area: 'media'`.
 
 ## Slots
 

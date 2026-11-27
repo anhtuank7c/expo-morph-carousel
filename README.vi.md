@@ -108,6 +108,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `pageGap` | `0` | Khoảng cách giữa các trang |
 | `pageAlign` | `'center'` | `'center'` hoặc `'start'` |
 | `snapMode` | `'page'` | `'page'`, `'momentum'` hoặc `'free'` |
+| `tapToNavigate` | `false` | `true` hoặc `{ mode: 'sides' | 'forward', backZone: 0.3, area: 'all' | 'media' }`: chạm để chuyển trang (xem [Chạm để chuyển trang](#chạm-để-chuyển-trang)) |
 | `animation` | spring | `{ type: 'spring', damping, stiffness, mass }` hoặc `{ type: 'timing', duration }` |
 | `components` | | Slot: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (xem [Slots](#slots)) |
 | `configureGesture(pan)` | | Chỉnh pan gesture (ngưỡng, gesture chạy song song) rồi trả về. Nên memo |
@@ -212,6 +213,26 @@ const title = useAnimatedStyle(() => ({
 ```tsx
 const configureGesture = useCallback((pan) => pan.simultaneousWithExternalGesture(parentPan), [parentPan]);
 ```
+
+## Chạm để chuyển trang
+
+Có người dùng thích chạm hơn là vuốt. Với `tapToNavigate`, một lần chạm sẽ chuyển trang:
+
+```tsx
+<MorphCarousel tapToNavigate … /> // 30% bên trái để lùi, phần còn lại để tiến
+<MorphCarousel tapToNavigate={{ mode: 'forward' }} … /> // chạm đâu cũng tiến
+<MorphCarousel tapToNavigate={{ area: 'media' }} … /> // chỉ nhận chạm trên vùng ảnh
+```
+
+| Tuỳ chọn | Mặc định | |
+| --- | --- | --- |
+| `mode` | `'sides'` | `sides`: phần đầu `backZone` để lùi, còn lại để tiến, như stories. `forward`: chạm đâu cũng tiến |
+| `backZone` | `0.3` | Tỉ lệ vùng để lùi |
+| `area` | `'all'` | `media`: chỉ tính chạm trên vùng ảnh |
+
+Phần đầu là bên trái, là phía trên khi trượt dọc, là bên phải trong bố cục phải sang trái. Khi `pageSize` nhỏ hơn carousel, chạm vào trang kế bên đang ló ra sẽ chuyển sang trang đó. Vuốt vẫn hoạt động bình thường: chạm chỉ được tính khi ngón tay không di chuyển, và chạm vào carousel đang đứng yên không gọi `onScrollEnd`.
+
+Tính năng tắt mặc định vì chạm vào nút bên trong trang cũng sẽ chuyển trang; nếu trang có nút, dùng `area: 'media'`.
 
 ## Slots
 

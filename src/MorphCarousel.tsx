@@ -38,7 +38,16 @@ import {
   type NormalizedSource,
 } from './responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from './useResponsiveImage';
-import { clamp, momentumTarget, nearestVirtual, pageWindow, rubberBand, snapTarget, wrap } from './math';
+import {
+  clamp,
+  momentumTarget,
+  nearestVirtual,
+  pageWindow,
+  rubberBand,
+  snapTarget,
+  tapDirection,
+  wrap,
+} from './math';
 import { resolvePageEffect, type PageEffectFn } from './pageEffects';
 import { Pagination } from './Pagination';
 import type {
@@ -90,6 +99,7 @@ export function MorphCarousel<T>({
   snapMode = 'page',
   animation,
   configureGesture,
+  tapToNavigate = false,
   components,
   onScrollStart,
   onScrollEnd,
@@ -109,6 +119,8 @@ export function MorphCarousel<T>({
 }: MorphCarouselProps<T>) {
   const count = data.length;
   const vertical = direction === 'vertical';
+  const hasMediaTop = !!getImage && mediaPosition === 'top';
+  const mediaIsBackground = !!getImage && mediaPosition === 'background';
   const rtl = !vertical && I18nManager.isRTL;
   const reduceMotion = useReducedMotion();
   const motion = useMemo(() => {
@@ -272,6 +284,8 @@ export function MorphCarousel<T>({
   /* --- gesture -------------------------------------------------------------- */
   const start = useSharedValue(0);
   const dragging = useSharedValue(false);
+  /** The touch caught the carousel between pages (an animation was running). */
+  const caught = useSharedValue(false);
   // The gesture callbacks run on gestures, not during render. The React
   // Compiler rule cannot tell once the gesture is handed to `configureGesture`.
   /* eslint-disable react-hooks/refs */
@@ -302,6 +316,7 @@ export function MorphCarousel<T>({
         // Touching a moving carousel catches it, like a native scroll view.
         cancelAnimation(position);
         start.value = position.value;
+        caught.value = Math.abs(position.value - Math.round(position.value)) > 0.001;
         runOnJS(setTouching)(true);
       })
       .onStart(() => {
@@ -324,7 +339,9 @@ export function MorphCarousel<T>({
         // A tap that caught a moving carousel never activates the pan, so
         // onEnd does not run: settle from where it was caught (free mode
         // simply stays there).
-        if (!dragging.value && snapMode !== 'free') settle(0);
+        // A touch on a carousel at rest is not a scroll: nothing to settle
+        // and no onScrollEnd (a tap may still navigate).
+        if (!dragging.value && caught.value && snapMode !== 'free') settle(0);
         dragging.value = false;
         runOnJS(setTouching)(false);
       });
@@ -334,6 +351,7 @@ export function MorphCarousel<T>({
     // Memoize `configureGesture`, or the gesture is rebuilt on every render.
     return configureGesture ? configureGesture(base) : base;
   }, [
+    caught,
     configureGesture,
     count,
     dragging,
@@ -351,6 +369,59 @@ export function MorphCarousel<T>({
   ]);
   /* eslint-enable react-hooks/refs */
 
+  /* --- tap to navigate ------------------------------------------------------
+     A tap fires only when the pan did not take over (`Gesture.Exclusive`),
+     so swiping and tapping never both move the carousel. The geometry it
+     needs (where the pages start, the current page's frame) is mirrored into
+     a shared value because the decision runs on the UI thread.            */
+  const tapOptions = tapToNavigate
+    ? {
+        mode: 'sides' as const,
+        backZone: 0.3,
+        area: 'all' as const,
+        ...(tapToNavigate === true ? {} : tapToNavigate),
+      }
+    : null;
+  const tapGeometry = useSharedValue({ pagesTop: 0, viewportMain: 0, pageMain: 0, lead: 0, mediaMain: 0 });
+  // As for the pan: the callback runs on taps, not during render.
+  /* eslint-disable react-hooks/refs */
+  const tap = useMemo(() => {
+    if (!tapOptions) return null;
+    const { mode, backZone, area } = tapOptions;
+    return Gesture.Tap()
+      .enabled(count > 1)
+      .maxDistance(12)
+      .onEnd((e, success) => {
+        if (!success) return;
+        const g = tapGeometry.value;
+        const inMedia = g.pagesTop > 0 ? e.y < g.pagesTop : area === 'media' && mediaIsBackground;
+        if (area === 'media' && !inMedia) return;
+        let dir: -1 | 0 | 1;
+        if (vertical && g.pagesTop > 0 && e.y < g.pagesTop) {
+          // On the media above vertical pages: split the media area itself.
+          dir = tapDirection(e.y, g.mediaMain, mode, backZone, false);
+        } else if (vertical) {
+          dir = tapDirection(e.y - g.pagesTop, g.viewportMain, mode, backZone, false, g.pageMain, g.lead);
+        } else {
+          dir = tapDirection(e.x, g.viewportMain, mode, backZone, rtl, g.pageMain, g.lead);
+        }
+        if (dir !== 0) runOnJS(step)(dir);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rebuilt when the options' values change
+  }, [
+    count,
+    rtl,
+    step,
+    tapGeometry,
+    vertical,
+    tapOptions?.mode,
+    tapOptions?.backZone,
+    tapOptions?.area,
+    mediaIsBackground,
+  ]);
+  /* eslint-enable react-hooks/refs */
+  const gesture = useMemo(() => (tap ? Gesture.Exclusive(pan, tap) : pan), [pan, tap]);
+
   /* --- layout ------------------------------------------------------------- */
   const onPagesLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -361,6 +432,17 @@ export function MorphCarousel<T>({
   const viewportMain = vertical ? viewport.height : viewport.width;
   const pageMain = Math.min(pageSizeProp ?? viewportMain, viewportMain || Number.POSITIVE_INFINITY);
   const pageStep = pageMain + pageGap;
+  const pageLead = pageAlign === 'center' ? (viewportMain - pageMain) / 2 : 0;
+  const pagesTop = hasMediaTop ? mediaSize.height : 0;
+  useEffect(() => {
+    tapGeometry.value = {
+      pagesTop,
+      viewportMain,
+      pageMain,
+      lead: pageLead,
+      mediaMain: vertical ? mediaSize.height : mediaSize.width,
+    };
+  }, [mediaSize.height, mediaSize.width, pageLead, pageMain, pagesTop, tapGeometry, vertical, viewportMain]);
   useEffect(() => {
     pageExtent.value = pageStep;
   }, [pageExtent, pageStep]);
@@ -552,7 +634,7 @@ export function MorphCarousel<T>({
 
   return (
     <View style={[styles.root, style]} testID={testID}>
-      <GestureDetector gesture={pan} userSelect="none" touchAction={vertical ? 'pan-x' : 'pan-y'}>
+      <GestureDetector gesture={gesture} userSelect="none" touchAction={vertical ? 'pan-x' : 'pan-y'}>
         <View
           style={styles.body}
           accessible

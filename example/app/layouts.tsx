@@ -75,6 +75,7 @@ export default function LayoutsScreen() {
   const [moving, setMoving] = useState(false);
   const [rests, setRests] = useState(0);
   const [liquid, setLiquid] = useState(true);
+  const [tap, setTap] = useState(true);
   const peek = peekOverride ?? !!EFFECTS[effect].peek;
 
   const viewport = width - 32;
@@ -95,6 +96,9 @@ export default function LayoutsScreen() {
         pageSize={pageSize}
         pageGap={peek ? 12 : 0}
         snapMode={snap}
+        // Tap the left 30% to go back, anywhere else to go forward; a tap on a
+        // peeking neighbor goes to it.
+        tapToNavigate={tap}
         animation={animation}
         loop={loop}
         direction={vertical ? 'vertical' : 'horizontal'}
@@ -136,6 +140,7 @@ export default function LayoutsScreen() {
       <View style={styles.toggles}>
         <Toggle label="Liquid images (media above the cards)" value={liquid} onChange={setLiquid} />
         <Toggle label="Peek at neighbors (pageSize 72%)" value={peek} onChange={setPeekOverride} />
+        <Toggle label="Tap to navigate (left 30% back, rest forward)" value={tap} onChange={setTap} />
         <Toggle label="Loop" value={loop} onChange={setLoop} />
         <Toggle label="Vertical" value={vertical} onChange={setVertical} />
       </View>

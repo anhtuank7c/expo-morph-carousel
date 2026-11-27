@@ -22,6 +22,8 @@ export default function ProductScreen() {
         getAccessibilityLabel={(p) => p.title}
         accessibilityLabel="Products"
         mediaHeight={300}
+        // Tapping works too: the left third goes back, the rest forward.
+        tapToNavigate
         mediaPadding={28}
         style={styles.card}
         renderItem={({ item }) => (

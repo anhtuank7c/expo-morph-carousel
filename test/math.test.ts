@@ -10,6 +10,7 @@ import {
   ringOffset,
   rubberBand,
   snapTarget,
+  tapDirection,
   transitionPeak,
   wrap,
 } from '../src/math.ts';
@@ -125,5 +126,29 @@ describe('momentumTarget', () => {
   it('stops at the ends without loop', () => {
     assert.equal(momentumTarget(8, 40, 10, false), 9);
     assert.equal(momentumTarget(1, -40, 10, false), 0);
+  });
+});
+
+describe('tapDirection', () => {
+  it('sides: the leading 30% goes back, the rest forward', () => {
+    assert.equal(tapDirection(50, 400, 'sides', 0.3, false), -1);
+    assert.equal(tapDirection(130, 400, 'sides', 0.3, false), 1);
+    assert.equal(tapDirection(390, 400, 'sides', 0.3, false), 1);
+  });
+  it('mirrors the zones in right-to-left layouts', () => {
+    assert.equal(tapDirection(390, 400, 'sides', 0.3, true), -1);
+    assert.equal(tapDirection(50, 400, 'sides', 0.3, true), 1);
+  });
+  it('forward: any tap goes forward', () => {
+    assert.equal(tapDirection(10, 400, 'forward', 0.3, false), 1);
+  });
+  it('a tap on a peeking neighbor goes to it', () => {
+    // 400 wide viewport, 280 wide page centered at 60..340
+    assert.equal(tapDirection(30, 400, 'forward', 0.3, false, 280, 60), -1);
+    assert.equal(tapDirection(370, 400, 'forward', 0.3, false, 280, 60), 1);
+    assert.equal(tapDirection(370, 400, 'sides', 0.3, true, 280, 60), -1);
+  });
+  it('does nothing before layout', () => {
+    assert.equal(tapDirection(10, 0, 'sides', 0.3, false), 0);
   });
 });

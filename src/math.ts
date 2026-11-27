@@ -104,6 +104,40 @@ export function momentumTarget(
 }
 
 /**
+ * Where a tap sends the carousel: -1 back, 1 forward, 0 nowhere.
+ *
+ * - With pages narrower than the viewport, a tap on a neighbor peeking at
+ *   either side goes to that neighbor.
+ * - `forward`: any other tap goes forward.
+ * - `sides`: a tap in the leading `backZone` fraction (left, or top when
+ *   vertical, right in right-to-left layouts) goes back, the rest forward.
+ *
+ * `along` is the tap's coordinate along the scroll axis in the viewport,
+ * `extent` the viewport's length, `page` the length of one page and `lead`
+ * where the current page starts.
+ */
+export function tapDirection(
+  along: number,
+  extent: number,
+  mode: 'sides' | 'forward',
+  backZone: number,
+  rtl: boolean,
+  page = extent,
+  lead = 0,
+): -1 | 0 | 1 {
+  'worklet';
+  if (extent <= 0) return 0;
+  // A visible neighbor: outside the current page's frame.
+  if (page < extent - 1) {
+    if (along < lead) return rtl ? 1 : -1;
+    if (along > lead + page) return rtl ? -1 : 1;
+  }
+  if (mode === 'forward') return 1;
+  const fraction = rtl ? 1 - along / extent : along / extent;
+  return fraction < backZone ? -1 : 1;
+}
+
+/**
  * Virtual page indexes to render around `center`: `radius` pages on each side.
  * Without loop the window stops at the data bounds; with loop it continues and
  * the caller maps each virtual index onto the data with `wrap`.

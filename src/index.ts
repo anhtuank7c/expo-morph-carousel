@@ -46,6 +46,7 @@ export type {
   MediaSlotProps,
   PaginationSlotProps,
   SnapMode,
+  TapToNavigateOptions,
   LiquidOptions,
   MediaEffect,
   MediaEffectFn,

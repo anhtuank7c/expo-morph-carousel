@@ -104,6 +104,23 @@ export type AnimationConfig =
  */
 export type SnapMode = 'page' | 'momentum' | 'free';
 
+export type TapToNavigateOptions = {
+  /**
+   * - `sides` (default): a tap on the leading part (left, or top when vertical;
+   *   right in right-to-left layouts) goes back, anywhere else forward, like
+   *   stories.
+   * - `forward`: any tap goes forward.
+   *
+   * Either way, a tap on a neighbor peeking at the side (with `pageSize`)
+   * goes to that neighbor.
+   */
+  mode?: 'sides' | 'forward';
+  /** Fraction of the carousel that goes back in `sides` mode. Default 0.3. */
+  backZone?: number;
+  /** Where taps count: the whole carousel (default) or only the media area. */
+  area?: 'all' | 'media';
+};
+
 export type RenderItemInfo<T> = {
   item: T;
   index: number;
@@ -238,6 +255,12 @@ export type MorphCarouselProps<T> = {
   snapMode?: SnapMode;
   /** Animation used to settle on a page. Default: a spring. */
   animation?: AnimationConfig;
+  /**
+   * Tap to change page, for users who would rather tap than swipe. `true` for
+   * the defaults, or options. Off by default: when pages contain buttons, a
+   * tap on a button would also change the page; use `area: 'media'` then.
+   */
+  tapToNavigate?: boolean | TapToNavigateOptions;
   /** Customize the pan gesture: thresholds, `simultaneousWithExternalGesture`, extra callbacks. Return the gesture. */
   configureGesture?: (gesture: CarouselPanGesture) => CarouselPanGesture;
   /** Replaceable parts: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground`. */
