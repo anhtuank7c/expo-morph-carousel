@@ -1,0 +1,59 @@
+---
+title: "Slots"
+description: "Thay pagination, từng chấm, hoặc vẽ phía trên và phía sau media."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="slots">
+
+Mỗi slot của trang này trong một màn. Thêm trong các ví dụ: thanh tab và quầng sáng của [Đặt món](/expo-morph-carousel/vi/examples/order/), dải thumbnail của [Trang sản phẩm](/expo-morph-carousel/vi/examples/shop/).
+
+</Demo>
+
+Giống expo-morph-menu, các phần hiển thị có thể thay bằng component của bạn qua `components`. Mỗi slot nhận `position` của carousel dạng shared value, nên animate theo ngón tay ngay trên UI thread.
+
+| Slot | Props | Mặc định |
+| --- | --- | --- |
+| `Pagination` | `count`, `index`, `position`, `loop`, `direction`, `scrollTo(i)` | Chấm biến hình. `null` để ẩn |
+| `Dot` | `index`, `count`, `active` (shared value 0–1), `direction`, `onPress` | Chấm dạng viên thuốc. Dùng trong pagination có sẵn |
+| `MediaOverlay` | `item`, `index`, `count`, `position`, `width`, `height` | Không có. Vẽ phía trên media, không nhận chạm |
+| `MediaBackground` | như trên | Không có. Vẽ phía sau media |
+
+```tsx
+function StoryPagination({ count, position, scrollTo }: PaginationSlotProps) {
+  // mỗi trang một thanh, tự lấp đầy khi vuốt (xem example/app/slots.tsx)
+}
+
+function NumberDot({ index, active, onPress }: DotSlotProps) {
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: 0.8 + active.value * 0.35 }] }));
+  return (
+    <Pressable onPress={onPress}>
+      <Animated.View style={[styles.dot, style]}>
+        <Text>{index + 1}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+<MorphCarousel components={{ Pagination: StoryPagination, MediaOverlay: Caption, MediaBackground: Tint }} … />
+```
+
+`renderItem` và `renderFooter` cũng là slot: nội dung trang và phần nằm dưới chấm phân trang.
+
+## Chấm phân trang đặt ở chỗ khác
+
+`<Pagination>` được export. Truyền cho nó cùng shared value:
+
+```tsx
+<MorphCarousel pagination={false} positionValue={position} ref={carousel} … />
+<Pagination count={data.length} position={position} onPress={(i) => carousel.current?.scrollTo(i)} />
+```
+
+## Mã nguồn của demo
+
+<Source files={["app/slots.tsx"]} />

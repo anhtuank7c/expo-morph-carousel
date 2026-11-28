@@ -2,6 +2,8 @@
 
 [English](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/README.md) | **Tiếng Việt**
 
+**[Tài liệu kèm demo chạy thật và mã chép về dùng ngay →](https://anhtuank7c.github.io/expo-morph-carousel/vi/)**
+
 Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong lúc các trang trượt. Dựng bằng React Native Skia và Reanimated 4, kèm các preset chuyển cảnh đơn giản hơn, loop, autoplay, trượt dọc, hỗ trợ trình đọc màn hình và web.
 
 <table>

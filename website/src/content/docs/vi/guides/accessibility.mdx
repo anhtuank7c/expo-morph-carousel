@@ -1,0 +1,13 @@
+---
+title: "Accessibility"
+description: "Trình đọc màn hình, bàn phím và Reduce Motion."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+- Vùng media và các trang tạo thành một phần tử với role `adjustable` (`slider` trên web). Người dùng VoiceOver và TalkBack vuốt lên hoặc xuống để đổi trang; giá trị được đọc như "Watch, 1 / 3".
+- Footer nằm ngoài phần tử đó nên các nút bên trong vẫn truy cập được.
+- Autoplay dừng khi trình đọc màn hình đang bật, trừ khi đặt `autoplay.whenScreenReaderEnabled`.
+- Khi bật Reduce Motion, `liquid` và các preset khác chuyển về `crossfade`, và snap không có animation.
+- Trên web carousel nhận focus được: phím mũi tên chuyển một trang (lên/xuống khi trượt dọc), Home và End về hai đầu.

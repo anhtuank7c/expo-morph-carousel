@@ -1,0 +1,86 @@
+---
+title: Morph Carousel
+description: Carousel cho Expo và React Native, ảnh tan vào nhau như chất lỏng. Demo chạy thật, mã chép về dùng ngay, slots cho mọi thứ.
+template: splash
+hero:
+  tagline: Carousel cho Expo và React Native, trong đó các ảnh tan vào nhau như chất lỏng trong lúc các trang trượt. Mọi demo trên trang này đều chạy thật, và toàn bộ mã nguồn chỉ cách một cú bấm.
+  image:
+    html: '<img class="hero-gif" src="/expo-morph-carousel/media/android/stories.gif" alt="Stories: các người dùng xoay như khối lập phương, ảnh tan vào nhau" width="240" />'
+  actions:
+    - text: Bắt đầu
+      link: /expo-morph-carousel/vi/getting-started/
+      icon: right-arrow
+    - text: Xem ví dụ
+      link: /expo-morph-carousel/vi/examples/
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/anhtuank7c/expo-morph-carousel
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Demo from '~/components/Demo.astro';
+
+## Trong 30 giây
+
+```bash
+npx expo install expo-morph-carousel @shopify/react-native-skia expo-file-system \
+  react-native-reanimated react-native-worklets react-native-gesture-handler
+```
+
+<Demo route="basic">
+
+```tsx
+<MorphCarousel
+  data={shapes}
+  getImage={(s) => s.image}
+  style={{ height: 520 }}
+  renderItem={({ item }) => <Text>{item.title}</Text>}
+  renderFooter={({ next }) => <Button title="Continue" onPress={next} />}
+/>
+```
+
+Khung điện thoại bên trái chỉ cần chừng ấy. Trang [Cách dùng](/expo-morph-carousel/vi/usage/) có nguyên file, chép về là chạy.
+
+</Demo>
+
+## Làm được gì
+
+<CardGrid>
+  <Card title="Liquid morph" icon="star">
+    Giữa hai trang, ảnh tan thành một khối lỏng rồi đông lại thành ảnh kế tiếp, vẽ bằng Skia trên UI thread. Lúc đứng yên ảnh không bao giờ bị mờ.
+  </Card>
+  <Card title="Bố cục trang" icon="random">
+    Slide, parallax, stack, coverflow, khối lập phương 3D đặc, flip, tinder, hoặc worklet tự viết. Trang hẹp hơn carousel để lộ trang kế bên.
+  </Card>
+  <Card title="Slots" icon="puzzle">
+    Thay pagination, từng chấm, hoặc vẽ phía trên và phía sau media. Mỗi slot nhận vị trí dưới dạng shared value nên chạy theo ngón tay.
+  </Card>
+  <Card title="Ảnh từ mạng" icon="cloud-download">
+    Cache trên đĩa có hạn dùng, chọn ảnh theo kích thước kiểu srcset, ưu tiên và tải trước, nên vuốt hiếm khi phải chờ.
+  </Card>
+  <Card title="Hành vi pager" icon="seti:pipeline">
+    Snap, momentum hoặc free, loop, autoplay, dọc, phải sang trái, chạm để chuyển trang, và ref API để điều khiển.
+  </Card>
+  <Card title="iOS, Android, web" icon="laptop">
+    Cùng một mã trên mọi nền tảng, hỗ trợ trình đọc màn hình và bàn phím.
+  </Card>
+</CardGrid>
+
+## Làm các ứng dụng quen thuộc
+
+<CardGrid>
+  <LinkCard title="Stories" description="Người dùng xoay như khối lập phương, ảnh tan, chạm và giữ" href="/expo-morph-carousel/vi/examples/stories/" />
+  <LinkCard title="Feed dọc" description="Bài đăng toàn màn hình, chạm hai lần để thả tim" href="/expo-morph-carousel/vi/examples/feed/" />
+  <LinkCard title="Flash sale" description="Banner vòng lặp, đếm ngược, thẻ deal" href="/expo-morph-carousel/vi/examples/flash-sale/" />
+  <LinkCard title="Trang sản phẩm" description="Thư viện ảnh với slot dải thumbnail" href="/expo-morph-carousel/vi/examples/shop/" />
+  <LinkCard title="Kỷ niệm" description="Trình chiếu Ken Burns với chuyển cảnh liquid" href="/expo-morph-carousel/vi/examples/memories/" />
+  <LinkCard title="Album nhạc" description="Coverflow với nền mờ" href="/expo-morph-carousel/vi/examples/albums/" />
+</CardGrid>
+
+## Tuỳ biến theo ý bạn
+
+Bắt đầu từ một ví dụ, rồi đi xa hơn với [slots](/expo-morph-carousel/vi/guides/slots/): pagination, chấm, lớp phủ và nền của riêng bạn, tất cả chạy theo vị trí của carousel trên UI thread. Hoặc viết [bố cục trang](/expo-morph-carousel/vi/guides/page-layouts/) hay [hiệu ứng media](/expo-morph-carousel/vi/guides/media-effects/) bằng worklet.
+
+Cùng tác giả: [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu), menu biến hình từ chính nút bấm của nó.

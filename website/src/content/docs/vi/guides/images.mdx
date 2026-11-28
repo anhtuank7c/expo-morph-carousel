@@ -1,0 +1,160 @@
+---
+title: "Ảnh và cache"
+description: "Ảnh responsive, ảnh từ mạng, cache trên đĩa, thứ tự tải và tải trước."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="remote">
+
+
+
+</Demo>
+
+## Ảnh responsive (srcset)
+
+Carousel đo vùng media, nhân với mật độ điểm ảnh của thiết bị và chọn ảnh vừa đủ nét mà không tải thừa. Có hai cách khai báo các kích thước.
+
+**Danh sách biến thể**, dạng `srcset` của React Native (`width` là `w`-descriptor):
+
+```tsx
+getImage={(p) => [
+  { uri: `${p.base}-640.jpg`, width: 640, height: 480 },
+  { uri: `${p.base}-1280.jpg`, width: 1280, height: 960 },
+  { uri: `${p.base}-2560.jpg`, width: 2560, height: 1920 },
+]}
+```
+
+Biến thể nhỏ nhất mà vẫn đủ rộng sẽ được chọn; nếu có `height`, `cover` và `contain` tính cả tỉ lệ khung hình. Biến thể đã có trong cache được ưu tiên nếu không lớn quá 2 lần mức cần.
+
+**URL dựng theo kích thước**, cho các CDN ảnh (imgix, Cloudinary, Unsplash, resizer kiểu Next.js). Tham số thứ ba là kích thước cần, tính bằng pixel vật lý, làm tròn lên một trong vài bậc (`WIDTH_STEPS`: 320, 480, 640, 750, 828, 1080, 1200, 1440, 1920, 2560, …) để CDN và cache chỉ thấy vài URL cho mỗi ảnh, thay vì mỗi thiết bị một URL:
+
+```tsx
+getImage={(p, i, target) => ({
+  uri: `https://images.unsplash.com/photo-${p.id}?w=${target.width}&h=${target.height}&fit=crop`,
+})}
+```
+
+`target` gồm `width`, `height`, `pixelRatio`, `layoutWidth`, `layoutHeight` (dp) và `fit`.
+
+Không cần `sizes`: HTML cần nó vì trình duyệt chọn ảnh trước khi layout, còn carousel chọn sau khi layout.
+
+**Xoay màn hình và đổi kích thước.** Khi vùng ảnh lớn lên (dọc sang ngang, chia đôi màn hình, đổi cỡ cửa sổ trên web), biến thể nét hơn được tải ở nền trong khi ảnh hiện tại vẫn hiển thị, rồi crossfade trong 220 ms sau khi decode xong. Khi vùng ảnh nhỏ đi, ảnh nét đang hiện được giữ nguyên và không tải gì thêm, giống trình duyệt. Không bao giờ có khung hình trống. Với hiệu ứng liquid, ảnh theo kích thước mới chậm một khung hình sau khi layout đổi (lần render đọc kích thước đó): nếu đo canvas trên UI thread thay vào đó thì mỗi khung hình đều phải đo một lần, suốt thời gian carousel còn mount.
+
+## Ảnh từ mạng và cache
+
+Ảnh từ mạng (`{ uri: 'https://…' }`) đi qua một cache trên đĩa, bật sẵn mặc định. Mỗi ảnh được lưu kèm thời điểm tải và thời điểm hết hạn.
+
+```tsx
+// Hằng số ở cấp module (hoặc useMemo): carousel memo tuỳ chọn theo identity.
+const CACHE = {
+  strategy: 'stale-while-revalidate', // mặc định
+  maxAge: 6 * 60 * 60 * 1000, // 6 giờ khi server không gửi Cache-Control
+} as const;
+
+<MorphCarousel imageCache={CACHE} getImage={(p) => ({ uri: p.imageUrl })} … />
+```
+
+| Chiến lược | Đã cache, còn hạn | Đã cache, hết hạn | Chưa cache |
+| --- | --- | --- | --- |
+| `stale-while-revalidate` (mặc định) | Hiện ngay, không gửi request | Hiện ngay, kiểm tra lại ở nền, thay ảnh nếu server có bản mới. Quá `maxStale` thì chờ mạng | Tải về |
+| `cache-first` | Hiện ngay, không gửi request | Chờ mạng; bản cũ là phương án dự phòng khi mất mạng | Tải về |
+| `network-first` | Kiểm tra lại trước khi hiện; bản đã cache là dự phòng khi mất mạng | Như cột bên | Tải về |
+
+Thời hạn của ảnh:
+
+- Nếu server gửi `Cache-Control: max-age` (hoặc `Expires`), dùng thời hạn đó. `no-cache` nghĩa là "luôn kiểm tra lại", `no-store` nghĩa là "không ghi xuống đĩa". Đặt `respectHttpHeaders: false` để luôn dùng `maxAge`.
+- Nếu không, dùng `maxAge` (mặc định 24 giờ).
+
+Khi kiểm tra lại, cache gửi `If-None-Match` / `If-Modified-Since`. Nếu ảnh không đổi, server trả 304 và không có dữ liệu ảnh nào được truyền. Nếu ảnh đã đổi, file mới mang tên mới nên view ảnh tải lại, và file cũ bị xoá. Ảnh đang nằm trên màn hình cũng được kiểm tra lại khi hết hạn, không chỉ lúc mount.
+
+Tuỳ chọn của `imageCache`:
+
+| Tuỳ chọn | Mặc định | Mô tả |
+| --- | --- | --- |
+| `strategy` | `'stale-while-revalidate'` | Xem bảng trên |
+| `maxAge` | 24 giờ | Thời hạn (ms) khi server không gửi |
+| `maxStale` | 7 ngày | `stale-while-revalidate` còn được hiện ảnh cũ bao lâu sau khi hết hạn, trong lúc chờ ảnh mới |
+| `respectHttpHeaders` | `true` | Dùng `Cache-Control` / `Expires` và tuân theo `no-store` |
+| `headers` | | Header cho request, ví dụ `Authorization` |
+| `getCacheKey(url)` | URL | Cho URL ký (signed URL) có query đổi mỗi lần: `(url) => url.split('?')[0]` |
+
+Truyền `imageCache={false}` để tải thẳng từ mạng.
+
+### Thứ tự tải và tải trước
+
+Mọi lượt tải đi qua một hàng đợi, giới hạn số request song song (mặc định 4), với ba mức ưu tiên:
+
+| Mức ưu tiên | Dùng cho |
+| --- | --- |
+| `high` | Ảnh của trang đang xem |
+| `normal` | Các trang kế bên (cách một trang) |
+| `low` | Các trang xa hơn trong cửa sổ render, prefetch, revalidate ở nền |
+
+Khi người dùng vuốt, ảnh của trang mới được đẩy lên đầu hàng đợi, nên vuốt nhanh không phải chờ ảnh của các trang đã đi qua.
+
+Ngoài cửa sổ render (`windowSize`), carousel tải trước ảnh của `prefetch` trang nữa mỗi bên (mặc định 1) mà không render, chọn đúng biến thể mà trang đó sẽ chọn khi mount. `prefetch={0}` để tắt.
+
+Để tải ảnh trước khi carousel tồn tại (màn hình tiếp theo, một item trong danh sách sắp hiện ra), dùng hook hoặc hàm:
+
+```tsx
+import { imageTargetFor, usePrefetchImages, imageCache } from 'expo-morph-carousel';
+
+// Ở màn hình trước: dựng đúng các URL mà carousel sẽ yêu cầu
+const target = imageTargetFor({ width: screenWidth - 32, height: 240 }, PixelRatio.get(), 'cover');
+const { loaded, total, failed, done } = usePrefetchImages(
+  products.map((p) => cdnUrl(p.image, target.width)),
+  { priority: 'low' }, // mặc định; `enabled: false` để chờ
+);
+
+// Hoặc gọi trực tiếp, ví dụ sau khi API danh sách trả về
+await imageCache.prefetch(urls, cacheOptions, 'low');
+```
+
+`imageTargetFor` chính là hàm carousel dùng để tạo `target` cho `getImage`, nên URL tải trước trùng với URL carousel sẽ yêu cầu.
+
+### Giới hạn
+
+| Cấu hình | Mặc định | |
+| --- | --- | --- |
+| `maxSize` | 100 MB | Dung lượng trên đĩa. File ít dùng nhất bị xoá trước |
+| `maxEntries` | 500 | Số file trên đĩa |
+| `maxConcurrent` | 4 | Số lượt tải song song; phần còn lại chờ theo thứ tự ưu tiên |
+| `decodedImages` | 24 | Số ảnh đã decode giữ trong bộ nhớ cho hiệu ứng liquid. Mỗi ảnh tốn rộng × cao × 4 byte (ảnh 1080×810 ≈ 3,5 MB), nên 24 ảnh như vậy ≈ 84 MB. Hạ xuống nếu dùng ảnh lớn trên máy ít RAM |
+| `decodedBytes` | 96 MB | Ngân sách bộ nhớ cho các ảnh đã decode đó; ảnh lâu không dùng nhất bị bỏ trước khi chạm một trong hai giới hạn |
+
+```ts
+imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300, maxConcurrent: 6, decodedImages: 12 });
+imageCache.getConfig(); // giá trị hiện tại
+```
+
+`configure` có hiệu lực ngay; hạ `maxSize` hoặc `maxEntries` sẽ xoá bớt ngay. Nên gọi một lần lúc khởi động (ví dụ trong root layout).
+
+### Xem và xoá cache
+
+```ts
+imageCache.getEntry(url); // { fetchedAt, expiresAt, etag, size, … }
+imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size, active, queued }
+const stats = useImageCacheStats(); // như trên, cập nhật trực tiếp, cho bảng debug
+await imageCache.remove(url);
+await imageCache.clear(); // ví dụ khi đăng xuất
+```
+
+File được lưu trong `<thư mục cache>/expo-morph-carousel/` trên iOS và Android (hệ điều hành có thể xoá khi thiếu dung lượng) và trong Cache Storage trên web. Ảnh đã decode cũng được giữ trong bộ nhớ (24 ảnh gần nhất), nên vuốt qua lại không phải decode lại.
+
+Để thử, app ví dụ có một server ảnh local gửi `ETag` và `Cache-Control`, và có thể đổi ảnh:
+
+```bash
+npm run image-server --workspace example   # http://localhost:8090, max-age 30 giây
+adb reverse tcp:8090 tcp:8090               # Android emulator
+```
+
+Mở "Remote images" trong app ví dụ. Bảng thông tin hiện thời điểm tải ảnh hiện tại, ảnh còn hạn bao lâu, và các bộ đếm của cache; nút "Swap images on server" đổi nội dung mà mọi URL trả về.
+
+## Mã nguồn của demo
+
+<Source files={["app/remote.tsx","data/products.ts"]} />

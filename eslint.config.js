@@ -10,7 +10,16 @@ const expoConfig = require('eslint-config-expo/flat');
 const prettierConfig = require('eslint-config-prettier/flat');
 
 module.exports = defineConfig([
-  globalIgnores(['**/node_modules/', '**/.expo/', '**/dist/', '**/web-build/', 'lib/', '**/expo-env.d.ts']),
+  // website/ is the documentation site, with its own package and tooling.
+  globalIgnores([
+    '**/node_modules/',
+    '**/.expo/',
+    '**/dist/',
+    '**/web-build/',
+    'lib/',
+    '**/expo-env.d.ts',
+    'website/',
+  ]),
 
   expoConfig,
 

@@ -2,6 +2,8 @@
 
 **English** | [Tiếng Việt](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/README.vi.md)
 
+**[Documentation with live demos and copyable code →](https://anhtuank7c.github.io/expo-morph-carousel/)**
+
 A carousel for Expo in which the images melt into each other like liquid while the pages slide. Built with React Native Skia and Reanimated 4, with presets for plainer transitions, loop, autoplay, vertical paging, screen reader support and web.
 
 <table>

@@ -1,0 +1,55 @@
+---
+title: "Getting started"
+description: "Install the carousel and its peers, set up web, and check compatibility."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+Install the package, add the libraries it builds on, and the carousel on the right is yours. Next: [Usage](/expo-morph-carousel/usage/) shows this demo's code, ready to copy.
+
+<Demo route="basic">
+
+
+
+</Demo>
+
+## Installation
+
+```bash
+npx expo install expo-morph-carousel @shopify/react-native-skia expo-file-system \
+  react-native-reanimated react-native-worklets react-native-gesture-handler
+```
+
+Two of these are optional:
+
+| Package | Needed for | Without it |
+| --- | --- | --- |
+| `@shopify/react-native-skia` | The `liquid` effect (the default) | The carousel uses `crossfade` |
+| `expo-file-system` | The disk cache for remote images on iOS and Android | Remote images load from the network each time (the platform's HTTP cache still applies) |
+
+`babel.config.js` must use `babel-preset-expo`, which enables the worklets Babel plugin. Wrap the app in `GestureHandlerRootView`.
+
+### Web
+
+Skia runs on CanvasKit on web, a WebAssembly file that has to be served by your app. Copy it into `public/` once:
+
+```bash
+npx setup-skia-web public
+```
+
+The carousel loads CanvasKit in the background and shows a cross-fade until it is ready. To load the file from somewhere else, call `configureSkiaWeb({ locateFile: (file) => 'https://…/' + file })` before the first carousel renders.
+
+## Compatibility
+
+| | Supported |
+| --- | --- |
+| Expo SDK | 58 or later |
+| React Native | 0.80 or later (New Architecture) |
+| Reanimated | 4 or later, with `react-native-worklets` |
+| React Native Skia | 2 or later (optional) |
+| Platforms | iOS, Android, web |
+| Expo Go | Yes. The package has no native code of its own |

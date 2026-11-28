@@ -1,0 +1,67 @@
+# Builds the documentation site (website/, Astro Starlight) with the example
+# app's web build embedded under /playground for the live demos, and
+# publishes it to GitHub Pages: https://anhtuank7c.github.io/expo-morph-carousel/
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer push waits instead of cancelling a deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false # nothing here pushes
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+
+      - run: npm ci
+
+      - name: Example app for web, served from /expo-morph-carousel/playground
+        working-directory: example
+        env:
+          EXPO_BASE_URL: /expo-morph-carousel/playground
+        run: |
+          npx setup-skia-web public
+          npx expo export --platform web --output-dir ../website/public/playground
+
+      - name: Site
+        working-directory: website
+        run: |
+          npm ci
+          node scripts/playground-routes.mjs
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

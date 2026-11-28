@@ -1,0 +1,17 @@
+{
+  "name": "expo-morph-carousel-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "node scripts/sections.mjs && node scripts/examples.mjs && node scripts/media.mjs",
+    "dev": "npm run prepare && astro dev",
+    "build": "npm run prepare && astro build",
+    "preview": "astro preview",
+    "sections": "node scripts/sections.mjs"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.43.2",
+    "astro": "7.4.13",
+    "sharp": "0.35.5"
+  }
+}

@@ -1,0 +1,73 @@
+---
+title: "Navigation and control"
+description: "Snapping, animation, tap to navigate, autoplay and the ref API."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="onboarding">
+
+Skip and Next use the ref API, the background follows `positionValue`.
+
+</Demo>
+
+## Snapping and animation
+
+| `snapMode` | Behavior |
+| --- | --- |
+| `page` (default) | One page per swipe; a fling moves to the next page |
+| `momentum` | A hard fling glides over several pages, then snaps to the nearest |
+| `free` | Glides and stops anywhere, like a scroll view |
+
+`animation` sets how the carousel settles, after a swipe and for `scrollTo`, `next`, dots and autoplay: a spring that carries the finger's velocity (default `{ damping: 26, stiffness: 220 }`) or `{ type: 'timing', duration }`.
+
+`onScrollStart` fires when a swipe, a command or an autoplay step starts, `onScrollEnd(index)` when the carousel comes to rest. `configureGesture` receives the pan gesture to adjust it, for example to run together with a parent gesture:
+
+```tsx
+const configureGesture = useCallback((pan) => pan.simultaneousWithExternalGesture(parentPan), [parentPan]);
+```
+
+## Tap to navigate
+
+Some users tap rather than swipe. With `tapToNavigate`, a tap changes the page:
+
+```tsx
+<MorphCarousel tapToNavigate … /> // left 30% back, the rest forward
+<MorphCarousel tapToNavigate={{ mode: 'forward' }} … /> // any tap goes forward
+<MorphCarousel tapToNavigate={{ area: 'media' }} … /> // only taps on the media area
+```
+
+| Option | Default | |
+| --- | --- | --- |
+| `mode` | `'sides'` | `sides`: the leading `backZone` goes back, the rest forward, like stories. `forward`: any tap goes forward |
+| `backZone` | `0.3` | Fraction of the carousel that goes back |
+| `area` | `'all'` | `media` counts only taps on the media area |
+
+The leading side is the left, the top when vertical, the right in right-to-left layouts. With `pageSize` smaller than the carousel, a tap on a neighbor peeking at the side goes to that neighbor. Swiping keeps working: a tap counts only when the finger does not move, and a touch on a carousel at rest does not fire `onScrollEnd`.
+
+It is off by default because a tap on a button inside a page would also change the page; with buttons in your pages, use `area: 'media'`.
+
+## Controlling the carousel
+
+```tsx
+const carousel = useRef<MorphCarouselRef>(null);
+const position = useSharedValue(0);
+
+// Tint the screen with the current item's color while swiping
+const background = useAnimatedStyle(() => ({
+  backgroundColor: interpolateColor(position.value, [0, 1, 2], ['#efe9ff', '#fff3df', '#e2f6f1']),
+}));
+
+<MorphCarousel ref={carousel} positionValue={position} onIndexChange={setIndex} … />
+<Button title="Next" onPress={() => carousel.current?.next()} />
+```
+
+`next()` on the last page goes back to the first when `loop` is off, which is what "Next" buttons and autoplay usually want. With `loop`, `scrollTo(0)` from the last page moves forward one page instead of rewinding through all of them.
+
+## Source of the demo
+
+<Source files={["app/onboarding.tsx"]} />

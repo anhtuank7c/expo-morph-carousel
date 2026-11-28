@@ -1,0 +1,55 @@
+---
+title: "Bắt đầu"
+description: "Cài carousel và các thư viện đi kèm, cấu hình web, kiểm tra tương thích."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+Cài package và các thư viện nền là bạn có ngay carousel bên phải. Tiếp theo: [Cách dùng](/expo-morph-carousel/vi/usage/) có mã của demo này, chép về là chạy.
+
+<Demo route="basic">
+
+
+
+</Demo>
+
+## Cài đặt
+
+```bash
+npx expo install expo-morph-carousel @shopify/react-native-skia expo-file-system \
+  react-native-reanimated react-native-worklets react-native-gesture-handler
+```
+
+Hai gói trong số này là tuỳ chọn:
+
+| Gói | Cần cho | Nếu không cài |
+| --- | --- | --- |
+| `@shopify/react-native-skia` | Hiệu ứng `liquid` (mặc định) | Carousel dùng `crossfade` |
+| `expo-file-system` | Cache ảnh từ mạng trên đĩa ở iOS và Android | Ảnh từ mạng được tải lại mỗi lần (HTTP cache của nền tảng vẫn có tác dụng) |
+
+`babel.config.js` phải dùng `babel-preset-expo`, preset này bật Babel plugin cho worklets. Bọc app trong `GestureHandlerRootView`.
+
+### Web
+
+Trên web, Skia chạy trên CanvasKit, một file WebAssembly mà app của bạn phải phục vụ. Chép nó vào `public/` một lần:
+
+```bash
+npx setup-skia-web public
+```
+
+Carousel tải CanvasKit ở nền và hiển thị cross-fade cho tới khi tải xong. Muốn tải file từ chỗ khác thì gọi `configureSkiaWeb({ locateFile: (file) => 'https://…/' + file })` trước khi carousel đầu tiên được render.
+
+## Tương thích
+
+| | Hỗ trợ |
+| --- | --- |
+| Expo SDK | 58 trở lên |
+| React Native | 0.80 trở lên (New Architecture) |
+| Reanimated | 4 trở lên, kèm `react-native-worklets` |
+| React Native Skia | 2 trở lên (tùy chọn) |
+| Nền tảng | iOS, Android, web |
+| Expo Go | Có. Package không có native code riêng |

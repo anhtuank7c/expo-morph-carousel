@@ -1,0 +1,16 @@
+---
+title: "Troubleshooting"
+description: "Common problems and their fixes."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+| Symptom | Cause and fix |
+| --- | --- |
+| Nothing shows | The carousel has no height. Set `style={{ height: … }}` or `flex: 1` inside a sized parent |
+| Cross-fade instead of liquid | Skia is not installed, Reduce Motion is on, or (web) CanvasKit has not loaded yet. Check that `public/canvaskit.wasm` exists (`npx setup-skia-web public`) |
+| Swiping scrolls the parent ScrollView instead | Horizontal carousels claim horizontal drags of more than 10 px; vertical drags go to the parent. In a vertical carousel inside a vertical ScrollView, give the carousel a fixed height and expect the two to compete |
+| Worklet errors such as "… is not a worklet" | A custom effect is missing `'worklet';`, or `babel.config.js` does not use `babel-preset-expo`. Clear the Metro cache with `npx expo start -c` |
+| Remote images stay as placeholders | The download failed; `imageCache.stats().errors` counts failures. On Android, HTTPS errors (for example a proxy certificate) show as `System.err` in logcat. Cleartext `http://` URLs need `usesCleartextTraffic` in a release build |
+| An updated image on the server does not show up | It is still fresh: lower `maxAge`, send a shorter `Cache-Control: max-age` from the server, or call `imageCache.remove(url)` |

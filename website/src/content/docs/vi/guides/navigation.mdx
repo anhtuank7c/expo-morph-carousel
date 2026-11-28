@@ -1,0 +1,73 @@
+---
+title: "Điều hướng và điều khiển"
+description: "Snap, animation, chạm để chuyển trang, autoplay và ref API."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="onboarding">
+
+Skip và Next dùng ref API, màu nền chạy theo `positionValue`.
+
+</Demo>
+
+## Snap và animation
+
+| `snapMode` | Hành vi |
+| --- | --- |
+| `page` (mặc định) | Mỗi lần vuốt một trang; vuốt nhanh sang trang kế |
+| `momentum` | Vuốt mạnh lướt qua nhiều trang rồi snap vào trang gần nhất |
+| `free` | Lướt và dừng ở bất kỳ đâu, như scroll view |
+
+`animation` quyết định cách carousel dừng lại, sau cú vuốt và cho `scrollTo`, `next`, chấm phân trang, autoplay: spring giữ vận tốc ngón tay (mặc định `{ damping: 26, stiffness: 220 }`) hoặc `{ type: 'timing', duration }`.
+
+`onScrollStart` được gọi khi một cú vuốt, lệnh điều hướng hoặc bước autoplay bắt đầu, `onScrollEnd(index)` khi carousel dừng hẳn. `configureGesture` nhận pan gesture để chỉnh, ví dụ cho chạy song song với gesture của view cha:
+
+```tsx
+const configureGesture = useCallback((pan) => pan.simultaneousWithExternalGesture(parentPan), [parentPan]);
+```
+
+## Chạm để chuyển trang
+
+Có người dùng thích chạm hơn là vuốt. Với `tapToNavigate`, một lần chạm sẽ chuyển trang:
+
+```tsx
+<MorphCarousel tapToNavigate … /> // 30% bên trái để lùi, phần còn lại để tiến
+<MorphCarousel tapToNavigate={{ mode: 'forward' }} … /> // chạm đâu cũng tiến
+<MorphCarousel tapToNavigate={{ area: 'media' }} … /> // chỉ nhận chạm trên vùng ảnh
+```
+
+| Tuỳ chọn | Mặc định | |
+| --- | --- | --- |
+| `mode` | `'sides'` | `sides`: phần đầu `backZone` để lùi, còn lại để tiến, như stories. `forward`: chạm đâu cũng tiến |
+| `backZone` | `0.3` | Tỉ lệ vùng để lùi |
+| `area` | `'all'` | `media`: chỉ tính chạm trên vùng ảnh |
+
+Phần đầu là bên trái, là phía trên khi trượt dọc, là bên phải trong bố cục phải sang trái. Khi `pageSize` nhỏ hơn carousel, chạm vào trang kế bên đang ló ra sẽ chuyển sang trang đó. Vuốt vẫn hoạt động bình thường: chạm chỉ được tính khi ngón tay không di chuyển, và chạm vào carousel đang đứng yên không gọi `onScrollEnd`.
+
+Tính năng tắt mặc định vì chạm vào nút bên trong trang cũng sẽ chuyển trang; nếu trang có nút, dùng `area: 'media'`.
+
+## Điều khiển carousel
+
+```tsx
+const carousel = useRef<MorphCarouselRef>(null);
+const position = useSharedValue(0);
+
+// Đổi màu nền theo item hiện tại trong lúc vuốt
+const background = useAnimatedStyle(() => ({
+  backgroundColor: interpolateColor(position.value, [0, 1, 2], ['#efe9ff', '#fff3df', '#e2f6f1']),
+}));
+
+<MorphCarousel ref={carousel} positionValue={position} onIndexChange={setIndex} … />
+<Button title="Next" onPress={() => carousel.current?.next()} />
+```
+
+Khi `loop` tắt, `next()` ở trang cuối quay về trang đầu, đúng như nút "Next" và autoplay thường cần. Khi `loop` bật, `scrollTo(0)` từ trang cuối tiến thêm một trang thay vì tua ngược qua tất cả các trang.
+
+## Mã nguồn của demo
+
+<Source files={["app/onboarding.tsx"]} />

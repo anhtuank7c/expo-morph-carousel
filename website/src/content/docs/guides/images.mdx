@@ -1,0 +1,160 @@
+---
+title: "Images and caching"
+description: "Responsive images, remote images, the disk cache, load order and prefetching."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="remote">
+
+
+
+</Demo>
+
+## Responsive images (srcset)
+
+The carousel measures its media area, multiplies by the device pixel ratio and picks an image that is sharp enough without downloading more than needed. There are two ways to offer sizes.
+
+**A list of variants**, the React Native form of `srcset` (`width` is the `w` descriptor):
+
+```tsx
+getImage={(p) => [
+  { uri: `${p.base}-640.jpg`, width: 640, height: 480 },
+  { uri: `${p.base}-1280.jpg`, width: 1280, height: 960 },
+  { uri: `${p.base}-2560.jpg`, width: 2560, height: 1920 },
+]}
+```
+
+The smallest variant at least as wide as needed wins; with `height` set, `cover` and `contain` account for the aspect ratio. A variant already in the cache is preferred when it is at most twice the needed width.
+
+**A URL built for the size**, for image CDNs (imgix, Cloudinary, Unsplash, a Next.js-style resizer). The third argument is the target in physical pixels, rounded up to one of a few widths (`WIDTH_STEPS`: 320, 480, 640, 750, 828, 1080, 1200, 1440, 1920, 2560, …) so the CDN and the cache see a handful of URLs per image, not one per device:
+
+```tsx
+getImage={(p, i, target) => ({
+  uri: `https://images.unsplash.com/photo-${p.id}?w=${target.width}&h=${target.height}&fit=crop`,
+})}
+```
+
+`target` has `width`, `height`, `pixelRatio`, `layoutWidth`, `layoutHeight` (dp) and `fit`.
+
+There is no `sizes`: HTML needs it because the browser chooses before layout, the carousel chooses after.
+
+**Rotation and resizing.** When the area grows (portrait to landscape, a split-screen resize, a window on web), the sharper variant is downloaded in the background while the current image stays on screen, then cross-faded in over 220 ms once decoded. When the area shrinks, the sharper image already shown is kept and nothing is downloaded, like browsers do. There is never an empty frame. With the liquid effect, the image follows the new size one frame after the layout change (the re-render that reads it): measuring the canvas on the UI thread instead would cost a measurement in every frame for as long as the carousel is mounted.
+
+## Remote images and caching
+
+Remote images (`{ uri: 'https://…' }`) go through a disk cache that is on by default. Each image is stored with the time it was fetched and when it expires.
+
+```tsx
+// A module constant (or useMemo): the carousel memoizes the options on identity.
+const CACHE = {
+  strategy: 'stale-while-revalidate', // default
+  maxAge: 6 * 60 * 60 * 1000, // 6 hours when the server sends no Cache-Control
+} as const;
+
+<MorphCarousel imageCache={CACHE} getImage={(p) => ({ uri: p.imageUrl })} … />
+```
+
+| Strategy | Cached and fresh | Cached and expired | Not cached |
+| --- | --- | --- | --- |
+| `stale-while-revalidate` (default) | Shown, no request | Shown at once, revalidated in the background, swapped if the server has a new version. Past `maxStale` it waits for the network instead | Downloaded |
+| `cache-first` | Shown, no request | Waits for the network; the old copy is the fallback when offline | Downloaded |
+| `network-first` | Revalidated before showing; the cached copy is the fallback when offline | Same | Downloaded |
+
+How long an image is fresh:
+
+- If the server sends `Cache-Control: max-age` (or `Expires`), that lifetime is used. `no-cache` means "always revalidate", `no-store` means "do not write it to disk". Set `respectHttpHeaders: false` to always use `maxAge`.
+- Otherwise `maxAge` (default 24 hours).
+
+Revalidation sends `If-None-Match` / `If-Modified-Since`. When the image has not changed, the server answers 304 and no image data is transferred. When it has changed, the new file gets a new name, so the image view reloads, and the old file is deleted. An image that stays on screen is revalidated when it expires, not only when it mounts.
+
+Options of `imageCache`:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `strategy` | `'stale-while-revalidate'` | See the table above |
+| `maxAge` | 24 h | Lifetime in ms when the server sends none |
+| `maxStale` | 7 days | How long past expiry `stale-while-revalidate` may still show an old image while the new one loads |
+| `respectHttpHeaders` | `true` | Use `Cache-Control` / `Expires` and honor `no-store` |
+| `headers` | | Request headers, for example `Authorization` |
+| `getCacheKey(url)` | the URL | For signed URLs whose query changes on every request: `(url) => url.split('?')[0]` |
+
+Pass `imageCache={false}` to load straight from the network.
+
+### Load order and prefetching
+
+Downloads go through one queue with a limit of parallel requests (4 by default) and three priorities:
+
+| Priority | Used for |
+| --- | --- |
+| `high` | The image of the page in view |
+| `normal` | Its neighbors (one page away) |
+| `low` | Pages further away in the render window, prefetches, background revalidations |
+
+When the user swipes, the images of the new page are moved up the queue, so a fast swipe does not wait behind downloads for pages already passed.
+
+Beyond the render window (`windowSize`), the carousel downloads the images of `prefetch` more pages on each side (default 1) without rendering them, choosing the same variant the page will choose when it mounts. `prefetch={0}` turns it off.
+
+To download images before the carousel exists (the next screen, a list item scrolling into view), use the hook or the function:
+
+```tsx
+import { imageTargetFor, usePrefetchImages, imageCache } from 'expo-morph-carousel';
+
+// In the screen before: build the URLs the carousel will request
+const target = imageTargetFor({ width: screenWidth - 32, height: 240 }, PixelRatio.get(), 'cover');
+const { loaded, total, failed, done } = usePrefetchImages(
+  products.map((p) => cdnUrl(p.image, target.width)),
+  { priority: 'low' }, // default; `enabled: false` to wait
+);
+
+// Or imperatively, for example after a list request resolves
+await imageCache.prefetch(urls, cacheOptions, 'low');
+```
+
+`imageTargetFor` is the function the carousel uses for `getImage`'s `target`, so the prefetched URL is the one the carousel asks for.
+
+### Limits
+
+| Setting | Default | |
+| --- | --- | --- |
+| `maxSize` | 100 MB | Bytes on disk. Least recently used files are deleted first |
+| `maxEntries` | 500 | Files on disk |
+| `maxConcurrent` | 4 | Parallel downloads; the rest wait in priority order |
+| `decodedImages` | 24 | Decoded images kept in memory for the liquid effect. Each costs width × height × 4 bytes (a 1080×810 photo ≈ 3.5 MB), so 24 such photos ≈ 84 MB. Lower it for large photos on low-memory devices |
+| `decodedBytes` | 96 MB | Memory budget for those decoded images; the least recently used go first when either limit is reached |
+
+```ts
+imageCache.configure({ maxSize: 50 * 1024 * 1024, maxEntries: 300, maxConcurrent: 6, decodedImages: 12 });
+imageCache.getConfig(); // current values
+```
+
+`configure` takes effect immediately; lowering `maxSize` or `maxEntries` evicts right away. Call it once at startup (for example in the root layout).
+
+### Inspecting and clearing
+
+```ts
+imageCache.getEntry(url); // { fetchedAt, expiresAt, etag, size, … }
+imageCache.stats(); // { hits, misses, revalidations, notModified, updates, errors, entries, size, active, queued }
+const stats = useImageCacheStats(); // the same, live, for a debug panel
+await imageCache.remove(url);
+await imageCache.clear(); // for example on sign out
+```
+
+Files live in `<cache directory>/expo-morph-carousel/` on iOS and Android (the OS may clear it when storage is low) and in Cache Storage on web. Decoded images are also kept in memory (the last 24), so swiping back and forth does not decode them again.
+
+To try it, the example app has a local image server that sends `ETag` and `Cache-Control` and can swap its images:
+
+```bash
+npm run image-server --workspace example   # http://localhost:8090, max-age 30 s
+adb reverse tcp:8090 tcp:8090               # Android emulator
+```
+
+Open "Remote images" in the example app. The panel shows when the current image was fetched, how long it stays fresh, and the cache counters; "Swap images on server" changes what every URL returns.
+
+## Source of the demo
+
+<Source files={["app/remote.tsx","data/products.ts"]} />

@@ -1,0 +1,55 @@
+---
+title: "Cách dùng"
+description: "Carousel tối giản, chép về dùng ngay."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="basic">
+
+
+
+</Demo>
+
+## Sử dụng
+
+```tsx
+import { MorphCarousel } from 'expo-morph-carousel';
+
+const products = [
+  { id: 'watch', title: 'Watch', description: '…', image: require('./assets/watch.png') },
+  { id: 'phone', title: 'Phone', description: '…', image: require('./assets/phone.png') },
+  { id: 'laptop', title: 'Laptop', description: '…', image: { uri: 'https://…/laptop.png' } },
+];
+
+export function Showcase() {
+  return (
+    <MorphCarousel
+      data={products}
+      keyExtractor={(p) => p.id}
+      getImage={(p) => p.image}
+      getAccessibilityLabel={(p) => p.title}
+      style={{ height: 520, borderRadius: 28, backgroundColor: '#fff' }}
+      renderItem={({ item }) => (
+        <View style={{ alignItems: 'center', padding: 24, gap: 8 }}>
+          <Text style={{ fontSize: 24, fontWeight: '700' }}>{item.title}</Text>
+          <Text style={{ textAlign: 'center' }}>{item.description}</Text>
+        </View>
+      )}
+      renderFooter={({ item, next }) => <Button title="Continue" onPress={next} />}
+    />
+  );
+}
+```
+
+Carousel cần có kích thước: đặt `height` hoặc `flex: 1` trong `style`. Vùng media chiếm `mediaHeight` ở trên (hoặc cả carousel với `mediaPosition="background"`), các trang chiếm phần còn lại, chấm phân trang và footer nằm bên dưới.
+
+Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sản phẩm, icon hay hình minh họa, nơi đường viền của vật thể thay đổi giữa các trang. Với ảnh chụp (`mediaFit="cover"`), nó làm các hình chữ nhật tan vào nhau.
+
+## Mã nguồn của demo
+
+<Source files={["app/basic.tsx"]} />

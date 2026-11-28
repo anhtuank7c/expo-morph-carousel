@@ -1,0 +1,79 @@
+---
+title: "Bố cục trang"
+description: "Cách cả trang di chuyển: parallax, stack, coverflow, cube, flip, tinder và hiệu ứng tự viết."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="layouts?effect=cube">
+
+Chọn hiệu ứng khác bên dưới carousel trong demo: mọi bố cục trong bảng bên dưới đều chạy ở đó.
+
+</Demo>
+
+Không có `getImage` thì carousel là carousel thẻ thuần: `renderItem` là cả tấm thẻ và `pageEffect` quyết định thẻ chuyển động thế nào. Có `getImage` thì page effect áp cho phần nội dung bên dưới vùng media.
+
+Hai loại hiệu ứng độc lập và kết hợp được với nhau: `effect` (mặc định `liquid`) morph ảnh trong vùng media, còn `pageEffect` di chuyển các trang. Liquid vẫn là mặc định; page effect được thêm vào bên cạnh chứ không thay thế nó. Màn Layouts trong app ví dụ cho thấy ảnh liquid phía trên và các thẻ chuyển động theo từng page effect bên dưới.
+
+```tsx
+import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
+
+<MorphCarousel
+  data={cards}
+  renderItem={({ item }) => <Card item={item} />}
+  pageEffect="coverflow" // hoặc pageEffects.coverflow({ angle: 60, spacing: 0.5 })
+  pageSize={280} // hẹp hơn carousel: lộ các trang kế bên hai bên
+  pageGap={12}
+  style={{ height: 380 }}
+/>
+```
+
+| Hiệu ứng | Trông thế nào | Tuỳ chọn |
+| --- | --- | --- |
+| `slide` | Các trang nằm cạnh nhau | |
+| `parallax` | Trang hiện tại đủ cỡ, trang kế bên nhỏ hơn và gần hơn. Dùng với `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
+| `stack` | Một chồng bài: thẻ sau nằm chờ phía sau, thẻ hiện tại trượt ra | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
+| `coverflow` | Trang kế bên xoay 3D và chồng lên nhau | `angle` 48, `scale` 0.82, `spacing` 0.62 |
+| `cube` | Một khối lập phương đặc đang xoay: các mặt kề nhau chung cạnh, cả khối được nhìn qua cùng một phối cảnh. Trang nên phủ kín khung (không margin, không bo góc, không `pageGap`); cạnh gần mắt nhô về phía mắt và to ra (khoảng 6% với phối cảnh mặc định), nên cần chừa chỗ: trang hẹp hơn carousel, và một khoảng lề theo chiều vuông góc với hướng cuộn bên trong trang. Chính xác trên iOS, Android và web: trên Android transform được dựng sao cho khi tách ra (dịch, xoay, scale, khoảng cách camera) vẫn vẽ đúng phép chiếu đó | `perspective` 2,5 × cạnh dài hơn của trang |
+| `flip` | Thẻ lật tại chỗ; trang sau là mặt lưng | |
+| `fade` | Crossfade tại chỗ | |
+| `scale-fade` | Trang cũ co lại và mờ dần, trang mới từ lớn hơn một chút thu về | `scale` 0.86 |
+| `rotate` | Các trang đung đưa theo cung tròn | `angle` 14, `drop` 24 |
+| `tinder` | Một chồng thẻ; thẻ trên cùng bị ném ra kèm nghiêng | `visible` 2, `angle` 18 |
+
+Mọi hiệu ứng chạy được cả ngang lẫn dọc và tự lật chiều trong bố cục phải sang trái. Khi bật Reduce Motion, các hiệu ứng theo tên chuyển về `slide`.
+
+Bố cục phải sang trái theo `I18nManager.isRTL`: chiều tiến là sang trái, vuốt sang phải để tiến, chấm phân trang và vùng chạm được lật lại. Trong app Expo, bố cục RTL chỉ được bật khi có `"extra": { "supportsRTL": true }` trong `app.json`.
+
+Hiệu ứng tự viết là một worklet nhận `offset` của trang (0 đang hiện, 1 trang sau, -1 trang trước, số lẻ khi đang chuyển), `step` (khoảng cách giữa hai trang), kích thước trang và viewport, `direction`, `rtl` và `platform` (`Platform.OS`: Android vẽ transform 3D từ bản đã tách thành phần, nên hiệu ứng có `perspective` có thể cần thứ tự khác trên Android), rồi trả về `opacity`, `zIndex`, `transform` và `transformOrigin`. Phải tự tính cả phần dịch chuyển:
+
+```tsx
+const door: PageEffectFn = ({ offset, step }) => {
+  'worklet';
+  const o = Math.max(-1, Math.min(1, offset));
+  return {
+    zIndex: Math.round(100 - Math.abs(offset) * 10),
+    transformOrigin: o > 0 ? 'left center' : 'right center',
+    transform: [{ perspective: 800 }, { translateX: offset * step }, { rotateY: `${o * -60}deg` }],
+  };
+};
+```
+
+`renderItem` cũng nhận `offset` dạng shared value, để animate nội dung bên trong thẻ tách biệt với thẻ:
+
+```tsx
+renderItem={({ item, offset }) => <Card item={item} offset={offset} />}
+
+// trong Card
+const title = useAnimatedStyle(() => ({
+  transform: [{ translateX: interpolate(offset.value, [-1, 0, 1], [-60, 0, 60]) }],
+}));
+```
+
+## Mã nguồn của demo
+
+<Source files={["app/layouts.tsx"]} />

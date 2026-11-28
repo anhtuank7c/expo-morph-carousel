@@ -1,0 +1,86 @@
+---
+title: Morph Carousel
+description: A carousel for Expo and React Native whose images melt into each other like liquid. Live demos, code you can copy, slots for everything.
+template: splash
+hero:
+  tagline: A carousel for Expo and React Native whose images melt into each other like liquid while the pages slide. Every demo on this site runs live, and its full source is one click away.
+  image:
+    html: '<img class="hero-gif" src="/expo-morph-carousel/media/android/stories.gif" alt="Stories: people turn like a cube while their photos melt into each other" width="240" />'
+  actions:
+    - text: Get started
+      link: /expo-morph-carousel/getting-started/
+      icon: right-arrow
+    - text: Browse examples
+      link: /expo-morph-carousel/examples/
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/anhtuank7c/expo-morph-carousel
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import Demo from '~/components/Demo.astro';
+
+## In 30 seconds
+
+```bash
+npx expo install expo-morph-carousel @shopify/react-native-skia expo-file-system \
+  react-native-reanimated react-native-worklets react-native-gesture-handler
+```
+
+<Demo route="basic">
+
+```tsx
+<MorphCarousel
+  data={shapes}
+  getImage={(s) => s.image}
+  style={{ height: 520 }}
+  renderItem={({ item }) => <Text>{item.title}</Text>}
+  renderFooter={({ next }) => <Button title="Continue" onPress={next} />}
+/>
+```
+
+That is all the phone on the left needs. [Usage](/expo-morph-carousel/usage/) has the whole file, ready to copy.
+
+</Demo>
+
+## What it does
+
+<CardGrid>
+  <Card title="Liquid morph" icon="star">
+    Between two pages the image dissolves into a blob and reforms as the next one, drawn with Skia on the UI thread. At rest the image is never blurred.
+  </Card>
+  <Card title="Page layouts" icon="random">
+    Slide, parallax, stack, coverflow, a solid 3D cube, flip, tinder, or your own worklet. Pages narrower than the carousel show their neighbors.
+  </Card>
+  <Card title="Slots" icon="puzzle">
+    Replace the pagination, each dot, or draw over and behind the media. Every slot gets the position as a shared value, so it moves with the finger.
+  </Card>
+  <Card title="Remote images" icon="cloud-download">
+    A disk cache with expiry, srcset-style picking by size, priorities and prefetching, so swipes rarely wait.
+  </Card>
+  <Card title="Pager behavior" icon="seti:pipeline">
+    Snap, momentum or free, loop, autoplay, vertical, right-to-left, tap to navigate, and a ref API to drive it.
+  </Card>
+  <Card title="iOS, Android, web" icon="laptop">
+    The same code on every platform, with screen reader and keyboard support.
+  </Card>
+</CardGrid>
+
+## Build apps people use every day
+
+<CardGrid>
+  <LinkCard title="Stories" description="People as a cube, photos melting, tap and hold" href="/expo-morph-carousel/examples/stories/" />
+  <LinkCard title="Vertical feed" description="Full-screen posts, double tap to like" href="/expo-morph-carousel/examples/feed/" />
+  <LinkCard title="Flash sale" description="Looping banner, countdown, deal cards" href="/expo-morph-carousel/examples/flash-sale/" />
+  <LinkCard title="Shop product page" description="Gallery with a thumbnail strip slot" href="/expo-morph-carousel/examples/shop/" />
+  <LinkCard title="Memories" description="Ken Burns slideshow with liquid transitions" href="/expo-morph-carousel/examples/memories/" />
+  <LinkCard title="Albums" description="Coverflow with a blurred backdrop" href="/expo-morph-carousel/examples/albums/" />
+</CardGrid>
+
+## Make it yours
+
+Start from an example, then go further with the [slots](/expo-morph-carousel/guides/slots/): your own pagination, dots, overlays and backgrounds, all driven by the carousel's position on the UI thread. Or write a [page layout](/expo-morph-carousel/guides/page-layouts/) or a [media effect](/expo-morph-carousel/guides/media-effects/) as a worklet.
+
+Also from the same author: [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu), a menu that morphs out of its button.

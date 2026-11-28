@@ -2,7 +2,7 @@
   "name": "expo-morph-carousel",
   "version": "0.1.0",
   "description": "Carousel for Expo where the images melt into each other like liquid while the pages slide. Skia + Reanimated 4, presets, loop, autoplay, vertical, accessibility, iOS / Android / web.",
-  "homepage": "https://github.com/anhtuank7c/expo-morph-carousel#readme",
+  "homepage": "https://anhtuank7c.github.io/expo-morph-carousel/",
   "bugs": {
     "url": "https://github.com/anhtuank7c/expo-morph-carousel/issues"
   },

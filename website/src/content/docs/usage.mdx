@@ -1,0 +1,53 @@
+---
+title: "Usage"
+description: "The smallest useful carousel, ready to copy."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="basic">
+
+
+
+</Demo>
+
+```tsx
+import { MorphCarousel } from 'expo-morph-carousel';
+
+const products = [
+  { id: 'watch', title: 'Watch', description: '…', image: require('./assets/watch.png') },
+  { id: 'phone', title: 'Phone', description: '…', image: require('./assets/phone.png') },
+  { id: 'laptop', title: 'Laptop', description: '…', image: { uri: 'https://…/laptop.png' } },
+];
+
+export function Showcase() {
+  return (
+    <MorphCarousel
+      data={products}
+      keyExtractor={(p) => p.id}
+      getImage={(p) => p.image}
+      getAccessibilityLabel={(p) => p.title}
+      style={{ height: 520, borderRadius: 28, backgroundColor: '#fff' }}
+      renderItem={({ item }) => (
+        <View style={{ alignItems: 'center', padding: 24, gap: 8 }}>
+          <Text style={{ fontSize: 24, fontWeight: '700' }}>{item.title}</Text>
+          <Text style={{ textAlign: 'center' }}>{item.description}</Text>
+        </View>
+      )}
+      renderFooter={({ item, next }) => <Button title="Continue" onPress={next} />}
+    />
+  );
+}
+```
+
+The carousel needs a size: give `style` a `height` or `flex: 1`. The media area takes `mediaHeight` at the top (or the whole carousel with `mediaPosition="background"`), the pages take the rest, and the dots and footer sit below.
+
+The liquid effect works best with images on a transparent background, such as product shots, icons or illustrations, where the outline of the object changes between pages. With photos (`mediaFit="cover"`) it melts whole rectangles into each other.
+
+## Source of the demo
+
+<Source files={["app/basic.tsx"]} />

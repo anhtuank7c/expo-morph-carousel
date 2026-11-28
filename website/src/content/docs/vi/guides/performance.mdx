@@ -1,0 +1,21 @@
+---
+title: "Hiệu năng"
+description: "Cái gì chạy ở đâu, và ảnh được giải mã thế nào."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="stress">
+
+60 ảnh trong chồng thẻ kiểu Tinder, đo JS thread và UI thread.
+
+</Demo>
+
+- Chỉ `windowSize` trang mỗi bên được render; phần còn lại của `data` không tốn gì.
+- Gesture, snap, hiệu ứng và chấm phân trang chạy trên UI thread. React chỉ render lại khi trang gần nhất thay đổi.
+- Bộ lọc Skia chỉ được tạo trong lúc đang chuyển trang. Khi đứng yên, layer chỉ là một lần vẽ ảnh.
+- Giữ ảnh gần với kích thước hiển thị. Ảnh 4000 px bị blur mỗi frame sẽ nặng trên điện thoại Android cũ; giảm `liquid.blur` cũng giúp.

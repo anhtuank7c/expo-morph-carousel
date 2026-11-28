@@ -1,0 +1,62 @@
+---
+title: "Hiệu ứng media"
+description: "Hiệu ứng liquid, các preset và hiệu ứng tự viết."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="playground">
+
+Mọi preset, một hiệu ứng tự viết và các thông số liquid, chỉnh trực tiếp.
+
+</Demo>
+
+## Hiệu ứng media tự viết
+
+Một hiệu ứng media nhận khoảng cách có dấu từ trang của ảnh tới vị trí hiện tại (`offset`: 0 là đang hiển thị, -1 là lùi một trang, 0.5 là nửa đường tới trang sau) và trả về opacity, transform. Nó chạy trên UI thread nên phải là worklet:
+
+```tsx
+import type { MediaEffectFn } from 'expo-morph-carousel';
+
+const flip: MediaEffectFn = ({ offset }) => {
+  'worklet';
+  const angle = Math.max(-1, Math.min(1, offset)) * 90;
+  return {
+    opacity: Math.abs(offset) < 0.5 ? 1 : 0,
+    transform: [{ perspective: 800 }, { rotateY: `${angle}deg` }],
+  };
+};
+
+<MorphCarousel effect={flip} … />
+```
+
+Đầu vào còn có `width`, `height`, `direction` và `rtl`. Các preset có sẵn được export dưới tên `mediaEffects` nếu bạn muốn bọc lại một preset.
+
+## Hiệu ứng liquid hoạt động thế nào
+
+Mọi ảnh gần trang hiện tại được xếp chồng trong một layer Skia và cross-fade theo khoảng cách trang. Sau đó layer đi qua hai bộ lọc:
+
+1. Blur, với bán kính đạt đỉnh ở giữa hai trang. Hai ảnh tan vào nhau thành một hình mềm.
+2. Alpha threshold, tức một color matrix trên kênh alpha, cắt viền mờ về lại một đường viền sắc. Hình mềm trở thành một khối đặc thay vì một đám mờ.
+
+Cả hai bộ lọc tỉ lệ theo một đường tam giác: bằng 0 khi ở đúng trang và bằng 1 ở giữa hai trang, nên trang đứng yên được vẽ nguyên vẹn.
+
+Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn góc và ăn vào mép khung chữ nhật trong lúc chuyển. `liquid={{ preserveShape: true }}` giữ nguyên khung: blur chỉ nằm trong vùng ảnh và lặp lại điểm ảnh ở mép, không có bước cắt alpha, nên góc vẫn vuông và chỉ phần nội dung tan vào nhau.
+
+**Khi nào ảnh được giải mã.** Giải mã một ảnh chặn thread chạy nó (JPEG 1080×810 mất vài chục mili giây). Skia giải mã lười ở lần vẽ đầu tiên, tức là trên UI thread, đúng lúc cú vuốt đưa trang đó vào. `liquid.decode` chuyển việc đó đi:
+
+- `'scheduled'` (mặc định): trên JS thread khi trang được mount trước, mỗi task một ảnh, trang đang xem trước. Ảnh của trang đã ra khỏi cửa sổ trước lượt của nó thì bỏ qua.
+- `'immediate'`: trên JS thread ngay khi đọc xong file.
+- `'onDraw'`: mặc định của Skia, trên UI thread ở lần vẽ đầu.
+
+Đo trên Redmi Note 8 Pro (Helio G90T, Expo Go, JS production) bằng màn Stress test của example, 40 trang cách nhau 350 ms: `'onDraw'` rớt khoảng một khung hình mỗi trang (40–41 khung trên 25 ms, dài nhất 133 ms). `'immediate'` và `'scheduled'` rớt 0–1, khung dài nhất 17 ms. Bù lại JS thread bận hơn: khoảng 15 lần trên 100 ms trong 40 trang, còn `onIndexChange` vẫn chạy trung bình 9 ms sau khi đổi trang. `'scheduled'` và `'immediate'` đo như nhau; hàng đợi chỉ chặn trên các trường hợp nhiều ảnh tới cùng lúc.
+
+ Các trang chữ là view React Native thông thường và trượt; chỉ vùng media được vẽ bằng Skia.
+
+## Mã nguồn của demo
+
+<Source files={["app/playground.tsx"]} />

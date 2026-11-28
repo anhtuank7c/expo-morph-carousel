@@ -1,0 +1,59 @@
+---
+title: "Slots"
+description: "Replace the pagination, each dot, or draw over and behind the media."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="slots">
+
+Each slot of this page in one screen. More in the examples: the menu tabs and glow of [Food order](/expo-morph-carousel/examples/order/), the thumbnail strip of [Shop](/expo-morph-carousel/examples/shop/).
+
+</Demo>
+
+Like expo-morph-menu, the visible parts can be replaced with your own components through `components`. Each slot gets the carousel's `position` as a shared value, so it can animate with the finger on the UI thread.
+
+| Slot | Props | Default |
+| --- | --- | --- |
+| `Pagination` | `count`, `index`, `position`, `loop`, `direction`, `scrollTo(i)` | Morphing dots. `null` hides the pagination |
+| `Dot` | `index`, `count`, `active` (shared value 0–1), `direction`, `onPress` | Pill dot. Used by the built-in pagination |
+| `MediaOverlay` | `item`, `index`, `count`, `position`, `width`, `height` | Nothing. Drawn over the media, not touchable |
+| `MediaBackground` | same | Nothing. Drawn behind the media |
+
+```tsx
+function StoryPagination({ count, position, scrollTo }: PaginationSlotProps) {
+  // one bar per page that fills as you swipe (see example/app/slots.tsx)
+}
+
+function NumberDot({ index, active, onPress }: DotSlotProps) {
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: 0.8 + active.value * 0.35 }] }));
+  return (
+    <Pressable onPress={onPress}>
+      <Animated.View style={[styles.dot, style]}>
+        <Text>{index + 1}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+<MorphCarousel components={{ Pagination: StoryPagination, MediaOverlay: Caption, MediaBackground: Tint }} … />
+```
+
+`renderItem` and `renderFooter` are slots too: the page content and whatever sits under the pagination.
+
+## Pagination outside the carousel
+
+`<Pagination>` is exported. Pass it the same shared value:
+
+```tsx
+<MorphCarousel pagination={false} positionValue={position} ref={carousel} … />
+<Pagination count={data.length} position={position} onPress={(i) => carousel.current?.scrollTo(i)} />
+```
+
+## Source of the demo
+
+<Source files={["app/slots.tsx"]} />

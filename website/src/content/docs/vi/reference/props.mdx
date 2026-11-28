@@ -1,0 +1,48 @@
+---
+title: "Props"
+description: "Toàn bộ props của MorphCarousel."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+| Prop | Mặc định | Mô tả |
+| --- | --- | --- |
+| <span id="prop-data"></span>`data` | bắt buộc | Danh sách item |
+| <span id="prop-getimage"></span>`getImage(item, index, target)` | | Ảnh cho vùng media (không có thì không có vùng media): `require(...)`, `{ uri }`, danh sách biến thể `{ uri, width, height }`, hoặc URL dựng từ `target` (xem [Ảnh responsive](#ảnh-responsive-srcset)) |
+| <span id="prop-renderitem"></span>`renderItem({ item, index, offset })` | | Nội dung trang hoặc cả một thẻ. `offset` là khoảng cách của trang tới vị trí hiện tại (shared value) |
+| <span id="prop-pageeffect"></span>`pageEffect` | `'slide'` | Cách cả trang chuyển động: `'slide'`, `'parallax'`, `'stack'`, `'coverflow'`, `'cube'`, `'flip'`, `'fade'`, `'scale-fade'`, `'rotate'`, `'tinder'`, `pageEffects.<tên>(tuỳ chọn)` hoặc một worklet (xem [Bố cục trang](#bố-cục-trang)) |
+| <span id="prop-pagesize"></span>`pageSize` | vùng trang | Kích thước một trang theo trục cuộn; nhỏ hơn thì lộ các trang kế bên |
+| <span id="prop-pagegap"></span>`pageGap` | `0` | Khoảng cách giữa các trang |
+| <span id="prop-pagealign"></span>`pageAlign` | `'center'` | `'center'` hoặc `'start'` |
+| <span id="prop-snapmode"></span>`snapMode` | `'page'` | `'page'`, `'momentum'` hoặc `'free'` |
+| <span id="prop-taptonavigate"></span>`tapToNavigate` | `false` | `true` hoặc `{ mode, backZone, area }` (`mode` là `'sides'` hoặc `'forward'`, `backZone` 0.3, `area` là `'all'` hoặc `'media'`): chạm để chuyển trang (xem [Chạm để chuyển trang](#chạm-để-chuyển-trang)) |
+| <span id="prop-animation"></span>`animation` | spring | `{ type: 'spring', damping, stiffness, mass }` hoặc `{ type: 'timing', duration }` |
+| <span id="prop-components"></span>`components` | | Slot: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (xem [Slots](/expo-morph-carousel/vi/guides/slots/#slots)) |
+| <span id="prop-configuregesture"></span>`configureGesture(pan)` | | Chỉnh pan gesture (ngưỡng, gesture chạy song song) rồi trả về. Nên memo |
+| <span id="prop-keyextractor"></span>`keyExtractor(item, index)` | index | Key ổn định cho từng item |
+| <span id="prop-effect"></span>`effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` hoặc một worklet (xem bên dưới) |
+| <span id="prop-liquid"></span>`liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false, decode = 'scheduled' }`. `blur` lớn hơn cho khối tròn hơn; `threshold` thấp hơn giữ lại nhiều quầng mờ hơn. `preserveShape` giữ khung chữ nhật của ảnh sắc nét (không bo góc), chỉ phần nội dung tan vào nhau, dành cho ảnh chụp. `decode` chọn thời điểm giải mã ảnh (xem phần giải thích hiệu ứng liquid) |
+| <span id="prop-mediaposition"></span>`mediaPosition` | `'top'` | `'top'` hoặc `'background'` |
+| <span id="prop-mediaheight"></span>`mediaHeight` | `280` | Chiều cao vùng media khi nằm trên |
+| <span id="prop-mediafit"></span>`mediaFit` | `'contain'` | `'contain'` hoặc `'cover'` |
+| <span id="prop-mediapadding"></span>`mediaPadding` | `16` | Khoảng cách quanh ảnh trong vùng media |
+| <span id="prop-getplaceholdercolor"></span>`getPlaceholderColor(item, index)` | | Màu của khối mờ hiển thị khi ảnh đang tải |
+| <span id="prop-imagecache"></span>`imageCache` | bật | Tuỳ chọn cho ảnh từ mạng (xem [Ảnh từ mạng và cache](#ảnh-từ-mạng-và-cache)), hoặc `false` |
+| <span id="prop-direction"></span>`direction` | `'horizontal'` | `'horizontal'` hoặc `'vertical'` |
+| <span id="prop-loop"></span>`loop` | `false` | Vuốt qua trang cuối về trang đầu, và ngược lại |
+| <span id="prop-initialindex"></span>`initialIndex` | `0` | Trang hiển thị đầu tiên |
+| <span id="prop-autoplay"></span>`autoplay` | `false` | `true` hoặc `{ interval = 4000, reverse = false, whenScreenReaderEnabled = false }` |
+| <span id="prop-windowsize"></span>`windowSize` | `2` | Số trang được render và số ảnh được giữ tải ở mỗi bên trang hiện tại |
+| <span id="prop-prefetch"></span>`prefetch` | `1` | Số trang ngoài cửa sổ mỗi bên được tải ảnh trước, ở mức ưu tiên thấp |
+| <span id="prop-gestureenabled"></span>`gestureEnabled` | `true` | Cho phép vuốt. Điều hướng qua `ref` vẫn hoạt động khi tắt |
+| <span id="prop-pagination"></span>`pagination` | `true` | `false`, hoặc tuỳ chọn: `activeColor`, `inactiveColor`, `size`, `activeWidth`, `gap`, `pressable`, `style` |
+| <span id="prop-renderfooter"></span>`renderFooter(api)` | | Nội dung dưới chấm phân trang. Nhận `item`, `index`, `count`, `position`, `scrollTo`, `next`, `prev` |
+| <span id="prop-onindexchange"></span>`onIndexChange(index)` | | Gọi khi trang gần nhất thay đổi, kể cả trong lúc kéo |
+| <span id="prop-onscrollstart"></span>`onScrollStart()` | | Một cú vuốt, lệnh điều hướng hoặc bước autoplay bắt đầu |
+| <span id="prop-onscrollend"></span>`onScrollEnd(index)` | | Carousel dừng lại ở trang `index` |
+| <span id="prop-positionvalue"></span>`positionValue` | | `SharedValue<number>` phản chiếu vị trí tính theo trang |
+| <span id="prop-accessibilitylabel"></span>`accessibilityLabel` | `'Carousel'` | Nhãn của carousel cho trình đọc màn hình |
+| <span id="prop-getaccessibilitylabel"></span>`getAccessibilityLabel(item, index)` | key | Văn bản đọc cho item hiện tại |
+| <span id="prop-ref"></span>`ref` | | `{ scrollTo(index, { animated }), next({ count, animated }), prev({ count, animated }), getIndex() }` |
+| <span id="prop-style"></span>`style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |

@@ -1,0 +1,16 @@
+---
+title: "Xử lý sự cố"
+description: "Các lỗi thường gặp và cách sửa."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.vi.md
+---
+
+{/* Generated from README.vi.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+| Triệu chứng | Nguyên nhân và cách sửa |
+| --- | --- |
+| Không thấy gì | Carousel không có chiều cao. Đặt `style={{ height: … }}` hoặc `flex: 1` trong một parent có kích thước |
+| Thấy cross-fade thay vì liquid | Chưa cài Skia, đang bật Reduce Motion, hoặc (web) CanvasKit chưa tải xong. Kiểm tra `public/canvaskit.wasm` đã có chưa (`npx setup-skia-web public`) |
+| Vuốt lại cuộn ScrollView cha | Carousel ngang nhận cử chỉ kéo ngang quá 10 px; kéo dọc thuộc về parent. Carousel dọc trong ScrollView dọc thì đặt chiều cao cố định cho carousel và chấp nhận hai bên tranh nhau cử chỉ |
+| Lỗi worklet như "… is not a worklet" | Hiệu ứng tự viết thiếu `'worklet';`, hoặc `babel.config.js` không dùng `babel-preset-expo`. Xoá cache Metro bằng `npx expo start -c` |
+| Ảnh từ mạng mãi là placeholder | Tải ảnh thất bại; `imageCache.stats().errors` đếm số lần lỗi. Trên Android, lỗi HTTPS (ví dụ chứng chỉ của proxy) hiện trong logcat dưới dạng `System.err`. URL `http://` không mã hoá cần `usesCleartextTraffic` ở bản release |
+| Ảnh đã cập nhật trên server mà app chưa hiện | Ảnh vẫn còn hạn: giảm `maxAge`, cho server gửi `Cache-Control: max-age` ngắn hơn, hoặc gọi `imageCache.remove(url)` |

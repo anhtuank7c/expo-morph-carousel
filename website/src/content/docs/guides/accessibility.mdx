@@ -1,0 +1,13 @@
+---
+title: "Accessibility"
+description: "Screen readers, keyboard and Reduce Motion."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+- The media and the pages form one element with the role `adjustable` (`slider` on web). VoiceOver and TalkBack users swipe up or down to change page; the value reads as "Watch, 1 / 3".
+- The footer stays outside that element, so buttons in it remain reachable.
+- Autoplay stops while a screen reader is on, unless `autoplay.whenScreenReaderEnabled` is set.
+- With Reduce Motion on, `liquid` and the other presets fall back to `crossfade`, and snapping is not animated.
+- On web the carousel is focusable: arrow keys move one page (Up and Down when vertical), Home and End go to the ends.

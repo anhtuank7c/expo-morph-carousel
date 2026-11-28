@@ -1,0 +1,48 @@
+---
+title: "Props"
+description: "Every prop of MorphCarousel."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| <span id="prop-data"></span>`data` | required | Items |
+| <span id="prop-getimage"></span>`getImage(item, index, target)` | | Image for the media area (no media area without it): `require(...)`, `{ uri }`, a list of `{ uri, width, height }` variants, or a URL built from `target` (see [Responsive images](/expo-morph-carousel/guides/images/#responsive-images-srcset)) |
+| <span id="prop-renderitem"></span>`renderItem({ item, index, offset })` | | Page content or a whole card. `offset` is this page's distance from the current position (shared value) |
+| <span id="prop-pageeffect"></span>`pageEffect` | `'slide'` | How whole pages move: `'slide'`, `'parallax'`, `'stack'`, `'coverflow'`, `'cube'`, `'flip'`, `'fade'`, `'scale-fade'`, `'rotate'`, `'tinder'`, `pageEffects.<name>(options)` or a worklet (see [Page layouts](/expo-morph-carousel/guides/page-layouts/#page-layouts)) |
+| <span id="prop-pagesize"></span>`pageSize` | page area | Size of a page along the scroll axis; smaller shows the neighbors |
+| <span id="prop-pagegap"></span>`pageGap` | `0` | Space between pages |
+| <span id="prop-pagealign"></span>`pageAlign` | `'center'` | `'center'` or `'start'` |
+| <span id="prop-snapmode"></span>`snapMode` | `'page'` | `'page'`, `'momentum'` or `'free'` |
+| <span id="prop-taptonavigate"></span>`tapToNavigate` | `false` | `true` or `{ mode, backZone, area }` (`mode` `'sides'` or `'forward'`, `backZone` 0.3, `area` `'all'` or `'media'`): tap to change page (see [Tap to navigate](/expo-morph-carousel/guides/navigation/#tap-to-navigate)) |
+| <span id="prop-animation"></span>`animation` | spring | `{ type: 'spring', damping, stiffness, mass }` or `{ type: 'timing', duration }` |
+| <span id="prop-components"></span>`components` | | Slots: `Pagination`, `Dot`, `MediaOverlay`, `MediaBackground` (see [Slots](/expo-morph-carousel/guides/slots/#slots)) |
+| <span id="prop-configuregesture"></span>`configureGesture(pan)` | | Adjust the pan gesture (thresholds, simultaneous gestures) and return it. Memoize it |
+| <span id="prop-keyextractor"></span>`keyExtractor(item, index)` | index | Stable key for each item |
+| <span id="prop-effect"></span>`effect` | `'liquid'` | `'liquid'`, `'crossfade'`, `'slide'`, `'parallax'`, `'stack'` or a worklet function (see below) |
+| <span id="prop-liquid"></span>`liquid` | | `{ blur = 28, threshold = 0.5, sharpness = 24, preserveShape = false, decode = 'scheduled' }`. Larger `blur` gives a rounder blob; lower `threshold` keeps more of the halo. `preserveShape` keeps the image rectangle sharp (no rounded corners) while only its content melts, for photos. `decode` picks when photos are decoded (see "How the liquid effect works") |
+| <span id="prop-mediaposition"></span>`mediaPosition` | `'top'` | `'top'` or `'background'` |
+| <span id="prop-mediaheight"></span>`mediaHeight` | `280` | Height of the media area when it is at the top |
+| <span id="prop-mediafit"></span>`mediaFit` | `'contain'` | `'contain'` or `'cover'` |
+| <span id="prop-mediapadding"></span>`mediaPadding` | `16` | Space around the image inside the media area |
+| <span id="prop-getplaceholdercolor"></span>`getPlaceholderColor(item, index)` | | Color of the soft blob shown while an image loads |
+| <span id="prop-imagecache"></span>`imageCache` | on | Options for remote images (see [Remote images and caching](/expo-morph-carousel/guides/images/#remote-images-and-caching)), or `false` |
+| <span id="prop-direction"></span>`direction` | `'horizontal'` | `'horizontal'` or `'vertical'` |
+| <span id="prop-loop"></span>`loop` | `false` | Swipe past the last page to the first, and back |
+| <span id="prop-initialindex"></span>`initialIndex` | `0` | Page shown first |
+| <span id="prop-autoplay"></span>`autoplay` | `false` | `true` or `{ interval = 4000, reverse = false, whenScreenReaderEnabled = false }` |
+| <span id="prop-windowsize"></span>`windowSize` | `2` | Pages rendered and images kept loaded on each side of the current page |
+| <span id="prop-prefetch"></span>`prefetch` | `1` | Pages beyond the window on each side whose images are downloaded ahead, at low priority |
+| <span id="prop-gestureenabled"></span>`gestureEnabled` | `true` | Allow swiping. `ref` navigation works either way |
+| <span id="prop-pagination"></span>`pagination` | `true` | `false`, or options: `activeColor`, `inactiveColor`, `size`, `activeWidth`, `gap`, `pressable`, `style` |
+| <span id="prop-renderfooter"></span>`renderFooter(api)` | | Content under the dots. Gets `item`, `index`, `count`, `position`, `scrollTo`, `next`, `prev` |
+| <span id="prop-onindexchange"></span>`onIndexChange(index)` | | Called when the nearest page changes, also during a drag |
+| <span id="prop-onscrollstart"></span>`onScrollStart()` | | A swipe, a programmatic move or an autoplay step started |
+| <span id="prop-onscrollend"></span>`onScrollEnd(index)` | | The carousel came to rest on `index` |
+| <span id="prop-positionvalue"></span>`positionValue` | | A `SharedValue<number>` that mirrors the position in pages |
+| <span id="prop-accessibilitylabel"></span>`accessibilityLabel` | `'Carousel'` | Screen reader label of the carousel |
+| <span id="prop-getaccessibilitylabel"></span>`getAccessibilityLabel(item, index)` | key | Screen reader text for the current item |
+| <span id="prop-ref"></span>`ref` | | `{ scrollTo(index, { animated }), next({ count, animated }), prev({ count, animated }), getIndex() }` |
+| <span id="prop-style"></span>`style`, `mediaStyle`, `pageStyle`, `footerStyle`, `testID` | | |

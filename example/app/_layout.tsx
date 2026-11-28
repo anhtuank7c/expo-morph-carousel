@@ -1,7 +1,14 @@
+import Constants from 'expo-constants';
+import { configureSkiaWeb } from 'expo-morph-carousel';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// Served from a sub path (the documentation site): CanvasKit is there too.
+const base = Constants.expoConfig?.experiments?.baseUrl;
+if (Platform.OS === 'web' && base) configureSkiaWeb({ locateFile: (file) => `${base}/${file}` });
 
 export default function RootLayout() {
   return (
@@ -10,6 +17,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShadowVisible: false, contentStyle: { backgroundColor: '#f2f2f7' } }}>
           <Stack.Screen name="index" options={{ title: 'Morph Carousel' }} />
+          <Stack.Screen name="basic" options={{ title: 'Getting started' }} />
           <Stack.Screen name="product" options={{ title: 'Product' }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="playground" options={{ title: 'Playground' }} />

@@ -1,0 +1,21 @@
+---
+title: "Performance"
+description: "What runs where, and how photos are decoded."
+editUrl: https://github.com/anhtuank7c/expo-morph-carousel/edit/main/README.md
+---
+
+{/* Generated from README.md by website/scripts/sections.mjs: edit the README, then run npm run sections. */}
+
+import Demo from '~/components/Demo.astro';
+import Source from '~/components/Source.astro';
+
+<Demo route="stress">
+
+60 photos in a Tinder stack with JS and UI thread probes.
+
+</Demo>
+
+- Only `windowSize` pages on each side are rendered; the rest of `data` costs nothing.
+- Gesture, snapping, effects and dots run on the UI thread. React re-renders only when the nearest page changes.
+- The Skia filters are created only while a transition is in progress. At rest the layer is a plain image draw.
+- Keep images close to the size they are shown at. A 4000 px photo blurred every frame is expensive on older Android phones; lower `liquid.blur` helps too.
