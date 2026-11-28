@@ -5,7 +5,7 @@ template: splash
 hero:
   tagline: A carousel for Expo and React Native whose images melt into each other like liquid while the pages slide. Every demo on this site runs live, and its full source is one click away.
   image:
-    html: '<img class="hero-gif" src="/expo-morph-carousel/media/android/stories.gif" alt="Stories: people turn like a cube while their photos melt into each other" width="240" />'
+    html: '<img class="hero-gif" src="/expo-morph-carousel/media/android/product.gif" alt="A watch melts into a laptop, then a phone and a Mac mini: tall and wide outlines pour into each other while the title slides" width="240" />'
   actions:
     - text: Get started
       link: /expo-morph-carousel/getting-started/
@@ -21,6 +21,20 @@ hero:
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import Demo from '~/components/Demo.astro';
+
+## Watch it melt
+
+<Demo route="product">
+
+A watch, a laptop, a phone, a Mac mini: product shots cut out to their outline, tall and wide in turn. Swipe or tap the phone and watch one outline pour into the next, while the title and the button slide underneath.
+
+- The blob takes the shape of the product it leaves and reforms as the next one, drawn with Skia on the UI thread.
+- At rest the image is sharp: the effect fades out completely between swipes.
+- The button takes the color of the product in view through `renderFooter`.
+
+[How it is built, with the full source →](/expo-morph-carousel/examples/product/)
+
+</Demo>
 
 ## In 30 seconds
 

@@ -5,7 +5,7 @@ template: splash
 hero:
   tagline: Carousel cho Expo và React Native, trong đó các ảnh tan vào nhau như chất lỏng trong lúc các trang trượt. Mọi demo trên trang này đều chạy thật, và toàn bộ mã nguồn chỉ cách một cú bấm.
   image:
-    html: '<img class="hero-gif" src="/expo-morph-carousel/media/android/stories.gif" alt="Stories: các người dùng xoay như khối lập phương, ảnh tan vào nhau" width="240" />'
+    html: '<img class="hero-gif" src="/expo-morph-carousel/media/android/product.gif" alt="Đồng hồ tan thành laptop, rồi điện thoại và Mac mini: dáng cao và dáng rộng rót vào nhau trong khi tiêu đề trượt" width="240" />'
   actions:
     - text: Bắt đầu
       link: /expo-morph-carousel/vi/getting-started/
@@ -21,6 +21,20 @@ hero:
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import Demo from '~/components/Demo.astro';
+
+## Xem ảnh tan vào nhau
+
+<Demo route="product">
+
+Đồng hồ, laptop, điện thoại, Mac mini: ảnh sản phẩm cắt sát viền, xen kẽ dáng dọc và dáng ngang. Vuốt hoặc chạm vào điện thoại để xem viền sản phẩm này rót sang sản phẩm kế tiếp, trong khi tiêu đề và nút trượt bên dưới.
+
+- Khối lỏng mang hình dáng sản phẩm vừa rời đi rồi đông lại thành sản phẩm mới, vẽ bằng Skia trên UI thread.
+- Lúc đứng yên ảnh luôn sắc nét: hiệu ứng tắt hẳn giữa các lần vuốt.
+- Nút đổi màu theo sản phẩm đang hiện nhờ `renderFooter`.
+
+[Cách dựng, kèm toàn bộ mã nguồn →](/expo-morph-carousel/vi/examples/product/)
+
+</Demo>
 
 ## Trong 30 giây
 
