@@ -584,6 +584,14 @@ Measured on a Redmi Note 8 Pro (Helio G90T, Expo Go, production JS) with the exa
 
 Reports from iOS are welcome.
 
+## Architecture
+
+![Architecture: the JS thread, the UI thread, the media layer and the image cache](https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/architecture/architecture.drawio.svg)
+
+A swipe runs on the UI thread: the gesture writes one shared value, `position`, and the page effects, the dots and the liquid layer read it in the same frame. React renders again only when the nearest page changes, to move the render window and call `onIndexChange`. Remote images go through the cache and a download queue that serves the page in view first.
+
+[ARCHITECTURE.md](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/docs/ARCHITECTURE.md) walks through a swipe step by step and an image from `getImage` to the screen, with a sequence diagram and a flowchart. The diagrams are `.drawio.svg` files in `docs/architecture/`: GitHub shows them, and draw.io opens them for editing.
+
 ## Development
 
 ```bash

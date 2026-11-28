@@ -584,6 +584,14 @@ Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn 
 
 Hoan nghênh các báo cáo từ iOS.
 
+## Kiến trúc
+
+![Kiến trúc: JS thread, UI thread, lớp media và cache ảnh](https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/architecture/architecture.vi.drawio.svg)
+
+Một lần vuốt chạy trên UI thread: cử chỉ ghi vào một shared value, `position`, còn hiệu ứng trang, chấm phân trang và lớp liquid đọc nó ngay trong frame đó. React chỉ render lại khi trang gần nhất thay đổi, để dịch cửa sổ render và gọi `onIndexChange`. Ảnh từ mạng đi qua cache và một hàng đợi tải ưu tiên trang đang xem.
+
+[ARCHITECTURE.vi.md](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/docs/ARCHITECTURE.vi.md) đi qua từng bước của một lần vuốt và đường đi của một ảnh từ `getImage` tới màn hình, kèm sơ đồ trình tự và lưu đồ. Các sơ đồ là file `.drawio.svg` trong `docs/architecture/`: GitHub hiển thị được, và draw.io mở ra để sửa.
+
 ## Phát triển
 
 ```bash

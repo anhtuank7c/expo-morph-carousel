@@ -79,7 +79,7 @@ export default defineConfig({
         {
           label: 'Reference',
           translations: { vi: 'Tham khảo' },
-          items: [{ slug: 'reference/props' }, { slug: 'reference/platforms' }],
+          items: [{ slug: 'reference/props' }, { slug: 'reference/platforms' }, { slug: 'reference/architecture' }],
         },
       ],
     }),

@@ -150,7 +150,28 @@ const PAGES = [
     description: ['What was tested where.', 'Đã kiểm tra những gì, trên nền tảng nào.'],
     sections: ['Platform status'],
   },
+  {
+    slug: 'reference/architecture',
+    title: ['Architecture', 'Kiến trúc'],
+    description: [
+      'How the carousel is built: threads, a swipe step by step, an image from getImage to the screen.',
+      'Carousel được dựng thế nào: các thread, từng bước của một lần vuốt, đường đi của một ảnh từ getImage tới màn hình.',
+    ],
+    // A whole document instead of README sections. Its diagrams are copied
+    // to public/media/architecture by media.mjs.
+    file: ['docs/ARCHITECTURE.md', 'docs/ARCHITECTURE.vi.md'],
+    sections: [],
+  },
 ];
+
+/** A docs/ file without its title and language switch, diagrams served from the site. */
+function documentLines(file) {
+  return fs
+    .readFileSync(path.join(root, file), 'utf8')
+    .split('\n')
+    .filter((l, i) => !(i === 0 && l.startsWith('# ')) && !/^\[(English|Tiếng Việt)\]\(/.test(l))
+    .map((l) => l.replace(/\]\(architecture\//g, `](${BASE}/media/architecture/`));
+}
 
 /** README sections by English heading: { heading, lines } in both languages. */
 function sections(file) {
@@ -235,7 +256,9 @@ for (const page of PAGES) {
     ['en', en, 0],
     ['vi', vi, 1],
   ]) {
-    const body = page.sections.map((h) => {
+    const body = page.file
+      ? [toMdx(documentLines(page.file[i18n]), lang, page)]
+      : page.sections.map((h) => {
       const idx = en.findIndex((s) => s.heading === h);
       if (idx < 0) throw new Error(`README section "${h}" not found`);
       const lines = list[idx].lines.slice();
@@ -264,10 +287,12 @@ for (const page of PAGES) {
       '---',
       `title: ${JSON.stringify(page.title[i18n])}`,
       `description: ${JSON.stringify(page.description[i18n])}`,
-      `editUrl: ${REPO.replace('/blob/', '/edit/')}${lang === 'vi' ? 'README.vi.md' : 'README.md'}`,
+      `editUrl: ${REPO.replace('/blob/', '/edit/')}${page.file ? page.file[i18n] : lang === 'vi' ? 'README.vi.md' : 'README.md'}`,
       '---',
       '',
-      `{/* Generated from ${lang === 'vi' ? 'README.vi.md' : 'README.md'} by website/scripts/sections.mjs: edit the README, then run npm run sections. */}`,
+      page.file
+        ? `{/* Generated from ${page.file[i18n]} by website/scripts/sections.mjs: edit that file, then run npm run sections. */}`
+        : `{/* Generated from ${lang === 'vi' ? 'README.vi.md' : 'README.md'} by website/scripts/sections.mjs: edit the README, then run npm run sections. */}`,
       '',
       ...imports,
       imports.length ? '' : null,
