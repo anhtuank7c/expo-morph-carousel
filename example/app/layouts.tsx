@@ -8,20 +8,11 @@ import {
 } from 'expo-morph-carousel';
 import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  I18nManager,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { I18nManager, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import { products, type Product } from '../data/products';
+import { column, useContentWidth } from '../data/layout';
 
 /**
  * Page effects with the liquid images. With "Liquid images" on (the default),
@@ -66,7 +57,7 @@ const ANIMATIONS: { label: string; value: AnimationConfig }[] = [
 ];
 
 export default function LayoutsScreen() {
-  const { width } = useWindowDimensions();
+  const width = useContentWidth();
   // `/layouts?effect=cube&autoplay=1` opens on an effect and plays it (handy
   // for recordings and devices that block injected taps).
   const params = useLocalSearchParams<{ effect?: string; autoplay?: string }>();
@@ -101,7 +92,7 @@ export default function LayoutsScreen() {
   const data = useMemo(() => [...products, ...products.map((p) => ({ ...p, id: `${p.id}-2` }))], []);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <MorphCarousel
         key={`${vertical ? 'v' : 'h'}-${liquid ? 'liquid' : 'cards'}`}
         testID="layouts-carousel"

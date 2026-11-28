@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { products, type Product } from '../data/products';
+import { column } from '../data/layout';
 
 /**
  * Slots: the parts of the carousel replaced by app components, like the
@@ -110,7 +111,7 @@ function NumberDot({ index, active, onPress }: DotSlotProps) {
 
 export default function SlotsScreen() {
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <Text style={styles.section}>Pagination, MediaOverlay and MediaBackground slots</Text>
       <MorphCarousel
         testID="slots-carousel"

@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { MorphCarousel } from 'expo-morph-carousel';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { banners, deals, photo, photoFor, type Deal } from '../data/demos';
+import { column, useContentWidth } from '../data/layout';
 
 /**
  * A shopping app's flash sale page, three carousels:
@@ -19,12 +20,12 @@ import { banners, deals, photo, photoFor, type Deal } from '../data/demos';
 const SIDE = 16;
 
 export default function FlashSaleScreen() {
-  const { width } = useWindowDimensions();
-  const inner = width - SIDE * 2;
+  // Sizes follow the content column, so a tablet shows a phone-sized page, centered.
+  const inner = useContentWidth() - SIDE * 2;
   const left = useCountdown(2 * 3600 + 13 * 60 + 45);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <MorphCarousel
         data={banners}
         keyExtractor={(b) => b.id}

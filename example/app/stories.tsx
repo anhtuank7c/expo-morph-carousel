@@ -25,6 +25,7 @@ import Animated, {
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { avatar, photo, photoFor, storyUsers, type StoryUser } from '../data/demos';
+import { column } from '../data/layout';
 
 /**
  * Stories like the big social apps have them. Two carousels:
@@ -49,7 +50,7 @@ export default function StoriesScreen() {
   usePrefetchImages(storyUsers.flatMap((u) => u.frames.map((f) => photoFor(f.id, target))));
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tray}>
         {storyUsers.map((u, i) => (
           <Pressable

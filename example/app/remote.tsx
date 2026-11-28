@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 
 import { heightFor, photos, REMOTE_MEDIA_HEIGHT, REMOTE_SIDE_MARGIN, unsplashUrl } from '../data/products';
+import { column } from '../data/layout';
 
 /**
  * Remote images through the carousel's disk cache.
@@ -105,7 +106,7 @@ export default function RemoteScreen() {
   };
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <MorphCarousel
         key={source}
         ref={carousel}

@@ -60,7 +60,14 @@ export default function Basic() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16, justifyContent: 'center' },
+  screen: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+  },
   card: { height: 520, borderRadius: 28, backgroundColor: '#fff' },
   page: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 12, gap: 8 },
   title: { fontSize: 24, fontWeight: '700', color: '#1c1c1e' },

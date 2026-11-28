@@ -2,6 +2,7 @@ import { MorphCarousel, type MediaSlotProps, type PaginationSlotProps } from 'ex
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { interpolate, interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
+import { column } from '../data/layout';
 
 /**
  * A fast-food menu: a tall cola bottle, a wide burger, a tall sundae and a
@@ -90,7 +91,7 @@ export default function OrderScreen() {
   const total = MENU.reduce((sum, item) => sum + (cart[item.id] ?? 0) * item.price, 0);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <View style={styles.cart} accessibilityLiveRegion="polite">
         <Text style={styles.cartTitle}>Your order</Text>
         <Text style={styles.cartInfo}>

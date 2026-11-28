@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { products } from '../data/products';
+import { column } from '../data/layout';
 
 /** A custom effect: the image turns like a card around its vertical axis. */
 const flip: MediaEffectFn = ({ offset }) => {
@@ -32,7 +33,7 @@ export default function PlaygroundScreen() {
   const [index, setIndex] = useState(0);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <MorphCarousel
         // Remount when the direction changes: the pages are laid out per axis.
         key={vertical ? 'v' : 'h'}

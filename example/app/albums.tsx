@@ -28,7 +28,9 @@ export default function AlbumsScreen() {
   const [playing, setPlaying] = useState(true);
   const [elapsed, setElapsed] = useState(0);
   const album = albums[index];
-  const cover = Math.round(width * 0.64);
+  const { height } = useWindowDimensions();
+  // 64% of the width on a phone, smaller on a tablet or in landscape so the player fits.
+  const cover = Math.round(Math.min(width * 0.64, height * 0.42, 440));
 
   // A pretend playback clock: a new album starts from 0, the end skips ahead.
   const onAlbum = (i: number) => {

@@ -2,6 +2,7 @@ import { MorphCarousel } from 'expo-morph-carousel';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { showcase } from '../data/products';
+import { column } from '../data/layout';
 
 /**
  * The layout from the SwiftUI "morphing carousel": a card with the product
@@ -13,7 +14,7 @@ export default function ProductScreen() {
   return (
     // "automatic": on iOS the native header is translucent and the screen
     // starts under it; the scroll view insets its content below the header.
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       <Text style={styles.section}>Demo</Text>
       <MorphCarousel
         testID="product-carousel"

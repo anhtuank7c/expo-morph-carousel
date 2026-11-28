@@ -6,6 +6,7 @@ import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { photo, photoFor, shopColors } from '../data/demos';
+import { column, useContentWidth } from '../data/layout';
 
 /**
  * A product page from a shopping app. The gallery is a carousel of the
@@ -19,7 +20,10 @@ const THUMB = 56;
 const THUMB_GAP = 8;
 
 export default function ShopScreen() {
-  const { width } = useWindowDimensions();
+  // A square gallery on a phone; on a tablet or in landscape it stops at
+  // 55% of the screen height so the details stay in view.
+  const width = useContentWidth();
+  const galleryHeight = Math.min(width, Math.round(useWindowDimensions().height * 0.55));
   const insets = useSafeAreaInsets();
   const gallery = useRef<MorphCarouselRef>(null);
   const [color, setColor] = useState(0);
@@ -33,7 +37,7 @@ export default function ShopScreen() {
     <View style={styles.screen}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
+        contentContainerStyle={[column, { paddingBottom: 110 + insets.bottom }]}
       >
         <MorphCarousel
           ref={gallery}
@@ -41,7 +45,7 @@ export default function ShopScreen() {
           keyExtractor={(c) => c.id}
           getImage={(c, _i, target) => ({ uri: photoFor(c.id, target) })}
           getPlaceholderColor={(c) => c.swatch}
-          mediaHeight={width}
+          mediaHeight={galleryHeight}
           mediaFit="cover"
           mediaPadding={0}
           liquid={{ preserveShape: true }}
@@ -50,7 +54,7 @@ export default function ShopScreen() {
           onIndexChange={setColor}
           accessibilityLabel="Product photos"
           getAccessibilityLabel={(c) => `Color ${c.name}`}
-          style={{ height: width + 150 }}
+          style={{ height: galleryHeight + 150 }}
           renderItem={({ item }) => (
             <View style={styles.colorInfo}>
               <Text style={styles.colorName}>{item.name}</Text>

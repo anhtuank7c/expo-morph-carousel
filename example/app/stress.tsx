@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAnimatedReaction, useFrameCallback, useSharedValue } from 'react-native-reanimated';
 
 import { heightFor, photos, unsplashUrl } from '../data/products';
+import { column } from '../data/layout';
 
 type Decode = 'scheduled' | 'immediate' | 'onDraw';
 
@@ -238,7 +239,7 @@ export default function StressScreen() {
     };
   }, [autoGap, autoSteps]);
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.screen, column]}>
       {carousel}
       <View style={styles.row}>
         <Pressable style={styles.button} onPress={reset} testID="reset">

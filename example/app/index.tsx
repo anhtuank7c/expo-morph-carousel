@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, type Href } from 'expo-router';
 import { imageTargetFor, usePrefetchImages } from 'expo-morph-carousel';
-import { PixelRatio, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { PixelRatio, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { heightFor, photos, REMOTE_MEDIA_HEIGHT, REMOTE_SIDE_MARGIN, unsplashUrl } from '../data/products';
+import { column, useContentWidth } from '../data/layout';
 
 const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   {
@@ -96,7 +97,7 @@ export default function Home() {
   // Warm the cache for the "Remote images" screen while the user is still
   // here: build the same Unsplash URLs that screen's carousel will request
   // (same area, pixel ratio and fit), and download them at low priority.
-  const { width } = useWindowDimensions();
+  const width = useContentWidth();
   const target = imageTargetFor(
     { width: width - REMOTE_SIDE_MARGIN * 2, height: REMOTE_MEDIA_HEIGHT },
     PixelRatio.get(),
@@ -107,7 +108,7 @@ export default function Home() {
   );
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.list}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={[styles.list, column]}>
       <Text style={styles.prefetch} testID="prefetch-status">
         Remote images prefetched: {prefetch.loaded}/{prefetch.total}
         {prefetch.failed ? ` · ${prefetch.failed} failed` : ''} at {target.width}w
