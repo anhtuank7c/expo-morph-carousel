@@ -29,6 +29,14 @@ A carousel for Expo in which the images melt into each other like liquid while t
 
 Recorded from the example app on an Android emulator and in Chrome.
 
+### Phones, foldables and tablets
+
+The same screen on an iPhone and on an unfolded iPhone Duo, swiped together. The carousel measures itself, so on the wider screen the liquid morph keeps its shape and the example lays its screens out as a centered column. Fold or unfold the phone while a carousel is on screen and it keeps its page.
+
+<img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/duo-iphone.gif" width="560" alt="The product showcase on an iPhone 18 Pro and an unfolded iPhone Duo side by side, at the same scale: on both, a watch melts into a laptop, then a phone, a Mac mini and more, at the same moment">
+
+Recorded on the iOS simulators, at the same scale.
+
 ### Real-world demos
 
 Screens of the example app modeled on apps people use every day, each a few hundred lines you can copy:

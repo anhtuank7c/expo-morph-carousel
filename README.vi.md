@@ -29,6 +29,14 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
 
 Quay từ app ví dụ trên Android emulator và trên Chrome.
 
+### Điện thoại, máy gập và máy tính bảng
+
+Cùng một màn hình trên iPhone và trên iPhone Duo đang mở, vuốt cùng lúc. Carousel tự đo kích thước của nó, nên trên màn hình rộng hơn hiệu ứng liquid vẫn giữ đúng hình dáng, còn app ví dụ xếp các màn thành một cột ở giữa. Gập hay mở máy khi carousel đang hiện, nó vẫn giữ nguyên trang.
+
+<img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/duo-iphone.gif" width="560" alt="Màn trưng bày sản phẩm trên iPhone 18 Pro và iPhone Duo đang mở đặt cạnh nhau, cùng tỉ lệ: trên cả hai, đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, cùng một lúc">
+
+Quay trên iOS simulator, cùng tỉ lệ.
+
 ### Demo ứng dụng thực tế
 
 Các màn của app ví dụ mô phỏng những ứng dụng quen thuộc hằng ngày, mỗi màn vài trăm dòng có thể chép về dùng:
