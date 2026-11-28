@@ -50,7 +50,7 @@ To test the cache by hand, run `npm run image-server --workspace example` and op
 npm run check          # typecheck, ESLint, Prettier check, unit tests
 ```
 
-The pre-commit hook runs ESLint and Prettier on staged files and the typecheck. CI runs `npm run check` and a package build on every pull request.
+The pre-commit hook runs ESLint and Prettier on staged files and the typecheck. It uses npm, or bun when Node is not installed (`bun install` also sets it up). CI runs `npm run check` and a package build on every pull request.
 
 For changes to paging or the liquid effect, also:
 
