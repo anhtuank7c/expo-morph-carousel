@@ -17,7 +17,7 @@ import Uses from '~/components/Uses.astro';
 
 1. Ảnh PNG nền trong suốt là thứ hiệu ứng liquid sinh ra để dùng: khối lỏng lấy viền của sản phẩm này rồi đông lại thành sản phẩm kế tiếp.
 2. `mediaHeight` và `mediaPadding` chừa chỗ cho sản phẩm; `mediaFit` mặc định là `contain`.
-3. `getPlaceholderColor` hiện một khối mờ màu của sản phẩm trong lúc ảnh tải.
+3. `getPlaceholderColor` phủ vùng ảnh bằng màu của sản phẩm, nhấp nháy nhẹ, trong lúc ảnh từ mạng tải; ảnh hiện dần lên trên.
 4. `renderFooter` nhận item hiện tại: nút lấy màu của nó.
 
 <Uses items={["getImage","getPlaceholderColor","mediaHeight","mediaPadding","tapToNavigate","renderItem","renderFooter"]} />

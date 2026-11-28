@@ -18,7 +18,7 @@
  * Types come from a type-only import, which does not exist at runtime.
  */
 import type * as SkiaModule from '@shopify/react-native-skia';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import {
   runOnJS,
@@ -32,6 +32,7 @@ import { decodedByteLimit, decodedImageLimit, useCachedUri, type LoadPriority } 
 import type { ResolvedCacheOptions } from '../cache/ImageCache';
 import { clamp, transitionPeak } from '../math';
 import { createDecodeQueue, type DecodeRequest } from './decodeQueue';
+import { placeholderRadius, usePlaceholder } from '../placeholder';
 import { sameSource, type NormalizedSource } from '../responsive';
 import { useChosenUri, useImageLayers, type ImageArea } from '../useResponsiveImage';
 
@@ -94,7 +95,7 @@ export type LiquidLayerComponent = (props: LiquidLayerProps) => React.ReactEleme
 const IDENTITY_ALPHA = { a: 1, b: 0 };
 
 export function createLiquidLayer(S: Skia): LiquidLayerComponent {
-  const { Canvas, Group, Image, Circle, useImage, Skia: SkiaApi, TileMode } = S;
+  const { Canvas, Group, Image, RoundedRect, useImage, Skia: SkiaApi, TileMode } = S;
 
   /**
    * Decoded images by URI, most recently used last. Swiping back and forth,
@@ -275,9 +276,22 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
     );
     const { layers, onShown } = useImageLayers(image);
     const opacity = useDerivedValue(() => clamp(1 - Math.abs(item.virtual - position.value), 0, 1));
-    const cx = rect.x + rect.width / 2;
-    const cy = rect.y + rect.height / 2;
-    const r = Math.min(rect.width, rect.height) * 0.32;
+    // Decoded on the first render (bundled, or in the decoded cache): no placeholder, no fade.
+    const placeholder = usePlaceholder(item.placeholderColor, image !== null, SWAP_MS);
+    const { reveal, leave, opacity: fade } = placeholder;
+    const placeholderOpacity = useDerivedValue(() => opacity.value * fade.value);
+    // The image is decoded: it starts fading in, the placeholder fades out with it.
+    const ready = layers.length > 0;
+    useEffect(() => {
+      if (ready) leave();
+    }, [leave, ready]);
+    const handleShown = useCallback(
+      (id: number) => {
+        onShown(id);
+        reveal();
+      },
+      [onShown, reveal],
+    );
     // A page more than one page away has opacity 0 but would still be drawn
     // (and blurred with the layer). A zero size skips it, decided on the UI
     // thread in the same frame as the position, so a fast fling never shows
@@ -290,22 +304,30 @@ export function createLiquidLayer(S: Skia): LiquidLayerComponent {
       [drawHeight, drawWidth, rect.x, rect.y],
     );
 
-    if (layers.length === 0) {
-      if (!item.placeholderColor) return null;
-      return <Circle cx={cx} cy={cy} r={r} color={item.placeholderColor} opacity={opacity} />;
-    }
     return (
       <Group>
+        {placeholder.visible && (
+          <RoundedRect
+            x={rect.x}
+            y={rect.y}
+            width={drawWidth}
+            height={drawHeight}
+            r={placeholderRadius(area.fit)}
+            color={item.placeholderColor}
+            opacity={placeholderOpacity}
+          />
+        )}
         {layers.map((l, i) => (
           <FadeLayer
             key={l.id}
             id={l.id}
             image={l.value}
-            fadeIn={i > 0}
+            // The first image fades in over the placeholder; later ones over the image below.
+            fadeIn={i > 0 || placeholder.fadeBase}
             opacity={opacity}
             rect={drawRect}
             fit={area.fit}
-            onShown={onShown}
+            onShown={handleShown}
           />
         ))}
       </Group>

@@ -4,6 +4,10 @@ All notable changes to this package are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed
+
+- The loading placeholder (`getPlaceholderColor`) fills the image area instead of drawing a colored circle in its middle. It pulses gently while the image loads (still with Reduce Motion), and fades out while the image fades in, on the plain renderer and in the liquid layer. Images that are ready at once (bundled, or already decoded) show no placeholder and no fade.
+
 ## [0.1.0] - 2026-11-28
 
 First public release.

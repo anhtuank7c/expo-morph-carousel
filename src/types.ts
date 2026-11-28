@@ -305,7 +305,12 @@ export type MorphCarouselProps<T> = {
   mediaFit?: 'contain' | 'cover';
   /** Space around the image inside the media area. Default 16. */
   mediaPadding?: number;
-  /** Color shown as a soft blob while an item's image loads. */
+  /**
+   * Color of the media area while an item's image loads: it fills the image
+   * area and pulses gently (still with Reduce Motion), then fades out as the
+   * image fades in. Not shown for images that are ready at once (bundled,
+   * or already decoded).
+   */
   getPlaceholderColor?: (item: T, index: number) => string;
   /**
    * Disk cache for remote (`{ uri }`) images, with expiry. On by default with

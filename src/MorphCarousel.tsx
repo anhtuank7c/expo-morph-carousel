@@ -30,6 +30,7 @@ import { resolveEffect } from './effects';
 import { imageCache, isCachedSync, resolveCacheOptions, useCachedUri, type LoadPriority } from './cache';
 import type { ResolvedCacheOptions } from './cache/ImageCache';
 import { useLiquidLayer, type LiquidItem } from './liquid';
+import { placeholderRadius, usePlaceholder } from './placeholder';
 import {
   makeTarget,
   normalizeSource,
@@ -849,11 +850,21 @@ function ViewMediaItem({
   const cached = useCachedUri(chosen, cache, priority);
   const value: number | string | null = source.kind === 'bundled' ? source.asset : cached;
   const { layers, onShown } = useImageLayers(value);
-  const [baseLoaded, setBaseLoaded] = useState<number | null>(null);
+  // An Image always loads asynchronously, even from a file: only a bundled
+  // asset counts as ready on the first render.
+  const placeholder = usePlaceholder(placeholderColor, source.kind === 'bundled', SWAP_MS);
+  const { reveal, leave, opacity: placeholderOpacity } = placeholder;
+  const pulseStyle = useAnimatedStyle(() => ({ opacity: placeholderOpacity.value }));
+  const handleShown = useCallback(
+    (id: number) => {
+      onShown(id);
+      reveal();
+    },
+    [onShown, reveal],
+  );
   const animated = useAnimatedStyle(() =>
     effect({ offset: virtual - position.value, width: size.width, height: size.height, direction, rtl }),
   );
-  const blob = Math.min(size.width, size.height) * 0.64;
   // Anchored to the edges so it follows the native layout in the same frame
   // (after a rotation, a size from React state would lag one render behind).
   // The Image inside fills it by percentage (see styles.fill).
@@ -864,12 +875,15 @@ function ViewMediaItem({
     right: padding,
     bottom: padding,
   };
-  const showPlaceholder = placeholderColor && (layers.length === 0 || baseLoaded !== layers[0].id);
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.center, { padding }, animated]}>
-      {showPlaceholder && (
-        <View
-          style={{ width: blob, height: blob, borderRadius: blob / 2, backgroundColor: placeholderColor }}
+      {placeholder.visible && (
+        <Animated.View
+          style={[
+            frame,
+            { backgroundColor: placeholderColor, borderRadius: placeholderRadius(fit) },
+            pulseStyle,
+          ]}
         />
       )}
       {layers.map((l, i) => (
@@ -877,11 +891,12 @@ function ViewMediaItem({
           key={l.id}
           id={l.id}
           source={typeof l.value === 'number' ? l.value : { uri: l.value }}
-          fadeIn={i > 0}
+          // The first image fades in over the placeholder; later ones over the image below.
+          fadeIn={i > 0 || placeholder.fadeBase}
           fit={fit}
           style={frame}
-          onLoad={i === 0 ? setBaseLoaded : undefined}
-          onShown={onShown}
+          onLoad={i === 0 ? leave : undefined}
+          onShown={handleShown}
         />
       ))}
     </Animated.View>
@@ -918,13 +933,14 @@ function ImageLayer({
   fadeIn: boolean;
   fit: 'contain' | 'cover';
   style: object;
-  onLoad?: (id: number) => void;
+  /** The image has loaded (its fade-in starts now). */
+  onLoad?: () => void;
   onShown: (id: number) => void;
 }) {
   const opacity = useSharedValue(fadeIn ? 0 : 1);
   const animated = useAnimatedStyle(() => ({ opacity: opacity.value }));
   const handleLoad = () => {
-    onLoad?.(id);
+    onLoad?.();
     if (!fadeIn) return;
     opacity.value = withTiming(1, { duration: SWAP_MS }, (finished) => {
       if (finished) runOnJS(onShown)(id);

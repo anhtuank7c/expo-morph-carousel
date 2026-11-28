@@ -215,7 +215,7 @@ Hiệu ứng liquid đẹp nhất với ảnh nền trong suốt như ảnh sả
 | `mediaHeight` | `280` | Chiều cao vùng media khi nằm trên |
 | `mediaFit` | `'contain'` | `'contain'` hoặc `'cover'` |
 | `mediaPadding` | `16` | Khoảng cách quanh ảnh trong vùng media |
-| `getPlaceholderColor(item, index)` | | Màu của khối mờ hiển thị khi ảnh đang tải |
+| `getPlaceholderColor(item, index)` | | Màu phủ vùng ảnh, nhấp nháy nhẹ, trong lúc ảnh tải; ảnh hiện dần lên trên |
 | `imageCache` | bật | Tuỳ chọn cho ảnh từ mạng (xem [Ảnh từ mạng và cache](#ảnh-từ-mạng-và-cache)), hoặc `false` |
 | `direction` | `'horizontal'` | `'horizontal'` hoặc `'vertical'` |
 | `loop` | `false` | Vuốt qua trang cuối về trang đầu, và ngược lại |

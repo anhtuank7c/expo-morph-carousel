@@ -215,7 +215,7 @@ The liquid effect works best with images on a transparent background, such as pr
 | `mediaHeight` | `280` | Height of the media area when it is at the top |
 | `mediaFit` | `'contain'` | `'contain'` or `'cover'` |
 | `mediaPadding` | `16` | Space around the image inside the media area |
-| `getPlaceholderColor(item, index)` | | Color of the soft blob shown while an image loads |
+| `getPlaceholderColor(item, index)` | | Color that fills the image area, pulsing gently, while an image loads; the image fades in over it |
 | `imageCache` | on | Options for remote images (see [Remote images and caching](#remote-images-and-caching)), or `false` |
 | `direction` | `'horizontal'` | `'horizontal'` or `'vertical'` |
 | `loop` | `false` | Swipe past the last page to the first, and back |

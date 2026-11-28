@@ -17,7 +17,7 @@ Product shots cut out to their outline, tall and wide in turn: the liquid pours 
 
 1. PNGs on a transparent background are what the liquid effect is made for: the blob takes the outline of one product and reforms as the next.
 2. `mediaHeight` and `mediaPadding` give the products room; `mediaFit` is `contain` by default.
-3. `getPlaceholderColor` shows a soft blob of the product's color while it loads.
+3. `getPlaceholderColor` fills the image area with the product's color, pulsing gently, while a remote image loads; the image fades in over it.
 4. `renderFooter` gets the current item: the button takes its color.
 
 <Uses items={["getImage","getPlaceholderColor","mediaHeight","mediaPadding","tapToNavigate","renderItem","renderFooter"]} />

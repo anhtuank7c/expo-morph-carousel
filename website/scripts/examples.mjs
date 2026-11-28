@@ -247,13 +247,13 @@ export const EXAMPLES = [
       [
         'PNGs on a transparent background are what the liquid effect is made for: the blob takes the outline of one product and reforms as the next.',
         '`mediaHeight` and `mediaPadding` give the products room; `mediaFit` is `contain` by default.',
-        "`getPlaceholderColor` shows a soft blob of the product's color while it loads.",
+        "`getPlaceholderColor` fills the image area with the product's color, pulsing gently, while a remote image loads; the image fades in over it.",
         '`renderFooter` gets the current item: the button takes its color.',
       ],
       [
         'Ảnh PNG nền trong suốt là thứ hiệu ứng liquid sinh ra để dùng: khối lỏng lấy viền của sản phẩm này rồi đông lại thành sản phẩm kế tiếp.',
         '`mediaHeight` và `mediaPadding` chừa chỗ cho sản phẩm; `mediaFit` mặc định là `contain`.',
-        '`getPlaceholderColor` hiện một khối mờ màu của sản phẩm trong lúc ảnh tải.',
+        '`getPlaceholderColor` phủ vùng ảnh bằng màu của sản phẩm, nhấp nháy nhẹ, trong lúc ảnh từ mạng tải; ảnh hiện dần lên trên.',
         '`renderFooter` nhận item hiện tại: nút lấy màu của nó.',
       ],
     ],
