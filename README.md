@@ -4,9 +4,28 @@
 
 A carousel for Expo in which the images melt into each other like liquid while the pages slide. Built with React Native Skia and Reanimated 4, with presets for plainer transitions, loop, autoplay, vertical paging, screen reader support and web.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/product.gif" width="320" alt="A product card: a purple sphere melts into an orange rounded square, then a green ring, a blue capsule and a red heart, while the title and description slide underneath">
-</p>
+<table>
+  <tr>
+    <th></th>
+    <th>Product showcase</th>
+    <th>Drink order</th>
+    <th><code>cube</code> page effect</th>
+  </tr>
+  <tr>
+    <th>Android</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/order.gif" width="240" alt="A drink order: the cup grows and shrinks between sizes S, M and L, and changes from matcha to strawberry to cold brew"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
+  </tr>
+  <tr>
+    <th>Web</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/order.gif" width="240" alt="A drink order: the cup grows and shrinks between sizes S, M and L, and changes from matcha to strawberry to cold brew"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
+  </tr>
+</table>
+
+Recorded from the example app on an Android emulator and in Chrome.
 
 ## Features
 

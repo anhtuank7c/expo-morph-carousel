@@ -4,9 +4,28 @@
 
 Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong lúc các trang trượt. Dựng bằng React Native Skia và Reanimated 4, kèm các preset chuyển cảnh đơn giản hơn, loop, autoplay, trượt dọc, hỗ trợ trình đọc màn hình và web.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/product.gif" width="320" alt="Một thẻ sản phẩm: quả cầu tím tan thành ô bo góc màu cam, rồi thành vòng tròn xanh, viên nang xanh dương và trái tim đỏ, trong khi tiêu đề và mô tả trượt bên dưới">
-</p>
+<table>
+  <tr>
+    <th></th>
+    <th>Trưng bày sản phẩm</th>
+    <th>Đặt đồ uống</th>
+    <th>Bố cục trang <code>cube</code></th>
+  </tr>
+  <tr>
+    <th>Android</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/order.gif" width="240" alt="Đặt đồ uống: ly lớn lên và nhỏ lại giữa các size S, M, L, đổi từ matcha sang sữa dâu và cold brew"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
+  </tr>
+  <tr>
+    <th>Web</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/order.gif" width="240" alt="Đặt đồ uống: ly lớn lên và nhỏ lại giữa các size S, M, L, đổi từ matcha sang sữa dâu và cold brew"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
+  </tr>
+</table>
+
+Quay từ app ví dụ trên Android emulator và trên Chrome.
 
 ## Tính năng
 
