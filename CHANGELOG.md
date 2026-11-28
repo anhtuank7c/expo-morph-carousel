@@ -4,6 +4,8 @@ All notable changes to this package are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-29
+
 ### Changed
 
 - The loading placeholder (`getPlaceholderColor`) fills the image area instead of drawing a colored circle in its middle. It pulses gently while the image loads (still with Reduce Motion), and fades out while the image fades in, on the plain renderer and in the liquid layer. Images that are ready at once (bundled, or already decoded) show no placeholder and no fade.
@@ -40,5 +42,7 @@ First public release.
 - Liquid filters are built once per size and options, pages more than one page away are not drawn by the liquid layer, and pages and media items are memoized, so nothing is allocated on the UI thread and no page re-renders while swiping.
 - `configureSkiaWeb` to set where CanvasKit is loaded from on web.
 
-[Unreleased]: https://github.com/anhtuank7c/expo-morph-carousel/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/anhtuank7c/expo-morph-carousel/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/anhtuank7c/expo-morph-carousel/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/anhtuank7c/expo-morph-carousel/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/anhtuank7c/expo-morph-carousel/releases/tag/v0.1.0
