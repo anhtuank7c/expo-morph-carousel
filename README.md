@@ -53,31 +53,49 @@ Screens of the example app modeled on apps people use every day, each a few hund
 
 <table>
   <tr>
+    <th></th>
     <th>Stories</th>
     <th>Vertical feed</th>
     <th>Flash sale</th>
   </tr>
   <tr>
+    <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/stories.gif" width="220" alt="Stories: People turn like a cube, their photos melt into each other; tap left or right, hold to pause, progress bars."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/feed.gif" width="220" alt="Vertical feed: Full-screen posts swiped up, double tap to like, a spinning record, liquid, slide or parallax."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/flash-sale.gif" width="220" alt="Flash sale: Looping hero banner, countdown, deal cards that glide with momentum, deal of the day."></td>
   </tr>
   <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/stories.gif" width="220" alt="Stories: People turn like a cube, their photos melt into each other; tap left or right, hold to pause, progress bars."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/feed.gif" width="220" alt="Vertical feed: Full-screen posts swiped up, double tap to like, a spinning record, liquid, slide or parallax."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/flash-sale.gif" width="220" alt="Flash sale: Looping hero banner, countdown, deal cards that glide with momentum, deal of the day."></td>
+  </tr>
+  <tr>
+    <td></td>
     <td width="240">People turn like a cube, their photos melt into each other; tap left or right, hold to pause, progress bars.</td>
     <td width="240">Full-screen posts swiped up, double tap to like, a spinning record, liquid, slide or parallax.</td>
     <td width="240">Looping hero banner, countdown, deal cards that glide with momentum, deal of the day.</td>
   </tr>
   <tr>
+    <th></th>
     <th>Shop product page</th>
     <th>Memories</th>
     <th>Albums</th>
   </tr>
   <tr>
+    <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/shop.gif" width="220" alt="Shop product page: Photo gallery with a thumbnail strip in the Pagination slot, color swatches, sizes, cart bar."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/memories.gif" width="220" alt="Memories: A trip slideshow: slow zoom, liquid transitions, tap to skip, progress bars."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/albums.gif" width="220" alt="Albums: Coverflow of album covers, a blurred backdrop that follows the swipe, player controls."></td>
   </tr>
   <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/shop.gif" width="220" alt="Shop product page: Photo gallery with a thumbnail strip in the Pagination slot, color swatches, sizes, cart bar."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/memories.gif" width="220" alt="Memories: A trip slideshow: slow zoom, liquid transitions, tap to skip, progress bars."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/albums.gif" width="220" alt="Albums: Coverflow of album covers, a blurred backdrop that follows the swipe, player controls."></td>
+  </tr>
+  <tr>
+    <td></td>
     <td width="240">Photo gallery with a thumbnail strip in the Pagination slot, color swatches, sizes, cart bar.</td>
     <td width="240">A trip slideshow: slow zoom, liquid transitions, tap to skip, progress bars.</td>
     <td width="240">Coverflow of album covers, a blurred backdrop that follows the swipe, player controls.</td>
@@ -586,7 +604,7 @@ Measured on a Redmi Note 8 Pro (Helio G90T, Expo Go, production JS) with the exa
 | --- | --- |
 | Android | Android 17 emulator (API 37), Expo Go: every media effect and page effect, slots, snap modes and tap navigation (horizontal, vertical and right-to-left), loop, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
 | Web | Desktop Chrome: liquid effect with CanvasKit, keyboard navigation, remote images, the Cache Storage cache across page reloads |
-| iOS | iOS 27.2 simulators (iPhone 18 Pro, iPhone Duo folded and unfolded), Expo Go: the liquid effect in the product showcase and food order screens, the `cube` page effect, the wide layout on the unfolded Duo, and folding and unfolding on the page in view. Not on a real device yet |
+| iOS | iOS 27.2 simulators (iPhone 18 Pro, iPhone Duo folded and unfolded), Expo Go: the liquid effect in the product showcase, food order and the six real-world demos (swipes, tap navigation, double tap, vertical paging, momentum snapping, autoplay), the `cube` page effect, the wide layout on the unfolded Duo, and folding and unfolding on the page in view. Not on a real device yet |
 
 Reports from real iOS devices are welcome.
 

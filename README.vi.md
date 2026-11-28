@@ -53,31 +53,49 @@ Các màn của app ví dụ mô phỏng những ứng dụng quen thuộc hằn
 
 <table>
   <tr>
+    <th></th>
     <th>Stories</th>
     <th>Feed dọc</th>
     <th>Flash sale</th>
   </tr>
   <tr>
+    <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/stories.gif" width="220" alt="Stories: Các người dùng xoay như khối lập phương, ảnh của mỗi người tan vào nhau; chạm trái phải, giữ để dừng, thanh tiến trình."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/feed.gif" width="220" alt="Feed dọc: Bài đăng toàn màn hình vuốt lên, chạm hai lần để thả tim, đĩa nhạc quay, liquid, slide hoặc parallax."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/flash-sale.gif" width="220" alt="Flash sale: Banner tự chạy vòng lặp, đếm ngược, thẻ deal lướt theo quán tính, deal trong ngày."></td>
   </tr>
   <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/stories.gif" width="220" alt="Stories: Các người dùng xoay như khối lập phương, ảnh của mỗi người tan vào nhau; chạm trái phải, giữ để dừng, thanh tiến trình."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/feed.gif" width="220" alt="Feed dọc: Bài đăng toàn màn hình vuốt lên, chạm hai lần để thả tim, đĩa nhạc quay, liquid, slide hoặc parallax."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/flash-sale.gif" width="220" alt="Flash sale: Banner tự chạy vòng lặp, đếm ngược, thẻ deal lướt theo quán tính, deal trong ngày."></td>
+  </tr>
+  <tr>
+    <td></td>
     <td width="240">Các người dùng xoay như khối lập phương, ảnh của mỗi người tan vào nhau; chạm trái phải, giữ để dừng, thanh tiến trình.</td>
     <td width="240">Bài đăng toàn màn hình vuốt lên, chạm hai lần để thả tim, đĩa nhạc quay, liquid, slide hoặc parallax.</td>
     <td width="240">Banner tự chạy vòng lặp, đếm ngược, thẻ deal lướt theo quán tính, deal trong ngày.</td>
   </tr>
   <tr>
+    <th></th>
     <th>Trang sản phẩm</th>
     <th>Kỷ niệm</th>
     <th>Album nhạc</th>
   </tr>
   <tr>
+    <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/shop.gif" width="220" alt="Trang sản phẩm: Thư viện ảnh với dải thumbnail trong slot Pagination, chọn màu, chọn size, thanh giỏ hàng."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/memories.gif" width="220" alt="Kỷ niệm: Trình chiếu ảnh chuyến đi: zoom chậm, chuyển cảnh liquid, chạm để bỏ qua, thanh tiến trình."></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/albums.gif" width="220" alt="Album nhạc: Coverflow bìa album, nền mờ chạy theo cú vuốt, nút điều khiển phát nhạc."></td>
   </tr>
   <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/shop.gif" width="220" alt="Trang sản phẩm: Thư viện ảnh với dải thumbnail trong slot Pagination, chọn màu, chọn size, thanh giỏ hàng."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/memories.gif" width="220" alt="Kỷ niệm: Trình chiếu ảnh chuyến đi: zoom chậm, chuyển cảnh liquid, chạm để bỏ qua, thanh tiến trình."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/albums.gif" width="220" alt="Album nhạc: Coverflow bìa album, nền mờ chạy theo cú vuốt, nút điều khiển phát nhạc."></td>
+  </tr>
+  <tr>
+    <td></td>
     <td width="240">Thư viện ảnh với dải thumbnail trong slot Pagination, chọn màu, chọn size, thanh giỏ hàng.</td>
     <td width="240">Trình chiếu ảnh chuyến đi: zoom chậm, chuyển cảnh liquid, chạm để bỏ qua, thanh tiến trình.</td>
     <td width="240">Coverflow bìa album, nền mờ chạy theo cú vuốt, nút điều khiển phát nhạc.</td>
@@ -586,7 +604,7 @@ Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn 
 | --- | --- |
 | Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng media và page effect, slots, snap mode và chạm để chuyển trang (ngang, dọc và phải sang trái), loop, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
 | Web | Chrome desktop: hiệu ứng liquid với CanvasKit, điều hướng bằng bàn phím, ảnh từ mạng, cache bằng Cache Storage qua các lần tải lại trang |
-| iOS | Simulator iOS 27.2 (iPhone 18 Pro, iPhone Duo khi gập và khi mở), Expo Go: hiệu ứng liquid ở màn trưng bày sản phẩm và đặt món, page effect `cube`, bố cục rộng trên Duo đang mở, và gập, mở máy vẫn giữ đúng trang đang xem. Chưa kiểm tra trên máy thật |
+| iOS | Simulator iOS 27.2 (iPhone 18 Pro, iPhone Duo khi gập và khi mở), Expo Go: hiệu ứng liquid ở màn trưng bày sản phẩm, đặt món và sáu demo ứng dụng thực tế (vuốt, chạm để chuyển trang, chạm hai lần, cuộn dọc, snap theo quán tính, autoplay), page effect `cube`, bố cục rộng trên Duo đang mở, và gập, mở máy vẫn giữ đúng trang đang xem. Chưa kiểm tra trên máy thật |
 
 Hoan nghênh các báo cáo từ máy iOS thật.
 
