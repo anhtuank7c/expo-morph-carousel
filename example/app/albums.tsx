@@ -70,10 +70,11 @@ export default function AlbumsScreen() {
         style={{ height: cover + 40 }}
         renderItem={({ item }) => (
           <View style={styles.coverWrap}>
-            <Image
-              source={{ uri: photo(item.id, 600, 600) }}
-              style={[styles.cover, { backgroundColor: item.color }]}
-            />
+            {/* The shadow sits on a view exactly the cover's size: on a page-sized
+                transparent view, web would draw it around the whole page. */}
+            <View style={[styles.coverShadow, { backgroundColor: item.color }]}>
+              <Image source={{ uri: photo(item.id, 600, 600) }} style={styles.cover} />
+            </View>
           </View>
         )}
       />
@@ -155,15 +156,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textTransform: 'uppercase',
   },
-  coverWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
+  coverWrap: { flex: 1, justifyContent: 'center' },
+  coverShadow: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 14,
+    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45)',
   },
-  cover: { width: '100%', aspectRatio: 1, borderRadius: 14 },
+  cover: { width: '100%', height: '100%', borderRadius: 14 },
   info: { alignItems: 'center', gap: 4, paddingHorizontal: 24 },
   title: { color: '#fff', fontSize: 26, fontWeight: '800' },
   artist: { color: '#ffffffb3', fontSize: 16, fontWeight: '600' },
