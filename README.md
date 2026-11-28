@@ -31,11 +31,15 @@ Recorded from the example app on an Android emulator and in Chrome.
 
 ### Phones, foldables and tablets
 
-The same screen on an iPhone and on an unfolded iPhone Duo, swiped together. The carousel measures itself, so on the wider screen the liquid morph keeps its shape and the example lays its screens out as a centered column. Fold or unfold the phone while a carousel is on screen and it keeps its page.
+The same screen on an iPhone and on an unfolded iPhone Duo, swiped together. The carousel measures itself, so on the wider screen the liquid morph keeps its shape and the example lays its screens out as a centered column.
 
 <img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/duo-iphone.gif" width="560" alt="The product showcase on an iPhone 18 Pro and an unfolded iPhone Duo side by side, at the same scale: on both, a watch melts into a laptop, then a phone, a Mac mini and more, at the same moment">
 
-Recorded on the iOS simulators, at the same scale.
+Then folded and unfolded between swipes: the outer screen wakes on the page the inner one showed, and unfolding goes back to the wide layout on the page you swiped to.
+
+<img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/duo-fold.gif" width="560" alt="An iPhone Duo folded and unfolded while the product showcase is on screen: on the inner screen a watch melts into a laptop and a phone; folded, the outer screen wakes on the same phone and swipes on to a Mac mini; unfolded again, the inner screen shows that page at its wide size">
+
+Recorded on the iOS simulators; the screens in each GIF are at the same scale.
 
 ### Real-world demos
 

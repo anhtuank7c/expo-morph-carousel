@@ -31,11 +31,15 @@ Quay từ app ví dụ trên Android emulator và trên Chrome.
 
 ### Điện thoại, máy gập và máy tính bảng
 
-Cùng một màn hình trên iPhone và trên iPhone Duo đang mở, vuốt cùng lúc. Carousel tự đo kích thước của nó, nên trên màn hình rộng hơn hiệu ứng liquid vẫn giữ đúng hình dáng, còn app ví dụ xếp các màn thành một cột ở giữa. Gập hay mở máy khi carousel đang hiện, nó vẫn giữ nguyên trang.
+Cùng một màn hình trên iPhone và trên iPhone Duo đang mở, vuốt cùng lúc. Carousel tự đo kích thước của nó, nên trên màn hình rộng hơn hiệu ứng liquid vẫn giữ đúng hình dáng, còn app ví dụ xếp các màn thành một cột ở giữa.
 
 <img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/duo-iphone.gif" width="560" alt="Màn trưng bày sản phẩm trên iPhone 18 Pro và iPhone Duo đang mở đặt cạnh nhau, cùng tỉ lệ: trên cả hai, đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, cùng một lúc">
 
-Quay trên iOS simulator, cùng tỉ lệ.
+Rồi gập, mở máy giữa các lần vuốt: màn hình ngoài bật lên đúng trang màn hình trong đang hiện, mở ra lại thì về bố cục rộng ở đúng trang vừa vuốt tới.
+
+<img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/duo-fold.gif" width="560" alt="Gập và mở iPhone Duo khi màn trưng bày sản phẩm đang hiện: trên màn hình trong, đồng hồ tan thành laptop rồi điện thoại; khi gập, màn hình ngoài bật lên đúng điện thoại đó và vuốt tiếp sang Mac mini; mở ra lại, màn hình trong hiện đúng trang đó ở khổ rộng">
+
+Quay trên iOS simulator; các màn hình trong mỗi GIF cùng tỉ lệ.
 
 ### Demo ứng dụng thực tế
 
