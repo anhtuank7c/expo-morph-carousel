@@ -28,6 +28,12 @@ export type PageEffectInput = {
   direction: CarouselDirection;
   /** Right-to-left horizontal layout: "forward" is to the left on screen. */
   rtl: boolean;
+  /**
+   * `Platform.OS`. Android draws a 3D transform from a decomposed matrix
+   * (translation, rotation, scale and a camera distance), so an effect with
+   * `perspective` may need a different transform list there (see `cube`).
+   */
+  platform: string;
 };
 
 type Transform =
@@ -210,15 +216,18 @@ export type CubeOptions = {
  *
  * The cube has the page's length as its side and its center that length / 2
  * behind the screen; it is turned by `offset × 90°` and seen by one eye at
- * `eye` in front of the page's center. The face is drawn around its
- * leading edge (u = 0): scaled (`along` the scroll axis, `across` it),
- * turned by the real angle, seen through a perspective centered on that
- * edge, then moved to the edge's projected position. With the scale applied
- * first (the order of a view's own transform on Android), that perspective
- * is the edge's depth from the eye times `along`. `across` is the edge's
- * perspective factor; `along` also corrects for the eye being off the
- * edge's axis. Every point of the face then lands where the real cube puts
- * it (see test/cube.test.ts), so neighboring faces share their edge.
+ * `eye` in front of the page's center. The face is drawn around its own
+ * center: scaled (`along` the scroll axis, `across` it), turned by the real
+ * angle, seen through `perspective` centered on it, then moved by
+ * `translate`. `across` is the perspective factor of the face's center;
+ * `along` also corrects for the eye being off the face's axis. Every point
+ * of the face then lands where the real cube puts it (see test/cube.test.ts),
+ * so neighboring faces share their edge.
+ *
+ * Everything is about the view's center because that is the only form
+ * Android draws exactly: it decomposes the transform into translation,
+ * rotation, scale and a camera distance and projects about the view's
+ * center (pivot), which loses a perspective centered anywhere else.
  *
  * Returns null when the face looks away from the eye (or is nearly edge-on).
  */
@@ -239,20 +248,28 @@ export function cubeFace(
   const z1 = h * (sin + cos - 1);
   const x2 = h * (sin + cos);
   const z2 = h * (cos - sin - 1);
-  const d1 = eye - z1;
-  const p1 = (x1 * eye) / d1;
-  const p2 = (x2 * eye) / (eye - z2);
-  if (p2 - p1 < 1e-3) return null; // seen from behind
-  const across = eye / d1;
-  const along = (across * (cos - (x1 * sin) / d1)) / cos;
+  if ((x2 * eye) / (eye - z2) - (x1 * eye) / (eye - z1) < 1e-3) return null; // seen from behind
+  // The face's center is at (h sin, h cos - h); its distance from the eye:
+  const d = eye + h - h * cos;
+  const across = eye / d;
+  const along = (across * (cos - (h * sin * sin) / d)) / cos;
+  if (along <= 0) return null;
   return {
-    translate: p1 + h,
+    translate: (eye * h * sin) / d,
     along,
     across,
-    perspective: along * d1,
+    perspective: along * d,
     angle: (a * 180) / Math.PI,
   };
 }
+
+/**
+ * Android turns a transform's perspective into a camera distance (React
+ * Native's BaseViewManager: density² × distance × √5), which the renderer
+ * divides by the screen's dpi and multiplies by 72. In points that is the
+ * distance times 72 × √5 / 160; dividing by it gives the exact perspective.
+ */
+const ANDROID_CAMERA = (72 * Math.sqrt(5)) / 160;
 
 /**
  * Pages are the faces of a turning cube: neighboring faces share an edge
@@ -272,35 +289,21 @@ export function cube({ perspective }: CubeOptions = {}): PageEffectFn {
     const face = cubeFace(input.rtl && !vertical ? -o : o, side, eye);
     if (!face) return { opacity: 0 };
     const zIndex = Math.round(100 - Math.abs(o) * 10);
-    if (vertical) {
-      return {
-        opacity: 1,
-        zIndex,
-        transformOrigin: 'center top',
-        // Applied last to first: scale, turn, perspective, move.
-        transform: [
-          { translateY: face.translate },
-          { perspective: face.perspective },
-          // rotateX turns the bottom toward the eye for positive angles.
-          { rotateX: `${-face.angle}deg` },
-          { scaleY: face.along },
-          { scaleX: face.across },
-        ],
-      };
-    }
-    return {
-      opacity: 1,
-      zIndex,
-      transformOrigin: 'left center',
-      // Applied last to first: scale, turn, perspective, move.
-      transform: [
-        { translateX: face.translate },
-        { perspective: face.perspective },
-        { rotateY: `${face.angle}deg` },
-        { scaleX: face.along },
-        { scaleY: face.across },
-      ],
-    };
+    // rotateX turns the bottom toward the eye for positive angles.
+    const turn = vertical ? { rotateX: `${-face.angle}deg` } : { rotateY: `${face.angle}deg` };
+    const move = vertical ? { translateY: face.translate } : { translateX: face.translate };
+    const scales = vertical
+      ? [{ scaleY: face.along }, { scaleX: face.across }]
+      : [{ scaleX: face.along }, { scaleY: face.across }];
+    // Applied last to first: scale, turn, perspective, move. Android draws the
+    // same thing from the decomposed form, which has the perspective first:
+    // there the camera always projects about the view's center before the
+    // translation, so this list decomposes into exactly those parts.
+    const transform =
+      input.platform === 'android'
+        ? [{ perspective: face.perspective / ANDROID_CAMERA }, move, turn, ...scales]
+        : [move, { perspective: face.perspective }, turn, ...scales];
+    return { opacity: 1, zIndex, transform };
   };
 }
 

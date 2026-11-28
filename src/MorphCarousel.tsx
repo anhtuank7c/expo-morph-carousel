@@ -59,6 +59,8 @@ import type {
   SpringOptions,
 } from './types';
 
+/** Captured by the page effect worklets (see PageEffectInput.platform). */
+const PLATFORM: string = Platform.OS;
 /** Duration of the cross-fade when an image is replaced by a sharper or newer one. */
 const SWAP_MS = 220;
 const DEFAULT_SPRING = { damping: 26, stiffness: 220, mass: 1 };
@@ -783,6 +785,7 @@ function Page({
       viewportHeight: viewport.height,
       direction,
       rtl,
+      platform: PLATFORM,
     }),
   );
   // Start alignment in right-to-left layouts starts at the right edge.

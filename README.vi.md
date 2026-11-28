@@ -15,13 +15,13 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
     <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/food-order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube-3d.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
   </tr>
   <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/food-order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube-3d.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
   </tr>
 </table>
 
@@ -183,7 +183,7 @@ import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 | `parallax` | Trang hiện tại đủ cỡ, trang kế bên nhỏ hơn và gần hơn. Dùng với `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
 | `stack` | Một chồng bài: thẻ sau nằm chờ phía sau, thẻ hiện tại trượt ra | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
 | `coverflow` | Trang kế bên xoay 3D và chồng lên nhau | `angle` 48, `scale` 0.82, `spacing` 0.62 |
-| `cube` | Một khối lập phương đặc đang xoay: các mặt kề nhau chung cạnh, cả khối được nhìn qua cùng một phối cảnh. Trang nên phủ kín khung (không margin, không bo góc, không `pageGap`); trang hẹp hơn carousel chừa chỗ cho cạnh gần mắt nhô ra khi xoay | `perspective` 2,5 × cạnh dài hơn của trang |
+| `cube` | Một khối lập phương đặc đang xoay: các mặt kề nhau chung cạnh, cả khối được nhìn qua cùng một phối cảnh. Trang nên phủ kín khung (không margin, không bo góc, không `pageGap`); cạnh gần mắt nhô về phía mắt và to ra (khoảng 6% với phối cảnh mặc định), nên cần chừa chỗ: trang hẹp hơn carousel, và một khoảng lề theo chiều vuông góc với hướng cuộn bên trong trang. Chính xác trên iOS, Android và web: trên Android transform được dựng sao cho khi tách ra (dịch, xoay, scale, khoảng cách camera) vẫn vẽ đúng phép chiếu đó | `perspective` 2,5 × cạnh dài hơn của trang |
 | `flip` | Thẻ lật tại chỗ; trang sau là mặt lưng | |
 | `fade` | Crossfade tại chỗ | |
 | `scale-fade` | Trang cũ co lại và mờ dần, trang mới từ lớn hơn một chút thu về | `scale` 0.86 |
@@ -194,7 +194,7 @@ Mọi hiệu ứng chạy được cả ngang lẫn dọc và tự lật chiều
 
 Bố cục phải sang trái theo `I18nManager.isRTL`: chiều tiến là sang trái, vuốt sang phải để tiến, chấm phân trang và vùng chạm được lật lại. Trong app Expo, bố cục RTL chỉ được bật khi có `"extra": { "supportsRTL": true }` trong `app.json`.
 
-Hiệu ứng tự viết là một worklet nhận `offset` của trang (0 đang hiện, 1 trang sau, -1 trang trước, số lẻ khi đang chuyển), `step` (khoảng cách giữa hai trang), kích thước trang và viewport, `direction`, `rtl`, rồi trả về `opacity`, `zIndex`, `transform` và `transformOrigin`. Phải tự tính cả phần dịch chuyển:
+Hiệu ứng tự viết là một worklet nhận `offset` của trang (0 đang hiện, 1 trang sau, -1 trang trước, số lẻ khi đang chuyển), `step` (khoảng cách giữa hai trang), kích thước trang và viewport, `direction`, `rtl` và `platform` (`Platform.OS`: Android vẽ transform 3D từ bản đã tách thành phần, nên hiệu ứng có `perspective` có thể cần thứ tự khác trên Android), rồi trả về `opacity`, `zIndex`, `transform` và `transformOrigin`. Phải tự tính cả phần dịch chuyển:
 
 ```tsx
 const door: PageEffectFn = ({ offset, step }) => {

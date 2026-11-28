@@ -15,13 +15,13 @@ A carousel for Expo in which the images melt into each other like liquid while t
     <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/food-order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube-3d.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
   <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/food-order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube-3d.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
 </table>
 
@@ -183,7 +183,7 @@ import { MorphCarousel, pageEffects } from 'expo-morph-carousel';
 | `parallax` | Current page full size, neighbors smaller and closer. Use with `pageSize` | `scale` 0.84, `offset` 0, `opacity` 1 |
 | `stack` | A deck: next cards wait behind, the current one slides off | `visible` 3, `spacing` 16, `scaleStep` 0.06, `opacityStep` 0.18, `rotation` 0, `stackAxis` `'across'` |
 | `coverflow` | Neighbors turned away in 3D, overlapping | `angle` 48, `scale` 0.82, `spacing` 0.62 |
-| `cube` | A solid cube turning: neighboring faces share their edge and the whole cube is seen through one perspective. Pages should fill their frame edge to edge (no margin, rounded corners or `pageGap`); a page narrower than the carousel leaves room for the near edge, which comes toward the eye | `perspective` 2.5 × the larger page side |
+| `cube` | A solid cube turning: neighboring faces share their edge and the whole cube is seen through one perspective. Pages should fill their frame edge to edge (no margin, rounded corners or `pageGap`); the near edge comes toward the eye and grows (about 6% with the default perspective), so leave room for it: a page narrower than the carousel, and some margin across the scroll axis inside the page. Exact on iOS, Android and web: on Android the transform is built so that its decomposition (translation, rotation, scale, camera distance) draws the same projection | `perspective` 2.5 × the larger page side |
 | `flip` | The card turns over in place; the next card is its back | |
 | `fade` | Cross-fade in place | |
 | `scale-fade` | Outgoing shrinks and fades, incoming settles from slightly larger | `scale` 0.86 |
@@ -194,7 +194,7 @@ All effects work horizontally and vertically and mirror in right-to-left layouts
 
 Right-to-left follows `I18nManager.isRTL`: forward is to the left, swiping to the right moves forward, dots and tap zones are mirrored. In an Expo app, RTL layouts are only enabled with `"extra": { "supportsRTL": true }` in `app.json`.
 
-A custom effect is a worklet from the page's offset to a style. It gets `offset` (0 in view, 1 next, -1 previous, fractions while moving), `step` (distance between pages), the page and viewport sizes, `direction` and `rtl`, and returns `opacity`, `zIndex`, `transform` and `transformOrigin`. It must include the translation:
+A custom effect is a worklet from the page's offset to a style. It gets `offset` (0 in view, 1 next, -1 previous, fractions while moving), `step` (distance between pages), the page and viewport sizes, `direction`, `rtl` and `platform` (`Platform.OS`: Android draws a 3D transform from its decomposition, so an effect with `perspective` may need another order there), and returns `opacity`, `zIndex`, `transform` and `transformOrigin`. It must include the translation:
 
 ```tsx
 const door: PageEffectFn = ({ offset, step }) => {

@@ -280,10 +280,18 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   cardImage: { width: '62%', height: '52%' },
-  // Cube faces meet at their edges: no gap, no corners, no shadow (a shadow
-  // on a view turned in 3D is drawn flat on Android).
-  faceHorizontal: { marginHorizontal: 0, borderRadius: 0, elevation: 0, shadowOpacity: 0 },
-  faceVertical: { marginVertical: 0, borderRadius: 0, elevation: 0, shadowOpacity: 0 },
+  // Cube faces meet at their edges: no margin along the scroll axis, no
+  // corners, no shadow (a shadow on a view turned in 3D is drawn flat on
+  // Android). Room across the axis: the near edge comes toward the eye and
+  // grows by up to ~6%, and the carousel clips its pages.
+  faceHorizontal: {
+    marginHorizontal: 0,
+    marginVertical: 20,
+    borderRadius: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  faceVertical: { marginVertical: 0, marginHorizontal: 20, borderRadius: 0, elevation: 0, shadowOpacity: 0 },
   faceShade: { backgroundColor: '#000' },
   cardTitle: { fontSize: 24, fontWeight: '800', color: '#fff' },
   label: { marginTop: 6, fontSize: 13, color: '#6e6e73' },
