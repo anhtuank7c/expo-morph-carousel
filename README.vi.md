@@ -20,6 +20,12 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube-3d.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
   </tr>
   <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/food-order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/cube-3d.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
+  </tr>
+  <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/food-order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
@@ -27,7 +33,7 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
   </tr>
 </table>
 
-Quay từ app ví dụ trên Android emulator và trên Chrome.
+Quay từ app ví dụ trên Android emulator, iPhone 18 Pro simulator và trên Chrome.
 
 ### Điện thoại, máy gập và máy tính bảng
 
@@ -580,9 +586,9 @@ Với ảnh chụp (`mediaFit="cover"`), bước cắt alpha còn làm bo tròn 
 | --- | --- |
 | Android | Emulator Android 17 (API 37), Expo Go: mọi hiệu ứng media và page effect, slots, snap mode và chạm để chuyển trang (ngang, dọc và phải sang trái), loop, chấm phân trang, ref API, và cache trên đĩa với server ảnh local (dùng cache khi còn hạn, kiểm tra lại bằng 304, thay ảnh sau khi hết hạn, giữ cache qua các lần mở lại app) |
 | Web | Chrome desktop: hiệu ứng liquid với CanvasKit, điều hướng bằng bàn phím, ảnh từ mạng, cache bằng Cache Storage qua các lần tải lại trang |
-| iOS | Chưa kiểm tra |
+| iOS | Simulator iOS 27.2 (iPhone 18 Pro, iPhone Duo khi gập và khi mở), Expo Go: hiệu ứng liquid ở màn trưng bày sản phẩm và đặt món, page effect `cube`, bố cục rộng trên Duo đang mở, và gập, mở máy vẫn giữ đúng trang đang xem. Chưa kiểm tra trên máy thật |
 
-Hoan nghênh các báo cáo từ iOS.
+Hoan nghênh các báo cáo từ máy iOS thật.
 
 ## Kiến trúc
 

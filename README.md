@@ -20,6 +20,12 @@ A carousel for Expo in which the images melt into each other like liquid while t
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube-3d.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
   <tr>
+    <th>iOS</th>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/food-order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/ios/cube-3d.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
+  </tr>
+  <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/food-order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
@@ -27,7 +33,7 @@ A carousel for Expo in which the images melt into each other like liquid while t
   </tr>
 </table>
 
-Recorded from the example app on an Android emulator and in Chrome.
+Recorded from the example app on an Android emulator, an iPhone 18 Pro simulator and in Chrome.
 
 ### Phones, foldables and tablets
 
@@ -580,9 +586,9 @@ Measured on a Redmi Note 8 Pro (Helio G90T, Expo Go, production JS) with the exa
 | --- | --- |
 | Android | Android 17 emulator (API 37), Expo Go: every media effect and page effect, slots, snap modes and tap navigation (horizontal, vertical and right-to-left), loop, dots, the ref API, and the disk cache with the local image server (fresh hits, 304 revalidation, swapped images after expiry, persistence across app restarts) |
 | Web | Desktop Chrome: liquid effect with CanvasKit, keyboard navigation, remote images, the Cache Storage cache across page reloads |
-| iOS | Not verified yet |
+| iOS | iOS 27.2 simulators (iPhone 18 Pro, iPhone Duo folded and unfolded), Expo Go: the liquid effect in the product showcase and food order screens, the `cube` page effect, the wide layout on the unfolded Duo, and folding and unfolding on the page in view. Not on a real device yet |
 
-Reports from iOS are welcome.
+Reports from real iOS devices are welcome.
 
 ## Architecture
 
