@@ -9,7 +9,7 @@ interface Props {
   /** Paths inside example/, for example `app/stories.tsx` or `data/demos.ts`. */
   files: string[];
 }
-const sources = import.meta.glob('../../../example/{app,data}/*.{ts,tsx}', {
+const sources = import.meta.glob('../../../example/{app,data}/**/*.{ts,tsx}', {
   query: '?raw',
   import: 'default',
   eager: true,

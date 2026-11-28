@@ -19,6 +19,7 @@ A product page: a gallery of the colors with a thumbnail strip, swatches, sizes 
 2. The `Pagination` slot is a strip of thumbnails. Each frame reads the carousel's `position` on the UI thread, so it follows the finger, and a tap calls `scrollTo(i)`.
 3. The color swatches below call `ref.scrollTo(i)`; `onIndexChange` keeps the title, the stock line and the cart button color in sync.
 4. Tap the photo itself to go to the next color (`tapToNavigate={{ area: 'media' }}`), which leaves the buttons on the page alone.
+5. The round info button above the cart bar is [expo-morph-menu](https://anhtuank7c.github.io/expo-morph-menu/), the sister package: Size guide, Reviews and Shipping grow out of its card into full-screen routes (`app/(sheet)`). The root layout shows it on this page only (`hidden`).
 
 <Uses items={["Pagination slot:guides/slots/#slots","components","mediaHeight","mediaFit","mediaPadding","liquid","tapToNavigate","onIndexChange","ref API:guides/navigation/#controlling-the-carousel"]} />
 
@@ -28,4 +29,4 @@ A product page: a gallery of the colors with a thumbnail strip, swatches, sizes 
 
 This is the code running in the phone. Copy it, swap the data, and it is yours.
 
-<Source files={["app/shop.tsx","data/demos.ts"]} />
+<Source files={["app/shop.tsx","data/demos.ts","data/shopMenu.tsx","app/(sheet)/[key].tsx","app/_layout.tsx"]} />

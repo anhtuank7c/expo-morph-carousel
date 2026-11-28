@@ -148,12 +148,14 @@ export const EXAMPLES = [
         "The `Pagination` slot is a strip of thumbnails. Each frame reads the carousel's `position` on the UI thread, so it follows the finger, and a tap calls `scrollTo(i)`.",
         'The color swatches below call `ref.scrollTo(i)`; `onIndexChange` keeps the title, the stock line and the cart button color in sync.',
         "Tap the photo itself to go to the next color (`tapToNavigate={{ area: 'media' }}`), which leaves the buttons on the page alone.",
+        'The round info button above the cart bar is [expo-morph-menu](https://anhtuank7c.github.io/expo-morph-menu/), the sister package: Size guide, Reviews and Shipping grow out of its card into full-screen routes (`app/(sheet)`). The root layout shows it on this page only (`hidden`).',
       ],
       [
         'Thư viện ảnh là một vùng media vuông (`mediaHeight={width}`, `mediaFit="cover"`, `mediaPadding={0}`); các màu là các trang của nó.',
         'Slot `Pagination` là dải thumbnail. Khung chọn đọc `position` của carousel trên UI thread nên chạy theo ngón tay, chạm vào thì gọi `scrollTo(i)`.',
         'Các ô màu bên dưới gọi `ref.scrollTo(i)`; `onIndexChange` giữ tiêu đề, dòng tồn kho và màu nút giỏ hàng khớp nhau.',
         "Chạm vào ảnh để sang màu kế tiếp (`tapToNavigate={{ area: 'media' }}`), không ảnh hưởng tới các nút trên trang.",
+        'Nút thông tin tròn phía trên thanh giỏ hàng là [expo-morph-menu](https://anhtuank7c.github.io/expo-morph-menu/vi/), gói anh em: Bảng size, Đánh giá và Giao hàng nở ra từ thẻ menu thành route toàn màn hình (`app/(sheet)`). Root layout chỉ hiện nút ở trang này (`hidden`).',
       ],
     ],
     uses: [
@@ -167,7 +169,7 @@ export const EXAMPLES = [
       'onIndexChange',
       REF,
     ],
-    files: ['app/shop.tsx', 'data/demos.ts'],
+    files: ['app/shop.tsx', 'data/demos.ts', 'data/shopMenu.tsx', 'app/(sheet)/[key].tsx', 'app/_layout.tsx'],
   },
   {
     slug: 'memories',

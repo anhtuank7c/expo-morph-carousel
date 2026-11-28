@@ -2,7 +2,7 @@
 
 **English** | [Tiếng Việt](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/README.vi.md)
 
-**[Documentation with live demos and copyable code →](https://anhtuank7c.github.io/expo-morph-carousel/)**
+**[Documentation with live demos and copyable code →](https://anhtuank7c.github.io/expo-morph-carousel/)** · Sister package: [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu), a floating menu that morphs into full-screen routes
 
 A carousel for Expo in which the images melt into each other like liquid while the pages slide. Built with React Native Skia and Reanimated 4, with presets for plainer transitions, loop, autoplay, vertical paging, screen reader support and web.
 
@@ -626,7 +626,7 @@ npm test                 # paging math unit tests only
 npm run build            # compile to lib/
 ```
 
-The example app (`example/`) imports the package from `src/` and has these screens: stories, a vertical feed, a flash sale, a shop product page, memories and albums (see Real-world demos above), a product showcase (watches, phones, a laptop and a Mac mini cut out to their outline, tall and wide ones in turn so the liquid stretches between them), a food order with real photos of a cola bottle, a burger, a sundae and fries (the menu tabs are a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. The product photos in `example/assets/showcase/` are Apple marketing images, used only to illustrate the effect; they belong to Apple Inc., are not covered by this project's license and are not part of the npm package. The food photos come from Wikimedia Commons, with their authors and licenses in `example/assets/food/CREDITS.md`. The other images are original drawings: the devices with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
+The example app (`example/`) imports the package from `src/` and has these screens: stories, a vertical feed, a flash sale, a shop product page, memories and albums (see Real-world demos above), a product showcase (watches, phones, a laptop and a Mac mini cut out to their outline, tall and wide ones in turn so the liquid stretches between them), a food order with real photos of a cola bottle, a burger, a sundae and fries (the menu tabs are a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. The shop product page also has an info button made with [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu) (`app/(sheet)`, `data/shopMenu.tsx`). The product photos in `example/assets/showcase/` are Apple marketing images, used only to illustrate the effect; they belong to Apple Inc., are not covered by this project's license and are not part of the npm package. The food photos come from Wikimedia Commons, with their authors and licenses in `example/assets/food/CREDITS.md`. The other images are original drawings: the devices with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
 
 `npm install` also sets up a pre-commit hook that runs ESLint and Prettier on staged files and the typecheck.
 
@@ -638,7 +638,9 @@ The example app (`example/`) imports the package from `src/` and has these scree
 - Security issues: see [SECURITY.md](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/SECURITY.md).
 - Release notes: [CHANGELOG.md](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/CHANGELOG.md).
 
-Also by the same author: [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu), a floating button that morphs into a menu and into full-screen routes.
+## Sister package
+
+**[expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu)** ([docs](https://anhtuank7c.github.io/expo-morph-menu/), [npm](https://www.npmjs.com/package/expo-morph-menu)): a floating action button for expo-router that morphs into a card menu, then into a full-screen route, and back. Same author and stack (Reanimated 4, iOS, Android, web). The two work together: the info button on this example's shop product page is expo-morph-menu, and the shop demo of expo-morph-menu opens on a banner made with this carousel.
 
 ## License
 

@@ -2,7 +2,7 @@
 
 [English](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/README.md) | **Tiếng Việt**
 
-**[Tài liệu kèm demo chạy thật và mã chép về dùng ngay →](https://anhtuank7c.github.io/expo-morph-carousel/vi/)**
+**[Tài liệu kèm demo chạy thật và mã chép về dùng ngay →](https://anhtuank7c.github.io/expo-morph-carousel/vi/)** · Gói anh em: [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu), menu nổi biến hình thành route toàn màn hình
 
 Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong lúc các trang trượt. Dựng bằng React Native Skia và Reanimated 4, kèm các preset chuyển cảnh đơn giản hơn, loop, autoplay, trượt dọc, hỗ trợ trình đọc màn hình và web.
 
@@ -626,7 +626,7 @@ npm test                 # chỉ unit test cho phần toán phân trang
 npm run build            # biên dịch ra lib/
 ```
 
-App ví dụ (`example/`) import package từ `src/` và có các màn: stories, feed dọc, flash sale, trang sản phẩm, kỷ niệm và album nhạc (xem Demo ứng dụng thực tế ở trên), trưng bày sản phẩm (đồng hồ, điện thoại, laptop và Mac mini cắt sát viền, xen kẽ dáng dọc và dáng ngang để khối liquid kéo dãn giữa chúng), đặt món với ảnh chụp thật chai cola, burger, ly sundae và khoai tây chiên (thanh tab menu là slot Pagination, quầng sáng và bóng đổ là slot MediaBackground), onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media, thư viện ảnh từ mạng kèm bảng thông tin cache và stress test. Ảnh sản phẩm trong `example/assets/showcase/` là ảnh marketing của Apple, chỉ dùng để minh hoạ hiệu ứng; chúng thuộc về Apple Inc., không nằm trong license của dự án và không có trong package npm. Ảnh đồ ăn lấy từ Wikimedia Commons, tác giả và giấy phép ghi trong `example/assets/food/CREDITS.md`. Các hình còn lại là hình vẽ nguyên bản: thiết bị bằng `npm run make-devices --workspace example` (CanvasKit, cài sẵn cùng React Native Skia), các khối hình bằng `npm run make-assets --workspace example` (cần ffmpeg).
+App ví dụ (`example/`) import package từ `src/` và có các màn: stories, feed dọc, flash sale, trang sản phẩm, kỷ niệm và album nhạc (xem Demo ứng dụng thực tế ở trên), trưng bày sản phẩm (đồng hồ, điện thoại, laptop và Mac mini cắt sát viền, xen kẽ dáng dọc và dáng ngang để khối liquid kéo dãn giữa chúng), đặt món với ảnh chụp thật chai cola, burger, ly sundae và khoai tây chiên (thanh tab menu là slot Pagination, quầng sáng và bóng đổ là slot MediaBackground), onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media, thư viện ảnh từ mạng kèm bảng thông tin cache và stress test. Trang sản phẩm còn có nút thông tin làm từ [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu) (`app/(sheet)`, `data/shopMenu.tsx`). Ảnh sản phẩm trong `example/assets/showcase/` là ảnh marketing của Apple, chỉ dùng để minh hoạ hiệu ứng; chúng thuộc về Apple Inc., không nằm trong license của dự án và không có trong package npm. Ảnh đồ ăn lấy từ Wikimedia Commons, tác giả và giấy phép ghi trong `example/assets/food/CREDITS.md`. Các hình còn lại là hình vẽ nguyên bản: thiết bị bằng `npm run make-devices --workspace example` (CanvasKit, cài sẵn cùng React Native Skia), các khối hình bằng `npm run make-assets --workspace example` (cần ffmpeg).
 
 `npm install` cũng cài một pre-commit hook chạy ESLint và Prettier trên các file đã stage và chạy typecheck.
 
@@ -638,7 +638,9 @@ App ví dụ (`example/`) import package từ `src/` và có các màn: stories,
 - Lỗi bảo mật: xem [SECURITY.md](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/SECURITY.md).
 - Ghi chú phát hành: [CHANGELOG.md](https://github.com/anhtuank7c/expo-morph-carousel/blob/main/CHANGELOG.md).
 
-Cùng tác giả: [expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu), một nút nổi biến hình thành menu và thành các route toàn màn hình.
+## Gói anh em
+
+**[expo-morph-menu](https://github.com/anhtuank7c/expo-morph-menu)** ([tài liệu](https://anhtuank7c.github.io/expo-morph-menu/vi/), [npm](https://www.npmjs.com/package/expo-morph-menu)): nút nổi cho expo-router biến hình thành thẻ menu, rồi thành route toàn màn hình, và thu về. Cùng tác giả và nền tảng (Reanimated 4, iOS, Android, web). Hai gói dùng được cùng nhau: nút thông tin ở trang sản phẩm trong app ví dụ này là expo-morph-menu, còn demo cửa hàng của expo-morph-menu mở đầu bằng banner làm từ carousel này.
 
 ## Giấy phép
 
