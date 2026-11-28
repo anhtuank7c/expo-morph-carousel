@@ -16,7 +16,7 @@ export default function RootLayout() {
           <Stack.Screen name="remote" options={{ title: 'Remote images' }} />
           <Stack.Screen name="layouts" options={{ title: 'Layouts' }} />
           <Stack.Screen name="slots" options={{ title: 'Slots' }} />
-          <Stack.Screen name="order" options={{ title: 'Order a drink' }} />
+          <Stack.Screen name="order" options={{ title: 'Order' }} />
           <Stack.Screen name="stress" options={{ title: 'Stress test' }} />
         </Stack>
       </GestureHandlerRootView>

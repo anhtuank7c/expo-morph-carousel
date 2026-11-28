@@ -1,174 +1,221 @@
 import { MorphCarousel, type MediaSlotProps, type PaginationSlotProps } from 'expo-morph-carousel';
-import { createContext, useContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { interpolate, interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
 
 /**
- * Ordering a drink: the pages are the cup sizes. The three cups of a flavor
- * share one frame and stand on its bottom edge (see make-devices.mjs), so
- * moving from S to L grows the cup instead of zooming it, and the liquid
- * effect pours one size into the next. A Pagination slot is the size picker,
- * a MediaBackground slot draws the flavor's glow and a floor shadow that
- * widens with the size.
+ * A fast-food menu: a tall cola bottle, a wide burger, a tall sundae and a
+ * very wide pile of fries, so the liquid effect has to pour one outline into
+ * a very different one. The photos share one square frame and stand on its
+ * bottom edge, so they keep their real proportions and a floor shadow can sit
+ * under each. A Pagination slot is the menu tab bar, a MediaBackground slot
+ * draws a glow that changes color with the item and a shadow as wide as it.
+ *
+ * Photos from Wikimedia Commons (see example/assets/food/CREDITS.md).
  */
 
-const CUPS = {
-  matcha: {
-    s: require('../assets/drinks/matcha-s.png'),
-    m: require('../assets/drinks/matcha-m.png'),
-    l: require('../assets/drinks/matcha-l.png'),
-  },
-  strawberry: {
-    s: require('../assets/drinks/strawberry-s.png'),
-    m: require('../assets/drinks/strawberry-m.png'),
-    l: require('../assets/drinks/strawberry-l.png'),
-  },
-  coldbrew: {
-    s: require('../assets/drinks/coldbrew-s.png'),
-    m: require('../assets/drinks/coldbrew-m.png'),
-    l: require('../assets/drinks/coldbrew-l.png'),
-  },
+type Item = {
+  id: string;
+  tab: string;
+  name: string;
+  description: string;
+  price: number;
+  kcal: number;
+  image: number;
+  color: string;
+  tint: string;
+  /** Width of the product in its square frame, for the floor shadow. */
+  footprint: number;
 };
 
-type FlavorId = keyof typeof CUPS;
-type Flavor = { id: FlavorId; name: string; color: string; tint: string; price: number; kcal: number };
-
-const FLAVORS: Flavor[] = [
-  { id: 'matcha', name: 'Matcha latte', color: '#4f8a24', tint: '#e6f2d8', price: 3.9, kcal: 0.36 },
-  { id: 'strawberry', name: 'Strawberry milk', color: '#d9426f', tint: '#fde2eb', price: 4.2, kcal: 0.42 },
-  { id: 'coldbrew', name: 'Cold brew', color: '#6b3e26', tint: '#f1e5da', price: 3.5, kcal: 0.08 },
+const MENU: Item[] = [
+  {
+    id: 'cola',
+    tab: 'Cola',
+    name: 'Classic cola',
+    description: 'Ice cold, in the glass bottle.',
+    price: 1.9,
+    kcal: 140,
+    image: require('../assets/food/cola.png'),
+    color: '#c8102e',
+    tint: '#fde3e3',
+    footprint: 0.29,
+  },
+  {
+    id: 'burger',
+    tab: 'Burger',
+    name: 'Cheeseburger',
+    description: 'Beef patty, cheddar and lettuce on a sesame bun.',
+    price: 5.5,
+    kcal: 520,
+    image: require('../assets/food/burger.png'),
+    color: '#b8621b',
+    tint: '#fcebd7',
+    footprint: 0.86,
+  },
+  {
+    id: 'sundae',
+    tab: 'Sundae',
+    name: 'Hot fudge sundae',
+    description: 'Vanilla ice cream, chocolate fudge and a cherry on top.',
+    price: 3.2,
+    kcal: 330,
+    image: require('../assets/food/sundae.png'),
+    color: '#6b3e26',
+    tint: '#f1e7df',
+    footprint: 0.34,
+  },
+  {
+    id: 'fries',
+    tab: 'Fries',
+    name: 'French fries',
+    description: 'Thin cut, golden and lightly salted.',
+    price: 2.6,
+    kcal: 320,
+    image: require('../assets/food/fries.png'),
+    color: '#d99a00',
+    tint: '#fdf1cc',
+    footprint: 0.9,
+  },
 ];
 
-type Size = { id: 's' | 'm' | 'l'; label: string; name: string; ml: number; extra: number };
-
-const SIZES: Size[] = [
-  { id: 's', label: 'S', name: 'Small', ml: 350, extra: 0 },
-  { id: 'm', label: 'M', name: 'Medium', ml: 500, extra: 0.6 },
-  { id: 'l', label: 'L', name: 'Large', ml: 700, extra: 1.2 },
-];
-/** Cup scale per size, as drawn (S 72%, M 86%, L 100% of the frame). */
-const SCALES = [0.72, 0.86, 1];
-
-const FlavorContext = createContext<Flavor>(FLAVORS[0]);
-
-const price = (flavor: Flavor, size: Size) => `$${(flavor.price + size.extra).toFixed(2)}`;
+const PADDING = 12;
+const POSITIONS = MENU.map((_, i) => i);
+const price = (item: Item) => `$${item.price.toFixed(2)}`;
 
 export default function OrderScreen() {
-  const [flavorId, setFlavorId] = useState<FlavorId>('matcha');
-  const flavor = FLAVORS.find((f) => f.id === flavorId)!;
-  const components = useMemo(() => ({ Pagination: SizePicker, MediaBackground: Glow }), []);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const components = useMemo(() => ({ Pagination: MenuTabs, MediaBackground: Glow }), []);
+  const count = Object.values(cart).reduce((a, b) => a + b, 0);
+  const total = MENU.reduce((sum, item) => sum + (cart[item.id] ?? 0) * item.price, 0);
 
   return (
-    <FlavorContext.Provider value={flavor}>
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
-        <View style={styles.flavors}>
-          {FLAVORS.map((f) => {
-            const on = f.id === flavorId;
-            return (
-              <Pressable
-                key={f.id}
-                onPress={() => setFlavorId(f.id)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                style={[styles.flavor, on && { backgroundColor: f.color }]}
-              >
-                <View style={[styles.flavorDot, { backgroundColor: on ? '#fff' : f.color }]} />
-                <Text style={[styles.flavorText, on && styles.flavorTextOn]}>{f.name}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.screen}>
+      <View style={styles.cart} accessibilityLiveRegion="polite">
+        <Text style={styles.cartTitle}>Your order</Text>
+        <Text style={styles.cartInfo}>
+          {count === 0 ? 'Nothing yet' : `${count} item${count > 1 ? 's' : ''} · $${total.toFixed(2)}`}
+        </Text>
+      </View>
 
-        <MorphCarousel
-          data={SIZES}
-          keyExtractor={(s) => s.id}
-          initialIndex={1}
-          // The flavor picks the set of cups; changing it cross-fades them.
-          getImage={(s) => CUPS[flavorId][s.id]}
-          mediaFit="contain"
-          mediaHeight={360}
-          mediaPadding={18}
-          tapToNavigate={{ area: 'media' }}
-          accessibilityLabel="Cup size"
-          getAccessibilityLabel={(s) => `${s.name}, ${s.ml} ml, ${price(flavor, s)}`}
-          components={components}
-          style={styles.card}
-          renderItem={({ item }) => (
-            <View style={styles.page}>
-              <Text style={styles.sizeName}>
-                {item.name} {flavor.name.toLowerCase()}
+      <MorphCarousel
+        data={MENU}
+        keyExtractor={(item) => item.id}
+        getImage={(item) => item.image}
+        getPlaceholderColor={(item) => item.tint}
+        mediaFit="contain"
+        mediaHeight={340}
+        mediaPadding={PADDING}
+        tapToNavigate={{ area: 'media' }}
+        accessibilityLabel="Menu"
+        getAccessibilityLabel={(item) => `${item.name}, ${price(item)}`}
+        components={components}
+        style={styles.card}
+        renderItem={({ item }) => (
+          <View style={styles.page}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.description}>{item.description}</Text>
+            <Text style={styles.info}>
+              {price(item)} · {item.kcal} kcal
+            </Text>
+          </View>
+        )}
+        renderFooter={({ item }) =>
+          item ? (
+            <Pressable
+              style={[styles.add, { backgroundColor: item.color }]}
+              accessibilityRole="button"
+              onPress={() => setCart((c) => ({ ...c, [item.id]: (c[item.id] ?? 0) + 1 }))}
+            >
+              <Text style={styles.addText}>
+                Add {item.tab.toLowerCase()} · {price(item)}
+                {cart[item.id] ? `  (${cart[item.id]})` : ''}
               </Text>
-              <Text style={styles.sizeInfo}>
-                {item.ml} ml · {Math.round(item.ml * flavor.kcal)} kcal
-              </Text>
-            </View>
-          )}
-          renderFooter={({ item }) =>
-            item ? (
-              <Pressable style={[styles.add, { backgroundColor: flavor.color }]} accessibilityRole="button">
-                <Text style={styles.addText}>
-                  Add {item.name.toLowerCase()} · {price(flavor, item)}
-                </Text>
-              </Pressable>
-            ) : null
-          }
-        />
-        <Text style={styles.hint}>Swipe the cup, tap it, or pick a size.</Text>
-      </ScrollView>
-    </FlavorContext.Provider>
+            </Pressable>
+          ) : null
+        }
+      />
+      <Text style={styles.hint}>Swipe the food, tap it, or pick a tab.</Text>
+    </ScrollView>
   );
 }
 
-const BUTTON = 52;
-const GAP = 14;
+const TAB = 74;
+const GAP = 4;
 
-/** Pagination slot: S, M and L, with a pill that follows the swipe. */
-function SizePicker({ index, position, scrollTo }: PaginationSlotProps) {
-  const flavor = useContext(FlavorContext);
-  const pill = useAnimatedStyle(() => ({ transform: [{ translateX: position.value * (BUTTON + GAP) }] }));
+/** Pagination slot: one tab per item, with a pill that follows the swipe and takes its color. */
+function MenuTabs({ index, position, scrollTo }: PaginationSlotProps) {
+  const pill = useAnimatedStyle(() => ({
+    transform: [{ translateX: position.value * (TAB + GAP) }],
+    backgroundColor: interpolateColor(
+      position.value,
+      POSITIONS,
+      MENU.map((m) => m.color),
+    ),
+  }));
   return (
-    <View style={styles.sizes}>
-      <Animated.View style={[styles.sizePill, { backgroundColor: flavor.color }, pill]} />
-      {SIZES.map((s, i) => (
+    <View style={styles.tabs}>
+      <Animated.View style={[styles.tabPill, pill]} />
+      {MENU.map((item, i) => (
         <Pressable
-          key={s.id}
+          key={item.id}
           onPress={() => scrollTo(i)}
-          style={styles.sizeButton}
-          accessibilityRole="button"
-          accessibilityLabel={s.name}
+          style={styles.tab}
+          accessibilityRole="tab"
+          accessibilityLabel={item.name}
           accessibilityState={{ selected: i === index }}
         >
-          <Text style={[styles.sizeLabel, i === index && styles.sizeLabelOn]}>{s.label}</Text>
+          <Text style={[styles.tabLabel, i === index && styles.tabLabelOn]}>{item.tab}</Text>
         </Pressable>
       ))}
     </View>
   );
 }
 
-/** MediaBackground slot: the flavor's glow, and a floor shadow as wide as the cup. */
-function Glow({ position, width, height }: MediaSlotProps<Size>) {
-  const flavor = useContext(FlavorContext);
-  const floor = useAnimatedStyle(() => ({
-    transform: [{ scaleX: interpolate(position.value, [0, 1, 2], SCALES, 'clamp') }],
+/** MediaBackground slot: a glow in the item's tint, and a floor shadow as wide as the item. */
+function Glow({ position, width, height }: MediaSlotProps<Item>) {
+  const glow = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      position.value,
+      POSITIONS,
+      MENU.map((m) => m.tint),
+    ),
   }));
-  const d = height * 0.86;
+  // The photos are drawn in a square that fits the media area inside its
+  // padding (mediaPadding); the bottom 4% of the square is empty.
+  const side = Math.min(width, height) - 2 * PADDING;
+  const floor = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scaleX: interpolate(
+          position.value,
+          POSITIONS,
+          MENU.map((m) => m.footprint),
+          'clamp',
+        ),
+      },
+    ],
+  }));
+  const d = side * 0.9;
   return (
     <View style={StyleSheet.absoluteFill}>
-      <View
-        style={{
-          position: 'absolute',
-          width: d,
-          height: d,
-          borderRadius: d / 2,
-          left: (width - d) / 2,
-          top: (height - d) / 2,
-          backgroundColor: flavor.tint,
-        }}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            width: d,
+            height: d,
+            borderRadius: d / 2,
+            left: (width - d) / 2,
+            top: (height - d) / 2,
+          },
+          glow,
+        ]}
       />
       <Animated.View
         style={[
           styles.floor,
-          { width: height * 0.36, left: (width - height * 0.36) / 2, top: height - 18 - 7 },
+          { width: side, left: (width - side) / 2, top: (height + side) / 2 - side * 0.04 - 6 },
           floor,
         ]}
       />
@@ -178,36 +225,28 @@ function Glow({ position, width, height }: MediaSlotProps<Size>) {
 
 const styles = StyleSheet.create({
   screen: { padding: 16, gap: 14 },
-  flavors: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  flavor: {
+  cart: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 18,
     backgroundColor: '#fff',
   },
-  flavorDot: { width: 10, height: 10, borderRadius: 5 },
-  flavorText: { fontSize: 14, fontWeight: '600', color: '#1c1c1e' },
-  flavorTextOn: { color: '#fff' },
-  card: { height: 600, borderRadius: 28, backgroundColor: '#fff' },
-  page: { flex: 1, alignItems: 'center', paddingTop: 6, gap: 4 },
-  sizeName: { fontSize: 22, fontWeight: '800', color: '#1c1c1e' },
-  sizeInfo: { fontSize: 14, color: '#6e6e73' },
-  sizes: { flexDirection: 'row', gap: GAP, padding: 6, borderRadius: 32, backgroundColor: '#f2f2f7' },
-  sizePill: {
-    position: 'absolute',
-    left: 6,
-    top: 6,
-    width: BUTTON,
-    height: BUTTON,
-    borderRadius: BUTTON / 2,
-  },
-  sizeButton: { width: BUTTON, height: BUTTON, alignItems: 'center', justifyContent: 'center' },
-  sizeLabel: { fontSize: 18, fontWeight: '700', color: '#6e6e73' },
-  sizeLabelOn: { color: '#fff' },
-  floor: { position: 'absolute', height: 14, borderRadius: 7, backgroundColor: '#00000016' },
+  cartTitle: { fontSize: 15, fontWeight: '700', color: '#1c1c1e' },
+  cartInfo: { fontSize: 15, color: '#6e6e73' },
+  card: { height: 620, borderRadius: 28, backgroundColor: '#fff' },
+  page: { flex: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 6, gap: 4 },
+  name: { fontSize: 22, fontWeight: '800', color: '#1c1c1e' },
+  description: { fontSize: 14, lineHeight: 19, color: '#6e6e73', textAlign: 'center' },
+  info: { fontSize: 15, fontWeight: '600', color: '#1c1c1e', marginTop: 2 },
+  tabs: { flexDirection: 'row', gap: GAP, padding: 5, borderRadius: 26, backgroundColor: '#f2f2f7' },
+  tabPill: { position: 'absolute', left: 5, top: 5, width: TAB, height: 38, borderRadius: 19 },
+  tab: { width: TAB, height: 38, alignItems: 'center', justifyContent: 'center' },
+  tabLabel: { fontSize: 14, fontWeight: '700', color: '#6e6e73' },
+  tabLabelOn: { color: '#fff' },
+  floor: { position: 'absolute', height: 12, borderRadius: 6, backgroundColor: '#00000012' },
   add: {
     alignSelf: 'stretch',
     marginHorizontal: 24,

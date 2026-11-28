@@ -14,9 +14,9 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
   },
   {
     href: '/order',
-    title: 'Order a drink',
-    subtitle: 'Cup sizes S, M and L: the liquid effect pours one size into the next',
-    icon: 'cafe-outline',
+    title: 'Order',
+    subtitle: 'A cola bottle, a burger, a sundae and fries: real photos, tall and wide in turn',
+    icon: 'fast-food-outline',
   },
   {
     href: '/onboarding',

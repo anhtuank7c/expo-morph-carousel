@@ -8,19 +8,19 @@ A carousel for Expo in which the images melt into each other like liquid while t
   <tr>
     <th></th>
     <th>Product showcase</th>
-    <th>Drink order</th>
+    <th>Food order</th>
     <th><code>cube</code> page effect</th>
   </tr>
   <tr>
     <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/order.gif" width="240" alt="A drink order: the cup grows and shrinks between sizes S, M and L, and changes from matcha to strawberry to cold brew"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
   <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/order.gif" width="240" alt="A drink order: the cup grows and shrinks between sizes S, M and L, and changes from matcha to strawberry to cold brew"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
 </table>
@@ -541,7 +541,7 @@ npm test                 # paging math unit tests only
 npm run build            # compile to lib/
 ```
 
-The example app (`example/`) imports the package from `src/` and has these screens: a product showcase (watches, phones, a laptop and a Mac mini cut out to their outline, tall and wide ones in turn so the liquid stretches between them), a drink order with S, M and L cups (the size picker is a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. The product photos in `example/assets/showcase/` are Apple marketing images, used only to illustrate the effect; they belong to Apple Inc., are not covered by this project's license and are not part of the npm package. The other images are original drawings: the devices and cups with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
+The example app (`example/`) imports the package from `src/` and has these screens: a product showcase (watches, phones, a laptop and a Mac mini cut out to their outline, tall and wide ones in turn so the liquid stretches between them), a food order with real photos of a cola bottle, a burger, a sundae and fries (the menu tabs are a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. The product photos in `example/assets/showcase/` are Apple marketing images, used only to illustrate the effect; they belong to Apple Inc., are not covered by this project's license and are not part of the npm package. The food photos come from Wikimedia Commons, with their authors and licenses in `example/assets/food/CREDITS.md`. The other images are original drawings: the devices with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
 
 `npm install` also sets up a pre-commit hook that runs ESLint and Prettier on staged files and the typecheck.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generates the device and drink images of the example: original vector
+ * Generates the device images of the example: original vector
  * drawings (no brand, no logo, no third-party artwork) rendered with
  * CanvasKit, the WebAssembly build of Skia that @shopify/react-native-skia
  * already installs.
@@ -8,10 +8,6 @@
  * - example/assets/devices/*.png: a watch, a phone, a laptop, a mini
  *   computer and a desktop display, each cropped to its own outline on a
  *   transparent background, the kind of image the liquid effect is made for.
- * - example/assets/drinks/<flavor>-<s|m|l>.png: an iced drink in three cup
- *   sizes. The three sizes of a flavor share one frame (the large cup's) and
- *   stand on its bottom edge, so a small cup is drawn small instead of being
- *   scaled up to fill the frame.
  *
  *   node example/scripts/make-devices.mjs
  */
@@ -515,100 +511,3 @@ render(join(devices, 'desktop.png'), 1180, 1080, (c) => {
   c.restore();
   c.drawCircle(cx, y + 16, 4, paint({ color: hex('#30343b') }));
 });
-
-/* --- drinks -------------------------------------------------------------- */
-
-const FLAVORS = {
-  matcha: { top: '#8fbf4a', mid: '#b7d77a', bottom: '#f2efe2', straw: '#2f7d4b' },
-  strawberry: { top: '#f7c6d6', mid: '#f48fb1', bottom: '#e04f7d', straw: '#e04f7d' },
-  coldbrew: { top: '#f3e3cc', mid: '#7a4a2e', bottom: '#3b2114', straw: '#1f1f22' },
-};
-const SIZES = { s: 0.72, m: 0.86, l: 1 };
-const CUP = { w: 600, h: 1220, cx: 300, bottom: 1200 };
-
-function cup(c, flavor, k) {
-  const f = FLAVORS[flavor];
-  const { cx, bottom } = CUP;
-  c.save();
-  // scale around the bottom center: the cup stands on the same line
-  c.translate(cx, bottom);
-  c.scale(k, k);
-  const topW = 400;
-  const botW = 280;
-  const rimY = -820; // top of the cup body
-  const body = new CK.PathBuilder();
-  body.moveTo(-topW / 2, rimY);
-  body.lineTo(topW / 2, rimY);
-  body.lineTo(botW / 2, -18);
-  body.quadTo(botW / 2 - 4, 0, botW / 2 - 24, 0);
-  body.lineTo(-botW / 2 + 24, 0);
-  body.quadTo(-botW / 2 + 4, 0, -botW / 2, -18);
-  body.close();
-  // straw behind the lid, leaning
-  c.drawLine(40, -260, 140, -1150, paint({ color: hex(f.straw), stroke: 30 }));
-  c.drawLine(36, -300, 132, -1140, paint({ color: hex('#ffffff', 0.35), stroke: 6 }));
-  // clear cup
-  c.drawPath(body.snapshot(), paint({ color: hex('#eef3f7', 0.96) }));
-  // drink, three layers, inside the walls
-  c.save();
-  c.clipPath(body.snapshot(), CK.ClipOp.Intersect, true);
-  const liquidTop = rimY + 90;
-  c.drawRect(
-    rect(-topW, liquidTop, topW * 2, -liquidTop),
-    paint({ shader: linear(0, liquidTop, 0, 0, [hex(f.top), hex(f.mid), hex(f.bottom)], [0, 0.45, 1]) }),
-  );
-  // a soft swirl between layers
-  const swirl = new CK.PathBuilder();
-  swirl.moveTo(-topW / 2, -360);
-  swirl.cubicTo(-80, -430, 60, -300, topW / 2, -380);
-  c.drawPath(swirl.snapshot(), paint({ color: hex('#ffffff', 0.35), stroke: 34, blur: 14 }));
-  swirl.delete();
-  // ice cubes near the top
-  [
-    [-110, liquidTop + 40, 18],
-    [10, liquidTop + 60, -12],
-    [-80, liquidTop + 180, 8],
-    [55, liquidTop + 170, 24],
-  ].forEach(([ix, iy, deg]) => {
-    c.save();
-    c.rotate(deg, ix + 55, iy + 55);
-    c.drawRRect(rrect(ix, iy, 110, 110, 22), paint({ color: hex('#ffffff', 0.5) }));
-    c.drawRRect(rrect(ix + 8, iy + 8, 94, 94, 18), paint({ color: hex('#ffffff', 0.7), stroke: 4 }));
-    c.drawLine(ix + 22, iy + 26, ix + 60, iy + 22, paint({ color: hex('#ffffff', 0.9), stroke: 6 }));
-    c.restore();
-  });
-  // glass highlights
-  c.drawLine(
-    -topW / 2 + 40,
-    rimY + 40,
-    -botW / 2 + 34,
-    -40,
-    paint({ color: hex('#ffffff', 0.75), stroke: 16 }),
-  );
-  c.drawLine(topW / 2 - 60, rimY + 60, botW / 2 - 50, -80, paint({ color: hex('#ffffff', 0.3), stroke: 8 }));
-  c.restore();
-  c.drawPath(body.snapshot(), paint({ color: hex('#c9d3dc', 0.9), stroke: 4 }));
-  body.delete();
-  // dome lid with a rim
-  const dome = new CK.PathBuilder();
-  dome.moveTo(-topW / 2 + 6, rimY - 22);
-  dome.cubicTo(-topW / 2 + 20, rimY - 210, topW / 2 - 20, rimY - 210, topW / 2 - 6, rimY - 22);
-  dome.close();
-  c.drawPath(dome.snapshot(), paint({ color: hex('#f4f8fb', 0.95) }));
-  c.drawPath(dome.snapshot(), paint({ color: hex('#c9d3dc', 0.9), stroke: 4 }));
-  dome.delete();
-  c.drawRRect(
-    rrect(-topW / 2 - 14, rimY - 32, topW + 28, 40, 20),
-    paint({ shader: linear(0, rimY - 32, 0, rimY + 8, [hex('#ffffff'), hex('#d5dde4')]) }),
-  );
-  c.drawLine(-120, rimY - 120, -40, rimY - 150, paint({ color: hex('#ffffff', 0.9), stroke: 10 }));
-  c.restore();
-}
-
-const drinks = join(assets, 'drinks');
-for (const flavor of Object.keys(FLAVORS)) {
-  // the large cup decides the frame of all three sizes
-  const { bounds } = render(join(drinks, `${flavor}-l.png`), CUP.w, CUP.h, (c) => cup(c, flavor, SIZES.l));
-  for (const s of ['s', 'm'])
-    render(join(drinks, `${flavor}-${s}.png`), CUP.w, CUP.h, (c) => cup(c, flavor, SIZES[s]), bounds);
-}
