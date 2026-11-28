@@ -3,6 +3,9 @@ node_modules/
 dist/
 ios/
 android/
+# Native folders from prebuild; the demo GIFs in docs/demo are not.
+!docs/demo/android/
+!docs/demo/ios/
 *.log
 .DS_Store
 /lib/
