@@ -19,6 +19,42 @@ const demos: { href: Href; title: string; subtitle: string; icon: keyof typeof I
     icon: 'fast-food-outline',
   },
   {
+    href: '/stories',
+    title: 'Stories',
+    subtitle: 'People turn like a cube, their photos melt into each other; tap, hold to pause, progress bars',
+    icon: 'aperture-outline',
+  },
+  {
+    href: '/feed',
+    title: 'Vertical feed',
+    subtitle: 'Full-screen posts swiped up, double tap to like, liquid, slide or parallax',
+    icon: 'phone-portrait-outline',
+  },
+  {
+    href: '/flash-sale',
+    title: 'Flash sale',
+    subtitle: 'Looping hero banner, countdown, deal cards that glide, deal of the day',
+    icon: 'flash-outline',
+  },
+  {
+    href: '/shop',
+    title: 'Shop product page',
+    subtitle: 'Photo gallery with a thumbnail strip, color swatches, sizes and a cart bar',
+    icon: 'bag-handle-outline',
+  },
+  {
+    href: '/memories',
+    title: 'Memories',
+    subtitle: 'A slideshow of a trip: slow zoom, liquid transitions, tap to skip',
+    icon: 'images-outline',
+  },
+  {
+    href: '/albums',
+    title: 'Albums',
+    subtitle: 'Coverflow of album covers, blurred backdrop that follows the swipe, player controls',
+    icon: 'musical-notes-outline',
+  },
+  {
     href: '/onboarding',
     title: 'Onboarding',
     subtitle: 'Full-screen background media, Skip and Next driven by the ref API',

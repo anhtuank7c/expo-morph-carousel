@@ -27,6 +27,45 @@ A carousel for Expo in which the images melt into each other like liquid while t
 
 Recorded from the example app on an Android emulator and in Chrome.
 
+### Real-world demos
+
+Screens of the example app modeled on apps people use every day, each a few hundred lines you can copy:
+
+<table>
+  <tr>
+    <th>Stories</th>
+    <th>Vertical feed</th>
+    <th>Flash sale</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/stories.gif" width="220" alt="Stories: People turn like a cube, their photos melt into each other; tap left or right, hold to pause, progress bars."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/feed.gif" width="220" alt="Vertical feed: Full-screen posts swiped up, double tap to like, a spinning record, liquid, slide or parallax."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/flash-sale.gif" width="220" alt="Flash sale: Looping hero banner, countdown, deal cards that glide with momentum, deal of the day."></td>
+  </tr>
+  <tr>
+    <td width="240">People turn like a cube, their photos melt into each other; tap left or right, hold to pause, progress bars.</td>
+    <td width="240">Full-screen posts swiped up, double tap to like, a spinning record, liquid, slide or parallax.</td>
+    <td width="240">Looping hero banner, countdown, deal cards that glide with momentum, deal of the day.</td>
+  </tr>
+  <tr>
+    <th>Shop product page</th>
+    <th>Memories</th>
+    <th>Albums</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/shop.gif" width="220" alt="Shop product page: Photo gallery with a thumbnail strip in the Pagination slot, color swatches, sizes, cart bar."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/memories.gif" width="220" alt="Memories: A trip slideshow: slow zoom, liquid transitions, tap to skip, progress bars."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/albums.gif" width="220" alt="Albums: Coverflow of album covers, a blurred backdrop that follows the swipe, player controls."></td>
+  </tr>
+  <tr>
+    <td width="240">Photo gallery with a thumbnail strip in the Pagination slot, color swatches, sizes, cart bar.</td>
+    <td width="240">A trip slideshow: slow zoom, liquid transitions, tap to skip, progress bars.</td>
+    <td width="240">Coverflow of album covers, a blurred backdrop that follows the swipe, player controls.</td>
+  </tr>
+</table>
+
+Photos from [Unsplash](https://unsplash.com/license), loaded at the size the carousel asks for.
+
 ## Features
 
 - **Liquid morph.** Between two pages the current image dissolves into a blob and reforms as the next one. The effect is drawn with Skia on the UI thread and fades out completely when a page is at rest, so a settled image is never blurred.
@@ -541,7 +580,7 @@ npm test                 # paging math unit tests only
 npm run build            # compile to lib/
 ```
 
-The example app (`example/`) imports the package from `src/` and has these screens: a product showcase (watches, phones, a laptop and a Mac mini cut out to their outline, tall and wide ones in turn so the liquid stretches between them), a food order with real photos of a cola bottle, a burger, a sundae and fries (the menu tabs are a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. The product photos in `example/assets/showcase/` are Apple marketing images, used only to illustrate the effect; they belong to Apple Inc., are not covered by this project's license and are not part of the npm package. The food photos come from Wikimedia Commons, with their authors and licenses in `example/assets/food/CREDITS.md`. The other images are original drawings: the devices with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
+The example app (`example/`) imports the package from `src/` and has these screens: stories, a vertical feed, a flash sale, a shop product page, memories and albums (see Real-world demos above), a product showcase (watches, phones, a laptop and a Mac mini cut out to their outline, tall and wide ones in turn so the liquid stretches between them), a food order with real photos of a cola bottle, a burger, a sundae and fries (the menu tabs are a Pagination slot, the glow and floor shadow a MediaBackground slot), a full-screen onboarding, page layouts, slots, a playground for the media effects, a remote image gallery with the cache panel and a stress test. The product photos in `example/assets/showcase/` are Apple marketing images, used only to illustrate the effect; they belong to Apple Inc., are not covered by this project's license and are not part of the npm package. The food photos come from Wikimedia Commons, with their authors and licenses in `example/assets/food/CREDITS.md`. The other images are original drawings: the devices with `npm run make-devices --workspace example` (CanvasKit, installed with React Native Skia), the shapes with `npm run make-assets --workspace example` (needs ffmpeg).
 
 `npm install` also sets up a pre-commit hook that runs ESLint and Prettier on staged files and the typecheck.
 

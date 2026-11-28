@@ -18,6 +18,15 @@ export default function RootLayout() {
           <Stack.Screen name="slots" options={{ title: 'Slots' }} />
           <Stack.Screen name="order" options={{ title: 'Order' }} />
           <Stack.Screen name="stress" options={{ title: 'Stress test' }} />
+          <Stack.Screen name="stories" options={{ title: 'Stories' }} />
+          <Stack.Screen name="feed" options={{ headerShown: false }} />
+          <Stack.Screen name="flash-sale" options={{ title: 'Flash sale' }} />
+          <Stack.Screen name="shop" options={{ title: '', headerTransparent: true }} />
+          <Stack.Screen name="memories" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="albums"
+            options={{ title: '', headerTransparent: true, headerTintColor: '#fff' }}
+          />
         </Stack>
       </GestureHandlerRootView>
     </SafeAreaProvider>

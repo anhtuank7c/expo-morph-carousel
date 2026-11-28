@@ -27,6 +27,45 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
 
 Quay từ app ví dụ trên Android emulator và trên Chrome.
 
+### Demo ứng dụng thực tế
+
+Các màn của app ví dụ mô phỏng những ứng dụng quen thuộc hằng ngày, mỗi màn vài trăm dòng có thể chép về dùng:
+
+<table>
+  <tr>
+    <th>Stories</th>
+    <th>Feed dọc</th>
+    <th>Flash sale</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/stories.gif" width="220" alt="Stories: Các người dùng xoay như khối lập phương, ảnh của mỗi người tan vào nhau; chạm trái phải, giữ để dừng, thanh tiến trình."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/feed.gif" width="220" alt="Feed dọc: Bài đăng toàn màn hình vuốt lên, chạm hai lần để thả tim, đĩa nhạc quay, liquid, slide hoặc parallax."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/flash-sale.gif" width="220" alt="Flash sale: Banner tự chạy vòng lặp, đếm ngược, thẻ deal lướt theo quán tính, deal trong ngày."></td>
+  </tr>
+  <tr>
+    <td width="240">Các người dùng xoay như khối lập phương, ảnh của mỗi người tan vào nhau; chạm trái phải, giữ để dừng, thanh tiến trình.</td>
+    <td width="240">Bài đăng toàn màn hình vuốt lên, chạm hai lần để thả tim, đĩa nhạc quay, liquid, slide hoặc parallax.</td>
+    <td width="240">Banner tự chạy vòng lặp, đếm ngược, thẻ deal lướt theo quán tính, deal trong ngày.</td>
+  </tr>
+  <tr>
+    <th>Trang sản phẩm</th>
+    <th>Kỷ niệm</th>
+    <th>Album nhạc</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/shop.gif" width="220" alt="Trang sản phẩm: Thư viện ảnh với dải thumbnail trong slot Pagination, chọn màu, chọn size, thanh giỏ hàng."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/memories.gif" width="220" alt="Kỷ niệm: Trình chiếu ảnh chuyến đi: zoom chậm, chuyển cảnh liquid, chạm để bỏ qua, thanh tiến trình."></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/albums.gif" width="220" alt="Album nhạc: Coverflow bìa album, nền mờ chạy theo cú vuốt, nút điều khiển phát nhạc."></td>
+  </tr>
+  <tr>
+    <td width="240">Thư viện ảnh với dải thumbnail trong slot Pagination, chọn màu, chọn size, thanh giỏ hàng.</td>
+    <td width="240">Trình chiếu ảnh chuyến đi: zoom chậm, chuyển cảnh liquid, chạm để bỏ qua, thanh tiến trình.</td>
+    <td width="240">Coverflow bìa album, nền mờ chạy theo cú vuốt, nút điều khiển phát nhạc.</td>
+  </tr>
+</table>
+
+Ảnh từ [Unsplash](https://unsplash.com/license), tải đúng kích thước carousel yêu cầu.
+
 ## Tính năng
 
 - **Liquid morph.** Giữa hai trang, ảnh hiện tại tan thành một khối lỏng rồi đông lại thành ảnh kế tiếp. Hiệu ứng được vẽ bằng Skia trên UI thread và tắt hẳn khi trang đứng yên, nên ảnh lúc nghỉ không bao giờ bị mờ.
@@ -541,7 +580,7 @@ npm test                 # chỉ unit test cho phần toán phân trang
 npm run build            # biên dịch ra lib/
 ```
 
-App ví dụ (`example/`) import package từ `src/` và có các màn: trưng bày sản phẩm (đồng hồ, điện thoại, laptop và Mac mini cắt sát viền, xen kẽ dáng dọc và dáng ngang để khối liquid kéo dãn giữa chúng), đặt món với ảnh chụp thật chai cola, burger, ly sundae và khoai tây chiên (thanh tab menu là slot Pagination, quầng sáng và bóng đổ là slot MediaBackground), onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media, thư viện ảnh từ mạng kèm bảng thông tin cache và stress test. Ảnh sản phẩm trong `example/assets/showcase/` là ảnh marketing của Apple, chỉ dùng để minh hoạ hiệu ứng; chúng thuộc về Apple Inc., không nằm trong license của dự án và không có trong package npm. Ảnh đồ ăn lấy từ Wikimedia Commons, tác giả và giấy phép ghi trong `example/assets/food/CREDITS.md`. Các hình còn lại là hình vẽ nguyên bản: thiết bị bằng `npm run make-devices --workspace example` (CanvasKit, cài sẵn cùng React Native Skia), các khối hình bằng `npm run make-assets --workspace example` (cần ffmpeg).
+App ví dụ (`example/`) import package từ `src/` và có các màn: stories, feed dọc, flash sale, trang sản phẩm, kỷ niệm và album nhạc (xem Demo ứng dụng thực tế ở trên), trưng bày sản phẩm (đồng hồ, điện thoại, laptop và Mac mini cắt sát viền, xen kẽ dáng dọc và dáng ngang để khối liquid kéo dãn giữa chúng), đặt món với ảnh chụp thật chai cola, burger, ly sundae và khoai tây chiên (thanh tab menu là slot Pagination, quầng sáng và bóng đổ là slot MediaBackground), onboarding toàn màn hình, bố cục trang, slots, playground cho các hiệu ứng media, thư viện ảnh từ mạng kèm bảng thông tin cache và stress test. Ảnh sản phẩm trong `example/assets/showcase/` là ảnh marketing của Apple, chỉ dùng để minh hoạ hiệu ứng; chúng thuộc về Apple Inc., không nằm trong license của dự án và không có trong package npm. Ảnh đồ ăn lấy từ Wikimedia Commons, tác giả và giấy phép ghi trong `example/assets/food/CREDITS.md`. Các hình còn lại là hình vẽ nguyên bản: thiết bị bằng `npm run make-devices --workspace example` (CanvasKit, cài sẵn cùng React Native Skia), các khối hình bằng `npm run make-assets --workspace example` (cần ffmpeg).
 
 `npm install` cũng cài một pre-commit hook chạy ESLint và Prettier trên các file đã stage và chạy typecheck.
 
