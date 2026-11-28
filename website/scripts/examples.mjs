@@ -16,7 +16,7 @@ export const EXAMPLES = [
   {
     slug: 'stories',
     route: 'stories',
-    gif: 'android/stories.gif',
+    gif: 'ios/stories.gif',
     group: 'real',
     title: ['Stories', 'Stories'],
     summary: [
@@ -57,7 +57,7 @@ export const EXAMPLES = [
   {
     slug: 'feed',
     route: 'feed',
-    gif: 'android/feed.gif',
+    gif: 'ios/feed.gif',
     group: 'real',
     title: ['Vertical feed', 'Feed dọc'],
     summary: [
@@ -95,7 +95,7 @@ export const EXAMPLES = [
   {
     slug: 'flash-sale',
     route: 'flash-sale',
-    gif: 'android/flash-sale.gif',
+    gif: 'ios/flash-sale.gif',
     group: 'real',
     title: ['Flash sale', 'Flash sale'],
     summary: [
@@ -135,7 +135,7 @@ export const EXAMPLES = [
   {
     slug: 'shop',
     route: 'shop',
-    gif: 'android/shop.gif',
+    gif: 'ios/shop.gif',
     group: 'real',
     title: ['Shop product page', 'Trang sản phẩm'],
     summary: [
@@ -172,7 +172,7 @@ export const EXAMPLES = [
   {
     slug: 'memories',
     route: 'memories',
-    gif: 'android/memories.gif',
+    gif: 'ios/memories.gif',
     group: 'real',
     title: ['Memories', 'Kỷ niệm'],
     summary: [
@@ -199,7 +199,7 @@ export const EXAMPLES = [
   {
     slug: 'albums',
     route: 'albums',
-    gif: 'android/albums.gif',
+    gif: 'ios/albums.gif',
     group: 'real',
     title: ['Albums', 'Album nhạc'],
     summary: [
@@ -234,7 +234,7 @@ export const EXAMPLES = [
   {
     slug: 'product',
     route: 'product',
-    gif: 'android/product.gif',
+    gif: 'ios/product.gif',
     group: 'show',
     title: ['Product showcase', 'Trưng bày sản phẩm'],
     summary: [
@@ -269,7 +269,7 @@ export const EXAMPLES = [
   {
     slug: 'order',
     route: 'order',
-    gif: 'android/food-order.gif',
+    gif: 'ios/food-order.gif',
     group: 'show',
     title: ['Food order', 'Đặt món'],
     summary: [
