@@ -1,4 +1,5 @@
 import { useWindowDimensions, type ViewStyle } from 'react-native';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 
 /**
  * The widest the content of a screen gets. On tablets and unfolded phones
@@ -13,4 +14,14 @@ export const column: ViewStyle = { width: '100%', maxWidth: MAX_CONTENT_WIDTH, a
 /** Width of that column on this screen. */
 export function useContentWidth() {
   return Math.min(useWindowDimensions().width, MAX_CONTENT_WIDTH);
+}
+
+/**
+ * Left and right padding for an overlay that spans the screen (a top bar, a
+ * caption, a bottom bar): the safe area plus some room. The side insets are 0
+ * on a phone in portrait, but in landscape they keep clear of the notch, and
+ * on the iPhone Duo (folded or not) of the status bar in the top right corner.
+ */
+export function sides(insets: EdgeInsets, padding = 0): ViewStyle {
+  return { paddingLeft: insets.left + padding, paddingRight: insets.right + padding };
 }

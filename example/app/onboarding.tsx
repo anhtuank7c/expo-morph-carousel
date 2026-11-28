@@ -6,6 +6,7 @@ import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { products } from '../data/products';
+import { column, sides } from '../data/layout';
 
 const steps = products.slice(0, 4);
 const tints = steps.map((s) => s.color);
@@ -32,7 +33,12 @@ export default function OnboardingScreen() {
 
   return (
     <Animated.View
-      style={[styles.screen, background, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+      style={[
+        styles.screen,
+        background,
+        sides(insets),
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
     >
       <Pressable style={styles.skip} onPress={() => router.back()} hitSlop={12}>
         <Text style={styles.skipText}>Skip</Text>
@@ -51,7 +57,7 @@ export default function OnboardingScreen() {
         mediaStyle={styles.media}
         positionValue={position}
         onIndexChange={setIndex}
-        style={styles.carousel}
+        style={[styles.carousel, column]}
         pageStyle={styles.pageFrame}
         pagination={{ activeColor: '#1c1c1e', inactiveColor: '#1c1c1e33' }}
         renderItem={({ item, index: i }) => (

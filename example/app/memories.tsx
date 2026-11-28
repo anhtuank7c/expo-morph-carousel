@@ -17,6 +17,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { memories, photoFor } from '../data/demos';
+import { sides } from '../data/layout';
 
 /**
  * A "memories" slideshow like the photo apps make: full-screen photos that
@@ -79,7 +80,7 @@ export default function MemoriesScreen() {
         />
       </Animated.View>
 
-      <View style={[styles.top, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+      <View style={[styles.top, sides(insets, 10), { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
         <View style={styles.bars}>
           {memories.map((m, i) => (
             <Bar key={m.id} i={i} index={index} progress={progress} />
@@ -107,7 +108,10 @@ export default function MemoriesScreen() {
         </View>
       </View>
 
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + 28 }]} pointerEvents="none">
+      <View
+        style={[styles.bottom, sides(insets, 22), { paddingBottom: insets.bottom + 28 }]}
+        pointerEvents="none"
+      >
         <Text style={styles.when}>3 years ago today</Text>
         <Text style={styles.title}>Summer in the mountains</Text>
         <Animated.Text
@@ -139,12 +143,12 @@ const shadow = { textShadowColor: '#0009', textShadowRadius: 10, textShadowOffse
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
   flex: { flex: 1 },
-  top: { position: 'absolute', left: 0, right: 0, top: 0, paddingHorizontal: 10, gap: 12 },
+  top: { position: 'absolute', left: 0, right: 0, top: 0, gap: 12 },
   bars: { flexDirection: 'row', gap: 4 },
   bar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: '#ffffff59', overflow: 'hidden' },
   barFill: { height: 3, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingHorizontal: 4 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, gap: 4 },
+  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: 4 },
   when: {
     color: '#fff',
     fontSize: 14,

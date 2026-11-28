@@ -25,7 +25,7 @@ import Animated, {
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { avatar, photo, photoFor, storyUsers, type StoryUser } from '../data/demos';
-import { column } from '../data/layout';
+import { column, sides } from '../data/layout';
 
 /**
  * Stories like the big social apps have them. Two carousels:
@@ -240,7 +240,7 @@ function UserStory({
       />
 
       <View
-        style={[styles.top, { paddingTop: insets.top + 8, opacity: paused ? 0 : 1 }]}
+        style={[styles.top, sides(insets, 10), { paddingTop: insets.top + 8, opacity: paused ? 0 : 1 }]}
         pointerEvents="box-none"
       >
         <View style={styles.bars}>
@@ -259,7 +259,13 @@ function UserStory({
         </View>
       </View>
 
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + 12, opacity: paused ? 0 : 1 }]}>
+      <View
+        style={[
+          styles.bottom,
+          sides(insets, 12),
+          { paddingBottom: insets.bottom + 12, opacity: paused ? 0 : 1 },
+        ]}
+      >
         <Text style={styles.caption}>{shown.caption}</Text>
         <View style={styles.replyRow}>
           <View style={styles.reply}>
@@ -303,7 +309,7 @@ const styles = StyleSheet.create({
   viewerRoot: { flex: 1, backgroundColor: '#000' },
   viewer: { flex: 1, backgroundColor: '#000' },
   story: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
-  top: { position: 'absolute', left: 0, right: 0, top: 0, paddingHorizontal: 10, gap: 10 },
+  top: { position: 'absolute', left: 0, right: 0, top: 0, gap: 10 },
   bars: { flexDirection: 'row', gap: 4 },
   bar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: '#ffffff59', overflow: 'hidden' },
   barFill: { height: 3, backgroundColor: '#fff' },
@@ -319,7 +325,7 @@ const styles = StyleSheet.create({
   headerName: { color: '#fff', fontWeight: '700', fontSize: 14, ...shadow },
   headerTime: { color: '#ffffffb3', fontSize: 13, ...shadow },
   flex: { flex: 1 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12, gap: 12 },
+  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: 12 },
   caption: { color: '#fff', fontSize: 20, fontWeight: '700', ...shadow },
   replyRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   reply: {

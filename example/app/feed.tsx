@@ -15,6 +15,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { avatar, compact, feedPosts, photoFor, type FeedPost } from '../data/demos';
+import { sides } from '../data/layout';
 
 /**
  * A full-screen vertical feed like the short-video apps: one post per page,
@@ -64,7 +65,10 @@ export default function FeedScreen() {
         )}
       />
 
-      <View style={[styles.topBar, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
+      <View
+        style={[styles.topBar, sides(insets, 12), { paddingTop: insets.top + 6 }]}
+        pointerEvents="box-none"
+      >
         <Pressable
           onPress={() => router.back()}
           hitSlop={12}
@@ -148,7 +152,7 @@ function Post({
         <Ionicons name="heart" size={120} color="#ff2d55" />
       </Animated.View>
 
-      <View style={[styles.actions, { bottom: insets.bottom + 96 }]}>
+      <View style={[styles.actions, { bottom: insets.bottom + 96, right: insets.right + 10 }]}>
         <View style={styles.author}>
           <Image source={{ uri: avatar(post.avatar, 120) }} style={styles.authorAvatar} />
           <View style={styles.follow}>
@@ -169,7 +173,12 @@ function Post({
         </Animated.View>
       </View>
 
-      <View style={[styles.info, { bottom: insets.bottom + 24 }]}>
+      <View
+        style={[
+          styles.info,
+          { bottom: insets.bottom + 24, left: insets.left + 14, right: insets.right + 84 },
+        ]}
+      >
         <Text style={styles.user}>@{post.user}</Text>
         <Text style={styles.caption}>{post.caption}</Text>
         <View style={styles.sound}>
@@ -217,7 +226,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
   },
   tabs: { flexDirection: 'row', gap: 18 },
   tabOff: { color: '#ffffffaa', fontSize: 16, fontWeight: '600', ...shadow },
@@ -226,7 +234,7 @@ const styles = StyleSheet.create({
   effectText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   post: { flex: 1 },
   burst: { position: 'absolute', alignSelf: 'center', top: '38%' },
-  actions: { position: 'absolute', right: 10, alignItems: 'center', gap: 18 },
+  actions: { position: 'absolute', alignItems: 'center', gap: 18 },
   author: { marginBottom: 6 },
   authorAvatar: {
     width: 48,
@@ -261,7 +269,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   recordInner: { width: 24, height: 24, borderRadius: 12 },
-  info: { position: 'absolute', left: 14, right: 84, gap: 6 },
+  info: { position: 'absolute', gap: 6 },
   user: { color: '#fff', fontSize: 16, fontWeight: '800', ...shadow },
   caption: { color: '#fff', fontSize: 14, lineHeight: 19, ...shadow },
   sound: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -6,7 +6,7 @@ import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { photo, photoFor, shopColors } from '../data/demos';
-import { column, useContentWidth } from '../data/layout';
+import { column, MAX_CONTENT_WIDTH, sides, useContentWidth } from '../data/layout';
 
 /**
  * A product page from a shopping app. The gallery is a carousel of the
@@ -23,7 +23,10 @@ export default function ShopScreen() {
   // A square gallery on a phone; on a tablet or in landscape it stops at
   // 55% of the screen height so the details stay in view.
   const width = useContentWidth();
-  const galleryHeight = Math.min(width, Math.round(useWindowDimensions().height * 0.55));
+  const window = useWindowDimensions();
+  const galleryHeight = Math.min(width, Math.round(window.height * 0.55));
+  // The cart bar spans the screen; its buttons line up with the column above.
+  const barSide = 16 + Math.max(0, (window.width - MAX_CONTENT_WIDTH) / 2);
   const insets = useSafeAreaInsets();
   const gallery = useRef<MorphCarouselRef>(null);
   const [color, setColor] = useState(0);
@@ -141,7 +144,7 @@ export default function ShopScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.cartBar, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.cartBar, sides(insets, barSide), { paddingBottom: insets.bottom + 12 }]}>
         <Pressable
           style={styles.cartIcon}
           accessibilityRole="button"
@@ -252,7 +255,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 16,
     paddingTop: 12,
     backgroundColor: '#ffffffee',
     borderTopWidth: StyleSheet.hairlineWidth,
