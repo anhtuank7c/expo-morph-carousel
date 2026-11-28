@@ -14,13 +14,13 @@ A carousel for Expo in which the images melt into each other like liquid while t
   <tr>
     <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/food-order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
   <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="A product card: a watch melts into a laptop, then a phone, a Mac mini and more, tall and wide outlines in turn, while the title and description slide underneath"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/food-order.gif" width="240" alt="A food order: a tall cola bottle melts into a wide burger, then a tall sundae and a wide pile of fries, while the glow behind changes color"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Cards turning like the faces of a solid cube"></td>
   </tr>
 </table>

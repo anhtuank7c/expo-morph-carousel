@@ -14,13 +14,13 @@ Carousel cho Expo, trong đó các ảnh tan vào nhau như chất lỏng trong 
   <tr>
     <th>Android</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/food-order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/android/cube.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
   </tr>
   <tr>
     <th>Web</th>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/product.gif" width="240" alt="Một thẻ sản phẩm: đồng hồ tan thành laptop, rồi điện thoại, Mac mini và các sản phẩm khác, xen kẽ dáng dọc và dáng ngang, trong khi tiêu đề và mô tả trượt bên dưới"></td>
-    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
+    <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/food-order.gif" width="240" alt="Đặt món: chai cola cao tan thành chiếc burger rộng, rồi ly sundae cao và đĩa khoai tây chiên rộng, trong khi quầng sáng phía sau đổi màu"></td>
     <td><img src="https://raw.githubusercontent.com/anhtuank7c/expo-morph-carousel/main/docs/demo/web/cube.gif" width="240" alt="Các thẻ xoay như các mặt của một khối lập phương đặc"></td>
   </tr>
 </table>
